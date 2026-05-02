@@ -1,0 +1,23 @@
+.title-screen {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(ellipse at 50% 40%, #16213e 0%, #0f3460 60%, #1a1a2e 100%);
+}
+
+.title-screen__inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 3rem 2rem;
+}
+
+
+.title-screen__tagline {
+  font-size: 1.1rem;
+  color: #aac4e0;
+  margin: 0;
+  letter-spacing: 0.03em;
+}

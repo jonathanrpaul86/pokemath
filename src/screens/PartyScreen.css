@@ -1,0 +1,233 @@
+.party-screen {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: #1a1a2e;
+  color: #eee;
+}
+
+/* ── Header ── */
+
+.pm-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.75rem 1.25rem;
+  background: #0f3460;
+  border-bottom: 3px solid #1a3c8c;
+  flex-wrap: wrap;
+}
+
+.pm-back {
+  font-size: 0.85rem;
+  padding: 0.4rem 0.9rem;
+  white-space: nowrap;
+}
+
+.pm-title {
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: #ffd700;
+  margin: 0;
+  flex: 1;
+}
+
+.pm-counts {
+  display: flex;
+  gap: 1rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.pm-counts__party { color: #ffd700; }
+.pm-counts__pc    { color: #90cdf4; }
+
+/* ── Body ── */
+
+.pm-body {
+  flex: 1;
+  display: flex;
+  overflow: hidden;
+}
+
+/* ── Panels ── */
+
+.pm-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 1rem 1.25rem;
+  overflow-y: auto;
+  min-width: 0;
+}
+
+.pm-panel--party {
+  border-right: 2px solid #1a3c8c;
+  max-width: 320px;
+}
+
+.pm-panel__title {
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: #90cdf4;
+  margin: 0 0 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.pm-panel__list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.pm-panel__empty {
+  color: #7a9cc0;
+  font-size: 0.9rem;
+  text-align: center;
+  padding: 3rem 1rem;
+  line-height: 1.5;
+}
+
+/* ── Pokémon card ── */
+
+.pm-card {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.35rem 0.6rem;
+  border-radius: 10px;
+  border: 2px solid #ffffff18;
+  background: #ffffff07;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s, transform 0.1s;
+  text-align: left;
+  font-family: inherit;
+  color: #eee;
+  width: 100%;
+}
+
+.pm-card:hover {
+  background: #ffffff12;
+  transform: translateY(-1px);
+}
+
+.pm-card--selected {
+  border-color: #ffd700;
+  background: #ffd70015;
+  box-shadow: 0 0 0 1px #ffd70040;
+}
+
+.pm-card--fainted {
+  opacity: 0.55;
+}
+
+.pm-card--empty {
+  cursor: default;
+  opacity: 0.25;
+  justify-content: center;
+  min-height: 64px;
+  pointer-events: none;
+}
+
+.pm-card__empty-label {
+  font-size: 0.75rem;
+  color: #7a9cc0;
+  font-style: italic;
+}
+
+.pm-card__sprite {
+  width: 52px;
+  height: 52px;
+  image-rendering: pixelated;
+  flex-shrink: 0;
+}
+
+.pm-card__info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+
+.pm-card__name {
+  font-size: 0.9rem;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-transform: capitalize;
+}
+
+.pm-card__level {
+  font-size: 0.72rem;
+  color: #90cdf4;
+  font-weight: 600;
+}
+
+.pm-card__hp-text {
+  font-size: 0.68rem;
+  color: #a0b4c8;
+  white-space: nowrap;
+}
+
+/* ── HP bar (inside card) ── */
+
+.pm-hp-bar {
+  height: 5px;
+  border-radius: 3px;
+  background: #ffffff20;
+  overflow: hidden;
+  width: 100%;
+  max-width: 100px;
+  margin-top: 1px;
+}
+
+.pm-hp-bar__fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.25s;
+}
+
+.pm-hp-bar__fill--green  { background: #48bb78; }
+.pm-hp-bar__fill--yellow { background: #f6e05e; }
+.pm-hp-bar__fill--red    { background: #f56565; }
+
+/* ── Action bar ── */
+
+.pm-action-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.85rem 1.5rem;
+  background: #16213e;
+  border-top: 2px solid #1a3c8c;
+  min-height: 64px;
+}
+
+.pm-action-bar__hint {
+  font-size: 0.85rem;
+  color: #7a9cc0;
+  margin: 0;
+}
+
+.pm-action-bar__row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.pm-action-bar__label {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #ffd700;
+}
+
+.pm-action-bar__warning {
+  font-size: 0.78rem;
+  color: #f56565;
+  font-weight: 600;
+}

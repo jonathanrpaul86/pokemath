@@ -1,0 +1,332 @@
+.battle-screen {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: #1a1a2e;
+  color: #eee;
+  max-width: 480px;
+  margin: 0 auto;
+}
+
+.battle-screen--loading {
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  font-size: 1.1rem;
+  color: #aac4e0;
+}
+
+/* ── Field ── */
+
+.battle-field {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 0.75rem 1rem 0.5rem;
+  gap: 0.4rem;
+  background: linear-gradient(180deg, #0f3460 0%, #16213e 60%, #1a1a2e 100%);
+}
+
+.battle-field__enemy-status,
+.battle-field__player-status {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  grid-template-rows: auto auto;
+  align-items: center;
+  gap: 2px 0.5rem;
+  background: #000000aa;
+  border: 2px solid #1a3c8c;
+  border-radius: 10px;
+  padding: 0.4rem 0.75rem;
+}
+
+.battle-field__enemy-status {
+  align-self: flex-end;
+  width: 55%;
+}
+
+.battle-field__player-status {
+  align-self: flex-start;
+  width: 55%;
+  margin-left: auto;
+}
+
+.battle-status__name {
+  font-weight: 800;
+  font-size: 0.9rem;
+  text-transform: capitalize;
+}
+
+.battle-status__level {
+  font-size: 0.8rem;
+  color: #aac4e0;
+  text-align: right;
+}
+
+.battle-status__hp-text {
+  font-size: 0.72rem;
+  color: #7a9cc0;
+  grid-column: 1 / -1;
+  text-align: right;
+}
+
+.hp-bar {
+  grid-column: 1 / -1;
+  height: 7px;
+  background: #ffffff18;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.hp-bar--small { height: 5px; }
+
+.hp-bar__fill {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.3s ease;
+}
+.hp-bar__fill--green  { background: #48bb78; }
+.hp-bar__fill--yellow { background: #f6e05e; }
+.hp-bar__fill--red    { background: #e63946; }
+
+/* ── Sprites ── */
+
+.battle-field__sprites {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  padding: 0 1rem;
+  flex: 1;
+  min-height: 140px;
+}
+
+.battle-sprite {
+  image-rendering: pixelated;
+}
+
+.battle-sprite--enemy {
+  width: 130px;
+  height: 130px;
+  align-self: flex-start;
+}
+
+.battle-sprite--player {
+  width: 130px;
+  height: 130px;
+}
+
+/* ── Log ── */
+
+.battle-log {
+  background: #0a0a1a;
+  border-top: 2px solid #1a3c8c;
+  border-bottom: 2px solid #1a3c8c;
+  padding: 0.6rem 1rem;
+  min-height: 56px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2px;
+}
+
+.battle-log__line {
+  margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.4;
+  color: #e0e8f0;
+}
+
+/* ── Action area ── */
+
+.battle-actions {
+  padding: 0.75rem 1rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  background: #0f1a30;
+  border-top: 2px solid #1a3c8c;
+}
+
+/* ── Math problem ── */
+
+.battle-problem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #ffffff0a;
+  border: 2px solid #1a3c8c;
+  border-radius: 10px;
+  padding: 0.5rem 1rem;
+}
+
+.battle-problem__text {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #ffd700;
+  letter-spacing: 0.04em;
+}
+
+.battle-problem__answer {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #fff;
+  min-width: 60px;
+  text-align: right;
+}
+
+.battle-problem__actions {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
+}
+
+/* ── Timer bar ── */
+
+.timer-bar {
+  position: relative;
+  height: 12px;
+  background: #ffffff15;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.timer-bar__fill {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.9s linear, background-color 0.3s ease;
+}
+
+.timer-bar__fill--blue   { background: #4299e1; }
+.timer-bar__fill--yellow { background: #f6e05e; }
+.timer-bar__fill--red    { background: #e63946; }
+
+.timer-bar__label {
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: #fff;
+  text-shadow: 1px 1px 0 #00000088;
+}
+
+/* ── Number pad ── */
+
+.numpad {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.4rem;
+}
+
+.numpad-btn {
+  font-family: inherit;
+  font-size: 1.3rem;
+  font-weight: 700;
+  padding: 0.6rem 0;
+  border: 2px solid #1a3c8c;
+  border-radius: 10px;
+  background: #ffffff0d;
+  color: #eee;
+  cursor: pointer;
+  transition: background 0.1s ease, transform 0.08s ease;
+}
+
+.numpad-btn:hover:not(:disabled) {
+  background: #ffffff1f;
+  transform: translateY(-1px);
+}
+
+.numpad-btn:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.numpad-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.numpad-btn--submit {
+  background: #ffd700;
+  color: #1a1a2e;
+  border-color: #b8860b;
+}
+
+.numpad-btn--submit:hover:not(:disabled) {
+  background: #ffe033;
+}
+
+.numpad-btn--delete {
+  color: #e63946;
+  border-color: #6b1a20;
+}
+
+/* ── Catch buttons ── */
+
+.btn-catch {
+  flex: 1;
+  font-family: inherit;
+  font-size: 0.9rem;
+  font-weight: 700;
+  padding: 0.5rem 1rem;
+  border-radius: 10px;
+  border: 2px solid #38a169;
+  background: #276749;
+  color: #fff;
+  cursor: pointer;
+  transition: filter 0.15s ease, transform 0.1s ease;
+}
+
+.btn-catch:hover {
+  filter: brightness(1.15);
+  transform: translateY(-1px);
+}
+
+.btn-flee {
+  font-family: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 0.5rem 0.9rem;
+  border-radius: 10px;
+  border: 1px solid #ffffff22;
+  background: transparent;
+  color: #aaa;
+  cursor: pointer;
+  transition: background 0.1s ease;
+}
+
+.btn-flee:hover {
+  background: #ffffff10;
+}
+
+/* ── Catch attempt ── */
+
+.catch-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.catch-header__label {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #ffd700;
+}
+
+.catch-header__progress {
+  font-size: 0.85rem;
+  color: #48bb78;
+  font-weight: 700;
+}
+
+/* ── Result ── */
+
+.battle-result {
+  display: flex;
+  justify-content: center;
+  padding: 0.5rem 0;
+}
+
+.battle-waiting {
+  min-height: 40px;
+}

@@ -1,0 +1,130 @@
+.starter-select {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(ellipse at 50% 40%, #16213e 0%, #0f3460 60%, #1a1a2e 100%);
+  padding: 2rem;
+}
+
+.starter-select__inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+  max-width: 700px;
+  width: 100%;
+}
+
+.starter-select__title {
+  font-size: 2rem;
+  font-weight: 800;
+  color: #ffd700;
+  margin: 0;
+  text-shadow: 2px 2px 0 #b8860b;
+}
+
+.starter-select__subtitle {
+  font-size: 1rem;
+  color: #aac4e0;
+  margin: 0;
+  text-align: center;
+}
+
+/* ---- Loading / Error ---- */
+
+.starter-select__loading,
+.starter-select__error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  color: #aac4e0;
+  font-size: 1rem;
+}
+
+.spinner {
+  width: 48px;
+  height: 48px;
+  border: 5px solid #ffffff22;
+  border-top-color: #ffd700;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ---- Cards ---- */
+
+.starter-cards {
+  display: flex;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.starter-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1.25rem 1rem 1rem;
+  background: #ffffff0f;
+  border: 3px solid #ffffff22;
+  border-radius: 16px;
+  cursor: pointer;
+  transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+  min-width: 160px;
+  color: #eee;
+  font-family: inherit;
+}
+
+.starter-card:hover {
+  transform: translateY(-4px);
+  background: #ffffff18;
+}
+
+.starter-card--selected {
+  background: #ffffff18;
+}
+
+.starter-card__sprite {
+  width: 112px;
+  height: 112px;
+  image-rendering: pixelated;
+}
+
+.starter-card__name {
+  font-size: 1.2rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+}
+
+.starter-card__types {
+  display: flex;
+  gap: 0.4rem;
+}
+
+/* ---- Type badges ---- */
+
+.type-badge {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 2px 8px;
+  border-radius: 999px;
+  color: #fff;
+  text-shadow: 1px 1px 0 #00000044;
+}
+
+/* ---- Actions ---- */
+
+.starter-select__actions {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  margin-top: 0.5rem;
+}
