@@ -1,4 +1,4 @@
-import type { OwnedPokemon, MathOperator, DifficultyLevel, PokemonSpecies } from '../types'
+import type { OwnedPokemon, MathOperator, DifficultyLevel, PokemonSpecies, BaseStats } from '../types'
 
 export type GameAction =
   | { type: 'NEW_GAME'; payload: { starterSpecies: PokemonSpecies } }
@@ -13,6 +13,9 @@ export type GameAction =
   | { type: 'SET_CURRENT_AREA'; payload: { areaId: string } }
   | { type: 'MOVE_TO_PARTY'; payload: { uid: string } }
   | { type: 'MOVE_TO_PC'; payload: { uid: string } }
+  | { type: 'REORDER_PARTY'; payload: { uid: string; direction: 'up' | 'down' } }
+  | { type: 'REORDER_PC'; payload: { uid: string; direction: 'up' | 'down' } }
+  | { type: 'EVOLVE_POKEMON'; payload: { uid: string; newSpeciesId: number; newName: string; newBaseStats: BaseStats } }
   | { type: 'HEAL_PARTY' }
   | { type: 'SEE_POKEMON'; payload: { speciesId: number } }
   | { type: 'UPDATE_POKEMON_HP'; payload: { uid: string; currentHp: number } }

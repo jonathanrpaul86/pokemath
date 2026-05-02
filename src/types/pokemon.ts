@@ -48,8 +48,8 @@ export interface OwnedPokemon {
   currentHp: number
   maxHp: number
   stats: BaseStats
-  /** Move IDs currently known (up to 4) */
-  moveIds: number[]
+  /** Moves currently known (up to 4) */
+  moves: Move[]
   caughtAt: number
 }
 

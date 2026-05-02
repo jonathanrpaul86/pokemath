@@ -1,6 +1,6 @@
 import type { Trainer, OwnedPokemon, MathStats, DifficultyLevel } from '../types'
 import type { GameAction } from './actions'
-import { createOwnedPokemon, trainerXpToNextLevel, pokemonXpToNextLevel } from '../utils/formulas'
+import { createOwnedPokemon, trainerXpToNextLevel, pokemonXpToNextLevel, calcStats } from '../utils/formulas'
 import { saveTrainer } from './localStorage'
 
 const PARTY_MAX = 6
@@ -188,6 +188,57 @@ export function gameReducer(trainer: Trainer, action: GameAction): Trainer {
         party: trainer.party.filter(p => p.uid !== uid),
         pc: [...trainer.pc, pokemon],
       }
+      break
+    }
+
+    case 'EVOLVE_POKEMON': {
+      const { uid, newSpeciesId, newName, newBaseStats } = action.payload
+      function evolve(list: typeof trainer.party) {
+        return list.map(p => {
+          if (p.uid !== uid) return p
+          const newStats = calcStats(newBaseStats, p.level)
+          const hpRatio = p.maxHp > 0 ? p.currentHp / p.maxHp : 1
+          return {
+            ...p,
+            speciesId: newSpeciesId,
+            name: newName,
+            stats: newStats,
+            maxHp: newStats.hp,
+            currentHp: Math.max(1, Math.floor(newStats.hp * hpRatio)),
+          }
+        })
+      }
+      next = {
+        ...trainer,
+        party: evolve(trainer.party),
+        pc: evolve(trainer.pc),
+        pokedex: {
+          ...trainer.pokedex,
+          [newSpeciesId]: { seen: true, caught: true },
+        },
+      }
+      break
+    }
+
+    case 'REORDER_PARTY': {
+      const { uid, direction } = action.payload
+      const idx = trainer.party.findIndex(p => p.uid === uid)
+      const swapIdx = direction === 'up' ? idx - 1 : idx + 1
+      if (idx === -1 || swapIdx < 0 || swapIdx >= trainer.party.length) return trainer
+      const party = [...trainer.party]
+      ;[party[idx], party[swapIdx]] = [party[swapIdx], party[idx]]
+      next = { ...trainer, party }
+      break
+    }
+
+    case 'REORDER_PC': {
+      const { uid, direction } = action.payload
+      const idx = trainer.pc.findIndex(p => p.uid === uid)
+      const swapIdx = direction === 'up' ? idx - 1 : idx + 1
+      if (idx === -1 || swapIdx < 0 || swapIdx >= trainer.pc.length) return trainer
+      const pc = [...trainer.pc]
+      ;[pc[idx], pc[swapIdx]] = [pc[swapIdx], pc[idx]]
+      next = { ...trainer, pc }
       break
     }
 

@@ -63,7 +63,7 @@ export function createOwnedPokemon(
     currentHp: stats.hp,
     maxHp: stats.hp,
     stats,
-    moveIds: [],
+    moves: [],
     caughtAt: Date.now(),
   }
 }
