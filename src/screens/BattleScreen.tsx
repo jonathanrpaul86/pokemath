@@ -1,10 +1,12 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useTrainer, useGameStore } from '../store'
 import { fetchPokemonSpecies } from '../services/pokeApi'
-import { spawnWildPokemon, calcDamage, calcCatchDifficulty, CATCH_HP_THRESHOLD } from '../utils/battle'
+import { spawnWildPokemon, calcDamage, calcCatchDifficulty } from '../utils/battle'
 import { pickEncounter, pickLevel } from '../utils/encounter'
 import { generateProblem, checkAnswer } from '../utils/math'
 import { battleXpReward, trainerXpReward, pokemonXpToNextLevel } from '../utils/formulas'
+import { playCorrect, playWrong, playCatch, playVictory, playLevelUp, isMuted, setMuted } from '../utils/sound'
+import { EVOLUTIONS } from '../data/evolutions'
 import type { Area, BattlePhase, MathProblem, Move, OwnedPokemon, WildPokemon } from '../types'
 import './BattleScreen.css'
 
@@ -63,6 +65,15 @@ function HpBar({ current, max, small }: { current: number; max: number; small?: 
   )
 }
 
+function XpBar({ xp, max }: { xp: number; max: number }) {
+  const pct = max > 0 ? Math.min(100, Math.round((xp / max) * 100)) : 0
+  return (
+    <div className="xp-bar xp-bar--battle">
+      <div className="xp-bar__fill" style={{ width: `${pct}%` }} />
+    </div>
+  )
+}
+
 function TimerBar({ remaining, total }: { remaining: number; total: number }) {
   const pct = total > 0 ? Math.min(100, Math.round((remaining / total) * 100)) : 0
   const color = pct > 50 ? 'blue' : pct > 25 ? 'yellow' : 'red'
@@ -114,7 +125,11 @@ export default function BattleScreen({ area, onBattleEnd }: Props) {
 
   const [battle, setBattle] = useState<BattleData | null>(null)
   const [answer, setAnswer] = useState('')
+  const [showSwitch, setShowSwitch] = useState(false)
   const battleRef = useRef<BattleData | null>(null)
+  const evolvedRef = useRef<Set<string>>(new Set())
+  const prevLevelRef = useRef<number | null>(null)
+  const [muted, setMutedState] = useState(isMuted())
 
   useEffect(() => { battleRef.current = battle }, [battle])
 
@@ -170,6 +185,7 @@ export default function BattleScreen({ area, onBattleEnd }: Props) {
   }
 
   function handleVictory(b: BattleData) {
+    playVictory()
     const pkmnXp = battleXpReward(b.wild.level)
     const trXp = trainerXpReward(b.wild.level)
     persistHps(b)
@@ -193,12 +209,11 @@ export default function BattleScreen({ area, onBattleEnd }: Props) {
 
   // ---- Phase effects ---------------------------------------------------------
 
-  // intro → player-turn
+  // intro → choose-action
   useEffect(() => {
     if (!battle || battle.phase !== 'intro') return
     const t = setTimeout(() => {
-      const p = nextProblem()
-      setBattle(prev => prev ? { ...prev, phase: 'player-turn', problem: p, timeRemaining: p.timeLimit } : prev)
+      setBattle(prev => prev ? { ...prev, phase: 'choose-action' } : prev)
     }, 1800)
     return () => clearTimeout(t)
   }, [battle?.phase])  // eslint-disable-line
@@ -219,18 +234,15 @@ export default function BattleScreen({ area, onBattleEnd }: Props) {
         if (b.partyHps[b.activeIdx] <= 0) {
           const nextIdx = b.partyHps.findIndex((hp, i) => i !== b.activeIdx && hp > 0)
           if (nextIdx === -1) { handleBlackout(b); return }
-          const p = nextProblem()
           setBattle(prev => prev ? {
-            ...prev, phase: 'player-turn', activeIdx: nextIdx,
-            problem: p, timeRemaining: p.timeLimit,
+            ...prev, phase: 'choose-action', activeIdx: nextIdx, problem: null,
             log: [...prev.log.slice(-3), `Go, ${capitalize(trainer.party[nextIdx].name)}!`],
           } : prev)
           return
         }
       }
 
-      const p = nextProblem()
-      setBattle(prev => prev ? { ...prev, phase: 'player-turn', problem: p, timeRemaining: p.timeLimit } : prev)
+      setBattle(prev => prev ? { ...prev, phase: 'choose-action', problem: null } : prev)
     }, 1500)
     return () => clearTimeout(t)
   }, [battle?.phase])  // eslint-disable-line
@@ -273,9 +285,84 @@ export default function BattleScreen({ area, onBattleEnd }: Props) {
     setAnswer('')
   }, [battle?.phase, battle?.catchTimeRemaining])  // eslint-disable-line
 
+  // ---- Level-up sound --------------------------------------------------------
+
+  useEffect(() => {
+    if (!battle || battle.phase === 'intro') return
+    const level = trainer.party[battle.activeIdx]?.level ?? null
+    if (prevLevelRef.current !== null && level !== null && level > prevLevelRef.current) {
+      playLevelUp()
+    }
+    prevLevelRef.current = level
+  }, [trainer.party[battle?.activeIdx ?? 0]?.level]) // eslint-disable-line
+
+  // ---- Evolution check -------------------------------------------------------
+
+  useEffect(() => {
+    if (!battle) return
+    if (battle.phase !== 'victory' && battle.phase !== 'caught') return
+
+    const pokemon = trainer.party[battle.activeIdx]
+    if (!pokemon) return
+
+    const key = `${pokemon.uid}@${pokemon.speciesId}@${pokemon.level}`
+    if (evolvedRef.current.has(key)) return
+
+    const evo = EVOLUTIONS[pokemon.speciesId]
+    if (!evo || pokemon.level < evo.atLevel) return
+
+    evolvedRef.current.add(key)
+    const prevName = capitalize(pokemon.name)
+
+    fetchPokemonSpecies(evo.evolvesIntoId).then(newSpecies => {
+      dispatch({
+        type: 'EVOLVE_POKEMON',
+        payload: {
+          uid: pokemon.uid,
+          newSpeciesId: newSpecies.id,
+          newName: newSpecies.name,
+          newBaseStats: newSpecies.baseStats,
+        },
+      })
+      setBattle(prev => {
+        if (!prev) return prev
+        const sprites = [...prev.playerSprites]
+        sprites[prev.activeIdx] = newSpecies.sprites.back
+        return {
+          ...prev,
+          playerSprites: sprites,
+          log: [...prev.log.slice(-3), `✨ ${prevName} evolved into ${capitalize(newSpecies.name)}!`],
+        }
+      })
+    })
+  }, [battle?.phase]) // eslint-disable-line
+
+  // ---- Keyboard input --------------------------------------------------------
+
+  useEffect(() => {
+    function onKeyDown(e: KeyboardEvent) {
+      const b = battleRef.current
+      if (!b || (b.phase !== 'player-turn' && b.phase !== 'catch-attempt')) return
+      if (e.key >= '0' && e.key <= '9') {
+        e.preventDefault()
+        setAnswer(a => a.length < 4 ? a + e.key : a)
+      } else if (e.key === 'Backspace') {
+        e.preventDefault()
+        setAnswer(a => a.slice(0, -1))
+      } else if (e.key === 'Enter') {
+        e.preventDefault()
+        if (b.phase === 'catch-attempt') handleSubmitCatchAnswer()
+        else handleSubmitAnswer()
+      }
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [answer]) // eslint-disable-line
+
   // ---- Action handlers -------------------------------------------------------
 
   function processCorrectAnswer(b: BattleData) {
+    playCorrect()
     const attacker = trainer.party[b.activeIdx]
     const damage = Math.max(1, calcDamage(MATH_ATTACK, attacker, b.wild))
     const newWildHp = Math.max(0, b.wildHp - damage)
@@ -288,6 +375,7 @@ export default function BattleScreen({ area, onBattleEnd }: Props) {
   }
 
   function processWrongAnswer(b: BattleData) {
+    playWrong()
     const move = pickEnemyMove(b.wild)
     const defender = trainer.party[b.activeIdx]
     const damage = Math.max(1, calcDamage(move, b.wild, defender))
@@ -313,9 +401,14 @@ export default function BattleScreen({ area, onBattleEnd }: Props) {
     else processWrongAnswer(b)
   }
 
+  function handleFight() {
+    const p = nextProblem()
+    setBattle(prev => prev ? { ...prev, phase: 'player-turn', problem: p, timeRemaining: p.timeLimit } : prev)
+  }
+
   function handleStartCatch() {
     const b = battleRef.current
-    if (!b || b.phase !== 'player-turn') return
+    if (!b || (b.phase !== 'player-turn' && b.phase !== 'choose-action')) return
     const { problemsRequired, timePerProblem } = calcCatchDifficulty(b.wildHp / b.wild.maxHp, b.wild.level)
     const p = nextProblem()
     setBattle(prev => prev ? {
@@ -356,9 +449,10 @@ export default function BattleScreen({ area, onBattleEnd }: Props) {
         currentHp: b.wildHp,
         maxHp: b.wild.maxHp,
         stats: b.wild.stats,
-        moveIds: b.wild.moves.map(m => m.id),
+        moves: b.wild.moves,
         caughtAt: Date.now(),
       }
+      playCatch()
       persistHps(b)
       dispatch({ type: 'CATCH_POKEMON', payload: { pokemon: caught } })
       dispatch({ type: 'GAIN_TRAINER_XP', payload: { amount: trainerXpReward(b.wild.level) } })
@@ -369,6 +463,7 @@ export default function BattleScreen({ area, onBattleEnd }: Props) {
         log: [`Gotcha! ${capitalize(b.wild.name)} was caught!`],
       } : prev)
     } else {
+      playCorrect()
       const p = nextProblem()
       setBattle(prev => prev ? {
         ...prev,
@@ -387,6 +482,18 @@ export default function BattleScreen({ area, onBattleEnd }: Props) {
     setBattle(prev => prev ? { ...prev, phase: 'fled', log: ['You got away safely!'] } : prev)
   }
 
+  function handleSwitch(partyIdx: number) {
+    setBattle(prev => prev ? {
+      ...prev,
+      activeIdx: partyIdx,
+      phase: 'choose-action',
+      problem: null,
+      log: [...prev.log.slice(-3), `Go, ${capitalize(trainer.party[partyIdx].name)}!`],
+    } : prev)
+    setShowSwitch(false)
+    setAnswer('')
+  }
+
   // ---- Derived values --------------------------------------------------------
 
   if (!battle) {
@@ -401,113 +508,156 @@ export default function BattleScreen({ area, onBattleEnd }: Props) {
   const { phase, wild, wildHp, partyHps, activeIdx, problem, timeRemaining } = battle
   const activeParty = trainer.party[activeIdx]
   const activeHp = partyHps[activeIdx] ?? 0
-  const wildHpPct = wild.maxHp > 0 ? wildHp / wild.maxHp : 0
-  const canCatch = wildHpPct <= CATCH_HP_THRESHOLD && phase === 'player-turn'
   const isTerminal = phase === 'victory' || phase === 'caught' || phase === 'fled' || phase === 'blacked-out'
+  const isChoosing = phase === 'choose-action'
   const inputBlocked = phase !== 'player-turn' && phase !== 'catch-attempt'
+  const switchableCount = trainer.party.filter((_, i) => i !== activeIdx && (partyHps[i] ?? 0) > 0).length
+
+  const numpadProps = {
+    onDigit: (d: string) => setAnswer(a => a.length < 4 ? a + d : a),
+    onDelete: () => setAnswer(a => a.slice(0, -1)),
+  }
 
   // ---- Render ----------------------------------------------------------------
 
+  function handleMuteToggle() {
+    const next = !muted
+    setMuted(next)
+    setMutedState(next)
+  }
+
   return (
     <div className="battle-screen">
+      <button className="mute-btn" onClick={handleMuteToggle} title={muted ? 'Unmute' : 'Mute'}>
+        {muted ? '🔇' : '🔊'}
+      </button>
 
       {/* ── Field ── */}
       <div className="battle-field">
-        {/* Enemy row */}
         <div className="battle-field__enemy-status">
           <span className="battle-status__name">{capitalize(wild.name)}</span>
           <span className="battle-status__level">Lv.{wild.level}</span>
           <HpBar current={wildHp} max={wild.maxHp} />
-          <span className="battle-status__hp-text">{wildHp} / {wild.maxHp}</span>
         </div>
         <div className="battle-field__sprites">
-          <img
-            className="battle-sprite battle-sprite--enemy"
-            src={battle.wildSprite}
-            alt={wild.name}
-          />
-          <img
-            className="battle-sprite battle-sprite--player"
-            src={battle.playerSprites[activeIdx]}
-            alt={activeParty?.name ?? ''}
-          />
+          <img className="battle-sprite battle-sprite--player" src={battle.playerSprites[activeIdx]} alt={activeParty?.name ?? ''} />
+          <img className="battle-sprite battle-sprite--enemy" src={battle.wildSprite} alt={wild.name} />
         </div>
-        {/* Player row */}
         {activeParty && (
           <div className="battle-field__player-status">
             <span className="battle-status__name">{capitalize(activeParty.name)}</span>
             <span className="battle-status__level">Lv.{activeParty.level}</span>
             <HpBar current={activeHp} max={activeParty.maxHp} />
             <span className="battle-status__hp-text">{activeHp} / {activeParty.maxHp}</span>
+            <XpBar xp={activeParty.xp} max={activeParty.xpToNextLevel} />
           </div>
         )}
       </div>
 
-      {/* ── Log ── */}
-      <div className="battle-log">
-        {battle.log.slice(-2).map((msg, i) => (
-          <p key={i} className="battle-log__line">{msg}</p>
-        ))}
-      </div>
-
-      {/* ── Action area ── */}
-      <div className="battle-actions">
-        {isTerminal ? (
-          <div className="battle-result">
-            <button className="btn btn-primary btn-lg" onClick={onBattleEnd}>
-              {phase === 'blacked-out' ? 'Continue (healed)' : 'Continue'}
-            </button>
-          </div>
-        ) : phase === 'catch-attempt' && battle.catchProgress && battle.catchProblem ? (
-          <>
-            <div className="catch-header">
-              <span className="catch-header__label">Catching {capitalize(wild.name)}!</span>
-              <span className="catch-header__progress">
-                {battle.catchProgress.solved} / {battle.catchProgress.required} solved
-              </span>
-            </div>
-            <div className="battle-problem">
-              <span className="battle-problem__text">
-                {battle.catchProblem.operand1} {battle.catchProblem.operator} {battle.catchProblem.operand2} = ?
-              </span>
-              <span className="battle-problem__answer">{answer || '_'}</span>
-            </div>
-            <TimerBar remaining={battle.catchTimeRemaining} total={battle.catchProgress.timePerProblem} />
-            <NumberPad
-              onDigit={d => setAnswer(a => a.length < 4 ? a + d : a)}
-              onDelete={() => setAnswer(a => a.slice(0, -1))}
-              onSubmit={handleSubmitCatchAnswer}
-            />
-          </>
-        ) : problem ? (
-          <>
-            <div className="battle-problem">
-              <span className="battle-problem__text">
-                {problem.operand1} {problem.operator} {problem.operand2} = ?
-              </span>
-              <span className="battle-problem__answer">{answer || '_'}</span>
-            </div>
-            <TimerBar remaining={timeRemaining} total={problem.timeLimit} />
-            <div className="battle-problem__actions">
-              {canCatch && (
-                <button className="btn btn-catch" onClick={handleStartCatch}>
-                  🎯 Catch!
+      {/* ── Command panel ── */}
+      <div className="battle-commands">
+        <div className="battle-commands__inner">
+          {isTerminal ? (
+            <div className="battle-bottom-row">
+              <div className="battle-log">
+                {battle.log.slice(-3).map((msg, i) => (
+                  <p key={i} className="battle-log__line">{msg}</p>
+                ))}
+              </div>
+              <div className="battle-action-grid battle-action-grid--result">
+                <button className="btn btn-primary" onClick={onBattleEnd}>
+                  {phase === 'blacked-out' ? 'Continue\n(healed)' : 'Continue'}
                 </button>
-              )}
-              <button className="btn btn-flee" onClick={handleFlee}>
-                Run
-              </button>
+              </div>
             </div>
-            <NumberPad
-              onDigit={d => setAnswer(a => a.length < 4 ? a + d : a)}
-              onDelete={() => setAnswer(a => a.slice(0, -1))}
-              onSubmit={handleSubmitAnswer}
-              disabled={inputBlocked}
-            />
-          </>
-        ) : (
-          <div className="battle-waiting" />
-        )}
+
+          ) : isChoosing || showSwitch ? (
+            <div className="battle-bottom-row">
+              <div className="battle-log">
+                {battle.log.slice(-3).map((msg, i) => (
+                  <p key={i} className="battle-log__line">{msg}</p>
+                ))}
+              </div>
+              {showSwitch ? (
+                <div className="switch-menu">
+                  {trainer.party.map((p, i) => {
+                    if (i === activeIdx || (partyHps[i] ?? 0) === 0) return null
+                    const hp = partyHps[i] ?? 0
+                    return (
+                      <button key={p.uid} className="switch-btn" onClick={() => handleSwitch(i)}>
+                        <span className="switch-btn__name">{capitalize(p.name)}</span>
+                        <span className="switch-btn__level">Lv.{p.level}</span>
+                        <span className="switch-btn__hp">{hp}/{p.maxHp} HP</span>
+                      </button>
+                    )
+                  })}
+                  <button className="switch-btn switch-btn--cancel" onClick={() => setShowSwitch(false)}>
+                    Cancel
+                  </button>
+                </div>
+              ) : (
+                <div className="battle-action-grid">
+                  <button className="btn btn-fight" onClick={handleFight}>⚔ Fight!</button>
+                  <button className="btn btn-catch" onClick={handleStartCatch}>🎯 Catch!</button>
+                  <button
+                    className="btn btn-switch"
+                    onClick={() => setShowSwitch(true)}
+                    disabled={switchableCount === 0}
+                  >
+                    🔄 Switch
+                  </button>
+                  <button className="btn btn-flee" onClick={handleFlee}>🏃 Run</button>
+                </div>
+              )}
+            </div>
+
+          ) : (
+            <>
+              {/* Problem / catch header */}
+              {phase === 'catch-attempt' && battle.catchProgress && battle.catchProblem ? (
+                <>
+                  <div className="catch-header">
+                    <span className="catch-header__label">Catching {capitalize(wild.name)}!</span>
+                    <span className="catch-header__progress">
+                      {battle.catchProgress.solved} / {battle.catchProgress.required} solved
+                    </span>
+                  </div>
+                  <div className="battle-problem">
+                    <span className="battle-problem__text">
+                      {battle.catchProblem.operand1} {battle.catchProblem.operator} {battle.catchProblem.operand2} = ?
+                    </span>
+                    <span className="battle-problem__answer">{answer || '_'}</span>
+                  </div>
+                  <TimerBar remaining={battle.catchTimeRemaining} total={battle.catchProgress.timePerProblem} />
+                </>
+              ) : problem ? (
+                <>
+                  <div className="battle-problem">
+                    <span className="battle-problem__text">
+                      {problem.operand1} {problem.operator} {problem.operand2} = ?
+                    </span>
+                    <span className="battle-problem__answer">{answer || '_'}</span>
+                  </div>
+                  <TimerBar remaining={timeRemaining} total={problem.timeLimit} />
+                </>
+              ) : null}
+
+              {/* Log + numpad side by side */}
+              <div className="battle-bottom-row">
+                <div className="battle-log">
+                  {battle.log.slice(-3).map((msg, i) => (
+                    <p key={i} className="battle-log__line">{msg}</p>
+                  ))}
+                </div>
+                <NumberPad
+                  {...numpadProps}
+                  onSubmit={phase === 'catch-attempt' ? handleSubmitCatchAnswer : handleSubmitAnswer}
+                  disabled={inputBlocked}
+                />
+              </div>
+            </>
+          )}
+        </div>
       </div>
     </div>
   )

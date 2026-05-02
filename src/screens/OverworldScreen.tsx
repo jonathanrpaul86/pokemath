@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useTrainer, useGameStore } from '../store'
+import { isMuted, setMuted } from '../utils/sound'
 import { AREA_MAP } from '../data/areas'
 import { preloadAreaSpecies } from '../services/pokeApi'
 import type { Area, OwnedPokemon } from '../types'
@@ -13,10 +14,10 @@ interface Props {
 
 // ---- Sub-components ---------------------------------------------------------
 
-function XpBar({ xp, xpToNextLevel }: { xp: number; xpToNextLevel: number }) {
+function XpBar({ xp, xpToNextLevel, pokemon }: { xp: number; xpToNextLevel: number; pokemon?: boolean }) {
   const pct = Math.min(100, Math.round((xp / xpToNextLevel) * 100))
   return (
-    <div className="xp-bar" title={`${xp} / ${xpToNextLevel} XP`}>
+    <div className={`xp-bar${pokemon ? ' xp-bar--pokemon' : ''}`} title={`${xp} / ${xpToNextLevel} XP`}>
       <div className="xp-bar__fill" style={{ width: `${pct}%` }} />
     </div>
   )
@@ -51,6 +52,7 @@ function PartyMember({ pokemon }: { pokemon: OwnedPokemon }) {
           </>
         )
       }
+      <XpBar xp={pokemon.xp} xpToNextLevel={pokemon.xpToNextLevel} pokemon />
     </div>
   )
 }
@@ -179,6 +181,13 @@ export default function OverworldScreen({ onStartBattle, onOpenPokedex, onOpenPa
   const trainer = useTrainer()
   const { dispatch } = useGameStore()
   const [centerPhase, setCenterPhase] = useState<CenterPhase | null>(null)
+  const [muted, setMutedState] = useState(isMuted())
+
+  function handleMuteToggle() {
+    const next = !muted
+    setMuted(next)
+    setMutedState(next)
+  }
 
   const currentArea: Area = AREA_MAP[trainer.currentAreaId]
 
@@ -210,6 +219,9 @@ export default function OverworldScreen({ onStartBattle, onOpenPokedex, onOpenPa
         <div className="trainer-bar__level">Lv.{trainer.level} Trainer</div>
         <button className="btn btn-secondary pokedex-btn" onClick={onOpenPokedex}>
           📖 Pokédex
+        </button>
+        <button className="btn btn-secondary mute-toggle-btn" onClick={handleMuteToggle} title={muted ? 'Unmute' : 'Mute'}>
+          {muted ? '🔇' : '🔊'}
         </button>
         <div className="trainer-bar__xp">
           <XpBar xp={trainer.xp} xpToNextLevel={trainer.xpToNextLevel} />

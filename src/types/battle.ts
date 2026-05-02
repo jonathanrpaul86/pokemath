@@ -3,6 +3,7 @@ import type { MathProblem } from './math'
 
 export type BattlePhase =
   | 'intro'
+  | 'choose-action'
   | 'player-turn'
   | 'resolving-correct'
   | 'resolving-wrong'

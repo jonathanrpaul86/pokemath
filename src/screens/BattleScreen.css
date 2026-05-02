@@ -1,11 +1,22 @@
+/* ── Screen shell ── */
+
 .battle-screen {
-  min-height: 100vh;
+  height: calc(100vh - 16px);
+  margin: 8px;
+  border-radius: 12px;
   display: flex;
   flex-direction: column;
   background: #1a1a2e;
   color: #eee;
-  max-width: 480px;
-  margin: 0 auto;
+  overflow: hidden;
+  position: relative;
+  /* Stylised double border: gold → gap → blue */
+  border: 2px solid #ffd700;
+  box-shadow:
+    0 0 0 1px #1a1a2e,
+    0 0 0 4px #1a3c8c,
+    0 0 28px #000c,
+    inset 0 0 0 1px #3d6abf40;
 }
 
 .battle-screen--loading {
@@ -16,15 +27,35 @@
   color: #aac4e0;
 }
 
-/* ── Field ── */
+/* ── Mute button ── */
+
+.mute-btn {
+  position: absolute;
+  top: 8px;
+  right: 10px;
+  z-index: 10;
+  background: #ffffff18;
+  border: 1px solid #ffffff28;
+  border-radius: 6px;
+  font-size: 1rem;
+  line-height: 1;
+  padding: 3px 6px;
+  cursor: pointer;
+  transition: background 0.1s;
+}
+
+.mute-btn:hover { background: #ffffff2e; }
+
+/* ── Field (top — grows to fill remaining height) ── */
 
 .battle-field {
   flex: 1;
   display: flex;
   flex-direction: column;
-  padding: 0.75rem 1rem 0.5rem;
-  gap: 0.4rem;
-  background: linear-gradient(180deg, #0f3460 0%, #16213e 60%, #1a1a2e 100%);
+  padding: 0.75rem 1.5rem 0.25rem;
+  gap: 0.35rem;
+  background: linear-gradient(180deg, #0f3460 0%, #16213e 65%, #1a1a2e 100%);
+  min-height: 0;
 }
 
 .battle-field__enemy-status,
@@ -42,12 +73,12 @@
 
 .battle-field__enemy-status {
   align-self: flex-end;
-  width: 55%;
+  width: 46%;
 }
 
 .battle-field__player-status {
   align-self: flex-start;
-  width: 55%;
+  width: 46%;
   margin-left: auto;
 }
 
@@ -80,6 +111,24 @@
 
 .hp-bar--small { height: 5px; }
 
+.xp-bar {
+  grid-column: 1 / -1;
+  border-radius: 999px;
+  overflow: hidden;
+  background: #ffffff18;
+}
+
+.xp-bar--battle {
+  height: 4px;
+}
+
+.xp-bar__fill {
+  height: 100%;
+  background: #63b3ed;
+  border-radius: 999px;
+  transition: width 0.4s ease;
+}
+
 .hp-bar__fill {
   height: 100%;
   border-radius: 999px;
@@ -92,62 +141,51 @@
 /* ── Sprites ── */
 
 .battle-field__sprites {
+  flex: 1;
   display: flex;
   justify-content: space-between;
-  align-items: flex-end;
-  padding: 0 1rem;
-  flex: 1;
-  min-height: 140px;
+  align-items: center;
+  padding: 0 4rem;
+  min-height: 0;
 }
 
-.battle-sprite {
-  image-rendering: pixelated;
-}
+.battle-sprite { image-rendering: pixelated; }
 
-.battle-sprite--enemy {
-  width: 130px;
-  height: 130px;
-  align-self: flex-start;
-}
-
+/* Player back sprite: left, sits low */
 .battle-sprite--player {
-  width: 130px;
-  height: 130px;
+  width: 200px;
+  height: 200px;
+  align-self: flex-end;
+  margin-bottom: 0.5rem;
 }
 
-/* ── Log ── */
-
-.battle-log {
-  background: #0a0a1a;
-  border-top: 2px solid #1a3c8c;
-  border-bottom: 2px solid #1a3c8c;
-  padding: 0.6rem 1rem;
-  min-height: 56px;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  gap: 2px;
+/* Enemy front sprite: right, sits high */
+.battle-sprite--enemy {
+  width: 200px;
+  height: 200px;
+  align-self: flex-start;
+  margin-top: 0.5rem;
 }
 
-.battle-log__line {
-  margin: 0;
-  font-size: 0.9rem;
-  line-height: 1.4;
-  color: #e0e8f0;
-}
+/* ── Command panel (bottom — fixed height) ── */
 
-/* ── Action area ── */
-
-.battle-actions {
-  padding: 0.75rem 1rem 1rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.6rem;
+.battle-commands {
+  flex-shrink: 0;
   background: #0f1a30;
   border-top: 2px solid #1a3c8c;
+  padding: 0.6rem 0 0.7rem;
 }
 
-/* ── Math problem ── */
+.battle-commands__inner {
+  max-width: 520px;
+  margin: 0 auto;
+  padding: 0 0.85rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+/* ── Problem row ── */
 
 .battle-problem {
   display: flex;
@@ -156,7 +194,13 @@
   background: #ffffff0a;
   border: 2px solid #1a3c8c;
   border-radius: 10px;
-  padding: 0.5rem 1rem;
+  padding: 0.4rem 1rem;
+}
+
+.battle-problem--placeholder .battle-problem__text {
+  color: #7a9cc0;
+  font-size: 1rem;
+  font-weight: 600;
 }
 
 .battle-problem__text {
@@ -174,20 +218,15 @@
   text-align: right;
 }
 
-.battle-problem__actions {
-  display: flex;
-  gap: 0.5rem;
-  justify-content: flex-end;
-}
-
 /* ── Timer bar ── */
 
 .timer-bar {
   position: relative;
-  height: 12px;
+  height: 10px;
   background: #ffffff15;
   border-radius: 999px;
   overflow: hidden;
+  flex-shrink: 0;
 }
 
 .timer-bar__fill {
@@ -211,25 +250,66 @@
   text-shadow: 1px 1px 0 #00000088;
 }
 
-/* ── Number pad ── */
+/* ── Bottom row: log + numpad side by side — FIXED height so it never shifts ── */
+
+.battle-bottom-row {
+  display: flex;
+  gap: 0.5rem;
+  height: 220px;
+  flex-shrink: 0;
+}
+
+/* ── Log (left side of bottom row) ── */
+
+.battle-log {
+  flex: 1;
+  background: #0a0a1a;
+  border: 2px solid #1a3c8c;
+  border-radius: 10px;
+  padding: 0.5rem 0.75rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 3px;
+  height: 100%;
+  overflow-y: auto;
+  box-sizing: border-box;
+}
+
+.battle-log__line {
+  margin: 0;
+  font-size: 0.82rem;
+  line-height: 1.4;
+  color: #e0e8f0;
+}
+
+/* ── Number pad (right side of bottom row) ── */
 
 .numpad {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 0.4rem;
+  grid-template-rows: repeat(4, 1fr);
+  gap: 0.3rem;
+  flex-shrink: 0;
+  width: 174px;
+  height: 100%;
+  box-sizing: border-box;
 }
 
 .numpad-btn {
   font-family: inherit;
-  font-size: 1.3rem;
+  font-size: 1.15rem;
   font-weight: 700;
-  padding: 0.6rem 0;
   border: 2px solid #1a3c8c;
-  border-radius: 10px;
+  border-radius: 8px;
   background: #ffffff0d;
   color: #eee;
   cursor: pointer;
   transition: background 0.1s ease, transform 0.08s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
 }
 
 .numpad-btn:hover:not(:disabled) {
@@ -261,45 +341,210 @@
   border-color: #6b1a20;
 }
 
-/* ── Catch buttons ── */
+/* ── Switch menu (replaces numpad) ── */
+
+.switch-menu {
+  flex-shrink: 0;
+  width: 174px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  overflow-y: auto;
+  box-sizing: border-box;
+}
+
+.switch-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 0.35rem 0.6rem;
+  border: 2px solid #1a3c8c;
+  border-radius: 8px;
+  background: #ffffff0d;
+  color: #eee;
+  cursor: pointer;
+  font-family: inherit;
+  text-align: left;
+  transition: background 0.1s, transform 0.08s;
+  gap: 1px;
+}
+
+.switch-btn:hover {
+  background: #ffffff1f;
+  transform: translateY(-1px);
+}
+
+.switch-btn__name {
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-transform: capitalize;
+}
+
+.switch-btn__level {
+  font-size: 0.68rem;
+  color: #90cdf4;
+}
+
+.switch-btn__hp {
+  font-size: 0.65rem;
+  color: #7a9cc0;
+}
+
+.switch-btn--cancel {
+  border-color: #78350f;
+  color: #fba96a;
+  margin-top: auto;
+  align-items: center;
+  font-weight: 700;
+  font-size: 0.82rem;
+}
+
+/* ── 2×2 action button grid (choose-action phase) ── */
+
+.battle-action-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  gap: 0.3rem;
+  flex-shrink: 0;
+  width: 174px;
+  height: 100%;
+  box-sizing: border-box;
+}
+
+.battle-action-grid .btn {
+  padding: 0;
+  font-size: 0.82rem;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.battle-action-grid--result .btn {
+  grid-column: 1 / -1;
+  grid-row: 1 / -1;
+  font-size: 1.1rem;
+}
+
+/* ── Action buttons (legacy row, kept for any future use) ── */
+
+.battle-action-btns {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.btn-fight {
+  flex: 1;
+  font-family: inherit;
+  font-size: 0.9rem;
+  font-weight: 800;
+  padding: 0.5rem 0.5rem;
+  border-radius: 10px;
+  border: none;
+  background: #e63946;
+  color: #fff;
+  cursor: pointer;
+  box-shadow: 0 4px 0 #8b0000;
+  transition: filter 0.1s, transform 0.1s, box-shadow 0.1s;
+}
+
+.btn-fight:hover {
+  filter: brightness(1.1);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 0 #8b0000;
+}
+
+.btn-fight:active {
+  transform: translateY(2px);
+  box-shadow: 0 2px 0 #8b0000;
+}
 
 .btn-catch {
   flex: 1;
   font-family: inherit;
   font-size: 0.9rem;
-  font-weight: 700;
-  padding: 0.5rem 1rem;
+  font-weight: 800;
+  padding: 0.5rem 0.5rem;
   border-radius: 10px;
-  border: 2px solid #38a169;
+  border: none;
   background: #276749;
   color: #fff;
   cursor: pointer;
-  transition: filter 0.15s ease, transform 0.1s ease;
+  box-shadow: 0 4px 0 #14532d;
+  transition: filter 0.1s, transform 0.1s, box-shadow 0.1s;
 }
 
 .btn-catch:hover {
-  filter: brightness(1.15);
-  transform: translateY(-1px);
+  filter: brightness(1.1);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 0 #14532d;
+}
+
+.btn-catch:active {
+  transform: translateY(2px);
+  box-shadow: 0 2px 0 #14532d;
+}
+
+.btn-switch {
+  flex: 1;
+  font-family: inherit;
+  font-size: 0.9rem;
+  font-weight: 800;
+  padding: 0.5rem 0.5rem;
+  border-radius: 10px;
+  border: none;
+  background: #1a5ca8;
+  color: #fff;
+  cursor: pointer;
+  box-shadow: 0 4px 0 #0d3566;
+  transition: filter 0.1s, transform 0.1s, box-shadow 0.1s;
+}
+
+.btn-switch:hover:not(:disabled) {
+  filter: brightness(1.1);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 0 #0d3566;
+}
+
+.btn-switch:active:not(:disabled) {
+  transform: translateY(2px);
+  box-shadow: 0 2px 0 #0d3566;
+}
+
+.btn-switch:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
 }
 
 .btn-flee {
+  flex: 1;
   font-family: inherit;
-  font-size: 0.85rem;
-  font-weight: 600;
-  padding: 0.5rem 0.9rem;
+  font-size: 0.9rem;
+  font-weight: 800;
+  padding: 0.5rem 0.5rem;
   border-radius: 10px;
-  border: 1px solid #ffffff22;
-  background: transparent;
-  color: #aaa;
+  border: none;
+  background: #b45309;
+  color: #fff;
   cursor: pointer;
-  transition: background 0.1s ease;
+  box-shadow: 0 4px 0 #78350f;
+  transition: filter 0.1s, transform 0.1s, box-shadow 0.1s;
 }
 
 .btn-flee:hover {
-  background: #ffffff10;
+  filter: brightness(1.1);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 0 #78350f;
 }
 
-/* ── Catch attempt ── */
+.btn-flee:active {
+  transform: translateY(2px);
+  box-shadow: 0 2px 0 #78350f;
+}
+
+/* ── Catch attempt header ── */
 
 .catch-header {
   display: flex;
@@ -319,14 +564,10 @@
   font-weight: 700;
 }
 
-/* ── Result ── */
+/* ── Terminal result ── */
 
 .battle-result {
   display: flex;
   justify-content: center;
-  padding: 0.5rem 0;
-}
-
-.battle-waiting {
-  min-height: 40px;
+  padding: 1rem 0;
 }

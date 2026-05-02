@@ -194,6 +194,176 @@
 .pm-hp-bar__fill--yellow { background: #f6e05e; }
 .pm-hp-bar__fill--red    { background: #f56565; }
 
+/* ── Detail panel ── */
+
+.pm-detail {
+  width: 260px;
+  flex-shrink: 0;
+  border-left: 2px solid #1a3c8c;
+  background: #0f1a30;
+  overflow-y: auto;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.pm-detail--empty {
+  align-items: center;
+  justify-content: center;
+}
+
+.pm-detail--empty p {
+  font-size: 0.85rem;
+  color: #7a9cc0;
+  text-align: center;
+  line-height: 1.5;
+}
+
+.pm-detail__sprite-wrap {
+  display: flex;
+  justify-content: center;
+}
+
+.pm-detail__sprite {
+  width: 96px;
+  height: 96px;
+  image-rendering: pixelated;
+}
+
+.pm-detail__name {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: #ffd700;
+  margin: 0;
+  text-align: center;
+}
+
+.pm-detail__level {
+  font-size: 0.8rem;
+  color: #90cdf4;
+  margin: 0;
+  text-align: center;
+  font-weight: 600;
+}
+
+.pm-detail__section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.pm-detail__section-title {
+  font-size: 0.68rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #7a9cc0;
+  margin: 0;
+}
+
+.pm-detail__stat-text {
+  font-size: 0.72rem;
+  color: #a0b4c8;
+  margin: 0;
+  text-align: right;
+}
+
+.pm-detail__none {
+  font-size: 0.75rem;
+  color: #7a9cc0;
+  font-style: italic;
+  margin: 0;
+}
+
+.pm-detail__caught {
+  font-size: 0.72rem;
+  color: #7a9cc0;
+  margin: 0.25rem 0 0;
+  text-align: center;
+}
+
+/* ── XP bar ── */
+
+.pm-xp-bar {
+  height: 6px;
+  background: #ffffff18;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.pm-xp-bar__fill {
+  height: 100%;
+  background: #63b3ed;
+  border-radius: 999px;
+  transition: width 0.3s ease;
+}
+
+/* ── Stat grid ── */
+
+.pm-stat-grid {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 2px 0.5rem;
+  align-items: center;
+}
+
+.pm-stat__label {
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: #7a9cc0;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+
+.pm-stat__val {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #eee;
+}
+
+/* ── Move list ── */
+
+.pm-move-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.pm-move {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.4rem;
+  background: #ffffff08;
+  border-radius: 6px;
+  padding: 0.3rem 0.5rem;
+}
+
+.pm-move__name {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #eee;
+}
+
+/* ── Type badge ── */
+
+.pm-type-badge {
+  font-size: 0.6rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 1px 5px;
+  border-radius: 4px;
+  color: #fff;
+  white-space: nowrap;
+  text-shadow: 0 1px 2px #0004;
+}
+
 /* ── Action bar ── */
 
 .pm-action-bar {
@@ -224,6 +394,17 @@
   font-size: 0.9rem;
   font-weight: 700;
   color: #ffd700;
+}
+
+.pm-action-bar__reorder {
+  display: flex;
+  gap: 0.25rem;
+}
+
+.pm-reorder-btn {
+  padding: 0.4rem 0.65rem;
+  font-size: 1rem;
+  line-height: 1;
 }
 
 .pm-action-bar__warning {
