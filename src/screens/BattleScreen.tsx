@@ -572,8 +572,16 @@ export default function BattleScreen({ area, onBattleEnd }: Props) {
           <HpBar current={wildHp} max={wild.maxHp} />
         </div>
         <div className="battle-field__sprites">
-          <img className="battle-sprite battle-sprite--player" src={battle.playerSprites[activeIdx]} alt={activeParty?.name ?? ''} />
-          <img className="battle-sprite battle-sprite--enemy" src={battle.wildSprite} alt={wild.name} />
+          <img
+            className={`battle-sprite battle-sprite--player${phase === 'resolving-correct' ? ' battle-sprite--lunge' : phase === 'resolving-wrong' ? ' battle-sprite--hit' : ''}`}
+            src={battle.playerSprites[activeIdx]}
+            alt={activeParty?.name ?? ''}
+          />
+          <img
+            className={`battle-sprite battle-sprite--enemy${phase === 'resolving-wrong' ? ' battle-sprite--lunge' : phase === 'resolving-correct' ? ' battle-sprite--hit' : ''}`}
+            src={battle.wildSprite}
+            alt={wild.name}
+          />
         </div>
         {activeParty && (
           <div className="battle-field__player-status">
