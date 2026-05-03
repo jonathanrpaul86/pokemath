@@ -71,7 +71,7 @@
 }
 
 .battle-field__enemy-status {
-  align-self: flex-end;
+  align-self: flex-start;
   width: 46%;
 }
 
@@ -150,20 +150,50 @@
 
 .battle-sprite { image-rendering: pixelated; }
 
+@keyframes hit-flash {
+  0%, 100% { opacity: 1;   filter: brightness(1)  saturate(1); }
+  20%, 60%  { opacity: 0;   filter: brightness(10) saturate(0); }
+  40%, 80%  { opacity: 1;   filter: brightness(4)  saturate(0); }
+}
+
+@keyframes lunge-right {
+  0%   { transform: translateX(0); }
+  35%  { transform: translateX(40px); }
+  100% { transform: translateX(0); }
+}
+
+@keyframes lunge-left {
+  0%   { transform: translateX(0); }
+  35%  { transform: translateX(-40px); }
+  100% { transform: translateX(0); }
+}
+
+.battle-sprite--hit {
+  animation: hit-flash 0.65s ease-in-out;
+}
+
+.battle-sprite--player.battle-sprite--lunge {
+  animation: lunge-right 0.45s ease-out;
+}
+
+.battle-sprite--enemy.battle-sprite--lunge {
+  animation: lunge-left 0.45s ease-out;
+}
+
 /* Player back sprite: left, sits low */
 .battle-sprite--player {
-  width: 200px;
-  height: 200px;
+  width: 350px;
+  height: 350px;
   align-self: flex-end;
   margin-bottom: 0.5rem;
 }
 
-/* Enemy front sprite: right, sits high */
+/* Enemy front sprite: right, diagonally opposite — center-low */
 .battle-sprite--enemy {
-  width: 200px;
-  height: 200px;
-  align-self: flex-start;
-  margin-top: 0.5rem;
+  width: 350px;
+  height: 350px;
+  align-self: center;
+  margin-top: 1.5rem;
 }
 
 /* ── Command panel (bottom — fixed height) ── */
