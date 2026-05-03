@@ -56,6 +56,38 @@
   to { transform: rotate(360deg); }
 }
 
+/* ---- Name input ---- */
+
+.starter-name-row {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+}
+
+.starter-name-input {
+  font-family: inherit;
+  font-size: 1.15rem;
+  font-weight: 700;
+  padding: 0.6rem 1rem;
+  border-radius: 10px;
+  border: 2px solid #1a3c8c;
+  background: #ffffff12;
+  color: #eee;
+  text-align: center;
+  width: 260px;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.starter-name-input::placeholder {
+  color: #4a6080;
+  font-weight: 400;
+}
+
+.starter-name-input:focus {
+  border-color: #ffd700;
+}
+
 /* ---- Cards ---- */
 
 .starter-cards {

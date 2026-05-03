@@ -1,51 +1,83 @@
-import { createContext, useContext, useReducer, useCallback, type ReactNode } from 'react'
+import {
+  createContext, useContext, useEffect, useCallback,
+  useState, type ReactNode,
+} from 'react'
 import type { Trainer, PokemonSpecies } from '../types'
 import { gameReducer, createNewTrainer } from './reducer'
-import { loadTrainer, deleteSave } from './localStorage'
+import { loadSave, writeSave, deleteSave, listSaves, migrateLegacySave } from './localStorage'
 import type { GameAction } from './actions'
 
 interface GameContextValue {
   trainer: Trainer | null
+  currentSlot: number | null
+  saves: (Trainer | null)[]
   dispatch: (action: GameAction) => void
-  startNewGame: (starterSpecies: PokemonSpecies) => void
-  deleteSaveFile: () => void
+  startNewGame: (name: string, starterSpecies: PokemonSpecies, slot: number) => void
+  loadSlot: (slot: number) => void
+  deleteSlot: (slot: number) => void
+  goToTitle: () => void
 }
 
 const GameContext = createContext<GameContextValue | null>(null)
 
-function init(): Trainer | null {
-  return loadTrainer()
-}
-
-// Thin wrapper so we can hold null (no save file) outside the reducer
-function rootReducer(
-  state: Trainer | null,
-  action: GameAction
-): Trainer | null {
-  if (action.type === 'NEW_GAME') {
-    return createNewTrainer(action.payload.starterSpecies)
-  }
-  if (action.type === 'DELETE_SAVE') {
-    deleteSave()
-    return null
-  }
-  if (state === null) return null
-  return gameReducer(state, action)
-}
-
 export function GameProvider({ children }: { children: ReactNode }) {
-  const [trainer, dispatch] = useReducer(rootReducer, null, init)
+  const [currentSlot, setCurrentSlot] = useState<number | null>(null)
+  const [trainer, setTrainer] = useState<Trainer | null>(null)
+  const [saves, setSaves] = useState<(Trainer | null)[]>(() => {
+    migrateLegacySave()
+    return listSaves()
+  })
 
-  const startNewGame = useCallback((starterSpecies: PokemonSpecies) => {
-    dispatch({ type: 'NEW_GAME', payload: { starterSpecies } })
+  // Auto-save whenever trainer state changes while a slot is active
+  useEffect(() => {
+    if (currentSlot !== null && trainer !== null) {
+      writeSave(currentSlot, trainer)
+      // Refresh the saves list so TitleScreen shows up-to-date info
+      setSaves(prev => {
+        const next = [...prev]
+        next[currentSlot] = trainer
+        return next
+      })
+    }
+  }, [trainer, currentSlot])
+
+  const dispatch = useCallback((action: GameAction) => {
+    setTrainer(prev => (prev ? gameReducer(prev, action) : null))
   }, [])
 
-  const deleteSaveFile = useCallback(() => {
-    dispatch({ type: 'DELETE_SAVE' })
+  const startNewGame = useCallback((name: string, starterSpecies: PokemonSpecies, slot: number) => {
+    const newTrainer = createNewTrainer(name, starterSpecies)
+    writeSave(slot, newTrainer)
+    setSaves(listSaves())
+    setCurrentSlot(slot)
+    setTrainer(newTrainer)
+  }, [])
+
+  const loadSlot = useCallback((slot: number) => {
+    const saved = loadSave(slot)
+    if (!saved) return
+    setCurrentSlot(slot)
+    setTrainer(saved)
+  }, [])
+
+  const deleteSlot = useCallback((slot: number) => {
+    deleteSave(slot)
+    const updated = listSaves()
+    setSaves(updated)
+    if (currentSlot === slot) {
+      setCurrentSlot(null)
+      setTrainer(null)
+    }
+  }, [currentSlot])
+
+  const goToTitle = useCallback(() => {
+    setCurrentSlot(null)
+    setTrainer(null)
+    setSaves(listSaves())
   }, [])
 
   return (
-    <GameContext.Provider value={{ trainer, dispatch, startNewGame, deleteSaveFile }}>
+    <GameContext.Provider value={{ trainer, currentSlot, saves, dispatch, startNewGame, loadSlot, deleteSlot, goToTitle }}>
       {children}
     </GameContext.Provider>
   )
@@ -57,7 +89,6 @@ export function useGameStore(): GameContextValue {
   return ctx
 }
 
-// Convenience selector hooks so components don't need to null-check everywhere
 export function useTrainer(): Trainer {
   const { trainer } = useGameStore()
   if (!trainer) throw new Error('useTrainer called before a game has started')

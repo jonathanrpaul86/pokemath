@@ -16,4 +16,7 @@ export interface Area {
   encounters: EncounterEntry[]
   /** IDs of areas this one connects to */
   connectedAreaIds: string[]
+  /** Position on the world map canvas (internal 600×380 coordinate space) */
+  mapX: number
+  mapY: number
 }

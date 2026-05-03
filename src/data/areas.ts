@@ -7,6 +7,7 @@ export const KANTO_AREAS: Area[] = [
     description: 'A grassy path outside Pallet Town. Weak wild Pokemon roam here.',
     requiredTrainerLevel: 1,
     connectedAreaIds: ['viridian-city'],
+    mapX: 200, mapY: 320,
     encounters: [
       { speciesId: 16, weight: 50, minLevel: 2, maxLevel: 4 },  // Pidgey
       { speciesId: 19, weight: 50, minLevel: 2, maxLevel: 4 },  // Rattata
@@ -18,6 +19,7 @@ export const KANTO_AREAS: Area[] = [
     description: 'Routes around the first city. New Pokemon starting to appear.',
     requiredTrainerLevel: 3,
     connectedAreaIds: ['route-1', 'viridian-forest'],
+    mapX: 200, mapY: 260,
     encounters: [
       { speciesId: 16, weight: 35, minLevel: 3, maxLevel: 6 },  // Pidgey
       { speciesId: 19, weight: 35, minLevel: 3, maxLevel: 6 },  // Rattata
@@ -31,6 +33,7 @@ export const KANTO_AREAS: Area[] = [
     description: 'A dense forest full of Bug-type Pokemon — and a rare Pikachu!',
     requiredTrainerLevel: 5,
     connectedAreaIds: ['viridian-city', 'pewter-city'],
+    mapX: 200, mapY: 196,
     encounters: [
       { speciesId: 10, weight: 35, minLevel: 3, maxLevel: 7 },  // Caterpie
       { speciesId: 13, weight: 35, minLevel: 3, maxLevel: 7 },  // Weedle
@@ -45,6 +48,7 @@ export const KANTO_AREAS: Area[] = [
     description: 'Rocky terrain surrounds the Boulder Badge gym.',
     requiredTrainerLevel: 8,
     connectedAreaIds: ['viridian-forest', 'mt-moon'],
+    mapX: 200, mapY: 136,
     encounters: [
       { speciesId: 21, weight: 35, minLevel: 6, maxLevel: 10 }, // Spearow
       { speciesId: 39, weight: 20, minLevel: 6, maxLevel: 10 }, // Jigglypuff
@@ -58,6 +62,7 @@ export const KANTO_AREAS: Area[] = [
     description: 'A deep cave system. Clefairy are said to dance here under the moon.',
     requiredTrainerLevel: 11,
     connectedAreaIds: ['pewter-city', 'cerulean-city'],
+    mapX: 306, mapY: 106,
     encounters: [
       { speciesId: 41, weight: 45, minLevel: 8,  maxLevel: 12 }, // Zubat
       { speciesId: 74, weight: 30, minLevel: 8,  maxLevel: 12 }, // Geodude
@@ -71,6 +76,7 @@ export const KANTO_AREAS: Area[] = [
     description: 'Flower-filled routes where Psychic and Grass types wander.',
     requiredTrainerLevel: 14,
     connectedAreaIds: ['mt-moon', 'rock-tunnel'],
+    mapX: 410, mapY: 120,
     encounters: [
       { speciesId: 43, weight: 25, minLevel: 12, maxLevel: 16 }, // Oddish
       { speciesId: 69, weight: 25, minLevel: 12, maxLevel: 16 }, // Bellsprout
@@ -85,6 +91,7 @@ export const KANTO_AREAS: Area[] = [
     description: 'A pitch-black tunnel carved through solid rock.',
     requiredTrainerLevel: 18,
     connectedAreaIds: ['cerulean-city', 'lavender-town'],
+    mapX: 466, mapY: 192,
     encounters: [
       { speciesId: 74, weight: 30, minLevel: 16, maxLevel: 20 }, // Geodude
       { speciesId: 66, weight: 25, minLevel: 16, maxLevel: 20 }, // Machop
@@ -99,6 +106,7 @@ export const KANTO_AREAS: Area[] = [
     description: 'A spooky town where Ghost-type Pokemon haunt the tower.',
     requiredTrainerLevel: 22,
     connectedAreaIds: ['rock-tunnel', 'celadon-city'],
+    mapX: 466, mapY: 262,
     encounters: [
       { speciesId: 92, weight: 40, minLevel: 20, maxLevel: 25 }, // Gastly
       { speciesId: 96, weight: 25, minLevel: 20, maxLevel: 24 }, // Drowzee
@@ -112,6 +120,7 @@ export const KANTO_AREAS: Area[] = [
     description: 'A lush city. Rare Pokemon can be found in the tall grass nearby.',
     requiredTrainerLevel: 26,
     connectedAreaIds: ['lavender-town', 'fuchsia-city'],
+    mapX: 340, mapY: 238,
     encounters: [
       { speciesId: 48, weight: 30, minLevel: 24, maxLevel: 28 }, // Venonat
       { speciesId: 52, weight: 30, minLevel: 24, maxLevel: 28 }, // Meowth
@@ -126,6 +135,7 @@ export const KANTO_AREAS: Area[] = [
     description: 'Home of the Safari Zone — exotic and powerful Pokemon live here.',
     requiredTrainerLevel: 30,
     connectedAreaIds: ['celadon-city', 'cinnabar-island'],
+    mapX: 306, mapY: 328,
     encounters: [
       { speciesId: 111, weight: 25, minLevel: 28, maxLevel: 35 }, // Rhyhorn
       { speciesId: 30,  weight: 20, minLevel: 28, maxLevel: 32 }, // Nidorina
@@ -141,6 +151,7 @@ export const KANTO_AREAS: Area[] = [
     description: 'A volcanic island. Fire-type Pokemon thrive in the heat here.',
     requiredTrainerLevel: 35,
     connectedAreaIds: ['fuchsia-city', 'victory-road'],
+    mapX: 148, mapY: 358,
     encounters: [
       { speciesId: 77,  weight: 35, minLevel: 33, maxLevel: 40 }, // Ponyta
       { speciesId: 58,  weight: 35, minLevel: 33, maxLevel: 40 }, // Growlithe
@@ -153,6 +164,7 @@ export const KANTO_AREAS: Area[] = [
     description: 'The final challenge before the Pokemon League. Only the strongest survive.',
     requiredTrainerLevel: 40,
     connectedAreaIds: ['cinnabar-island'],
+    mapX: 96, mapY: 240,
     encounters: [
       { speciesId: 67,  weight: 25, minLevel: 38, maxLevel: 45 }, // Machoke
       { speciesId: 95,  weight: 25, minLevel: 38, maxLevel: 45 }, // Onix

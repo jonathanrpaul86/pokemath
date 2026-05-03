@@ -1,29 +1,48 @@
 import type { Trainer } from '../types'
 
-const SAVE_KEY = 'pmg_trainer_v1'
+const SLOT_COUNT = 3
+const LEGACY_KEY = 'pmg_trainer_v1'
 
-export function loadTrainer(): Trainer | null {
+function slotKey(slot: number): string {
+  return `pmg_save_v1_${slot}`
+}
+
+export function loadSave(slot: number): Trainer | null {
   try {
-    const raw = localStorage.getItem(SAVE_KEY)
+    const raw = localStorage.getItem(slotKey(slot))
     return raw ? (JSON.parse(raw) as Trainer) : null
   } catch {
     return null
   }
 }
 
-export function saveTrainer(trainer: Trainer): void {
+export function writeSave(slot: number, trainer: Trainer): void {
   try {
-    localStorage.setItem(SAVE_KEY, JSON.stringify(trainer))
+    const data: Trainer = { ...trainer, savedAt: Date.now() }
+    localStorage.setItem(slotKey(slot), JSON.stringify(data))
   } catch {
-    // Storage full — not fatal, game continues without saving
     console.warn('Could not save game: localStorage quota exceeded')
   }
 }
 
-export function deleteSave(): void {
-  localStorage.removeItem(SAVE_KEY)
+export function deleteSave(slot: number): void {
+  localStorage.removeItem(slotKey(slot))
 }
 
-export function hasSave(): boolean {
-  return localStorage.getItem(SAVE_KEY) !== null
+export function listSaves(): (Trainer | null)[] {
+  return Array.from({ length: SLOT_COUNT }, (_, i) => loadSave(i))
+}
+
+export function migrateLegacySave(): void {
+  try {
+    const legacy = localStorage.getItem(LEGACY_KEY)
+    if (!legacy) return
+    const slot0 = localStorage.getItem(slotKey(0))
+    if (!slot0) {
+      localStorage.setItem(slotKey(0), legacy)
+    }
+    localStorage.removeItem(LEGACY_KEY)
+  } catch {
+    // Migration is best-effort
+  }
 }

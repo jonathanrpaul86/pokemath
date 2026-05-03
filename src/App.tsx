@@ -9,20 +9,35 @@ import PokedexScreen from './screens/PokedexScreen'
 import PartyScreen from './screens/PartyScreen'
 import './index.css'
 
-type PreGameScreen = 'title' | 'starter-select'
 type GameScreen = 'overworld' | 'battle' | 'pokedex' | 'party'
 
 function App() {
-  const { trainer } = useGameStore()
-  const [preGame, setPreGame] = useState<PreGameScreen>('title')
+  const { trainer, currentSlot, saves, loadSlot, deleteSlot, goToTitle } = useGameStore()
+  const [starterSlot, setStarterSlot] = useState<number | null>(null)
   const [gameScreen, setGameScreen] = useState<GameScreen>('overworld')
 
-  if (!trainer) {
-    if (preGame === 'starter-select') {
-      return <StarterSelect onBack={() => setPreGame('title')} />
+  // No active slot → show title or starter select
+  if (currentSlot === null) {
+    if (starterSlot !== null) {
+      return (
+        <StarterSelect
+          slot={starterSlot}
+          onBack={() => setStarterSlot(null)}
+        />
+      )
     }
-    return <TitleScreen onNewGame={() => setPreGame('starter-select')} />
+    return (
+      <TitleScreen
+        saves={saves}
+        onNewGame={slot => setStarterSlot(slot)}
+        onPlay={slot => { loadSlot(slot); setGameScreen('overworld') }}
+        onDelete={deleteSlot}
+      />
+    )
   }
+
+  // Active slot, but startNewGame hasn't set trainer yet (shouldn't happen, guard anyway)
+  if (!trainer) return null
 
   if (gameScreen === 'battle') {
     return (
@@ -46,6 +61,7 @@ function App() {
       onStartBattle={() => setGameScreen('battle')}
       onOpenPokedex={() => setGameScreen('pokedex')}
       onOpenParty={() => setGameScreen('party')}
+      onGoToTitle={goToTitle}
     />
   )
 }

@@ -4,20 +4,150 @@
   align-items: center;
   justify-content: center;
   background: radial-gradient(ellipse at 50% 40%, #16213e 0%, #0f3460 60%, #1a1a2e 100%);
+  padding: 2rem;
 }
 
 .title-screen__inner {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 1.5rem;
-  padding: 3rem 2rem;
+  gap: 1.75rem;
 }
 
+.title-screen__inner img {
+  border: 3px solid #ffd700;
+  border-radius: 20px;
+  box-shadow: 0 0 18px #ffd70055;
+}
 
 .title-screen__tagline {
   font-size: 1.1rem;
   color: #aac4e0;
   margin: 0;
   letter-spacing: 0.03em;
+}
+
+/* ── Save slot grid ── */
+
+.title-screen__slots {
+  display: flex;
+  gap: 1.25rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.slot-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1.5rem 1.25rem 1.25rem;
+  border-radius: 18px;
+  border: 2px solid #1a3c8c;
+  background: #ffffff09;
+  width: 200px;
+  min-height: 210px;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.slot-card--empty {
+  border-style: dashed;
+  opacity: 0.75;
+}
+
+.slot-card--occupied {
+  border-color: #2a5ca8;
+  box-shadow: 0 0 18px #1a3c8c55;
+}
+
+.slot-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.slot-card__label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #7a9cc0;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.slot-card__delete-btn {
+  background: none;
+  border: none;
+  color: #e63946;
+  font-size: 0.85rem;
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 4px;
+  opacity: 0.7;
+  transition: opacity 0.15s;
+}
+
+.slot-card__delete-btn:hover {
+  opacity: 1;
+}
+
+.slot-card__empty-text {
+  font-size: 1rem;
+  color: #4a6080;
+  flex: 1;
+  display: flex;
+  align-items: center;
+}
+
+.slot-card__name {
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: #ffd700;
+  text-align: center;
+}
+
+.slot-card__meta {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2rem;
+}
+
+.slot-card__level {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #eee;
+}
+
+.slot-card__area {
+  font-size: 0.8rem;
+  color: #7ad4a0;
+}
+
+.slot-card__date {
+  font-size: 0.72rem;
+  color: #5a7a9a;
+}
+
+/* ── Inline delete confirmation ── */
+
+.slot-card__confirm {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.65rem;
+  flex: 1;
+  justify-content: center;
+}
+
+.slot-card__confirm-text {
+  font-size: 0.9rem;
+  color: #f4a0a8;
+  margin: 0;
+  text-align: center;
+}
+
+.slot-card__confirm-btns {
+  display: flex;
+  gap: 0.5rem;
 }

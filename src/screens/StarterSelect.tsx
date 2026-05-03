@@ -30,15 +30,17 @@ function capitalize(s: string) {
 }
 
 interface Props {
+  slot: number
   onBack: () => void
 }
 
-export default function StarterSelect({ onBack }: Props) {
+export default function StarterSelect({ slot, onBack }: Props) {
   const { startNewGame } = useGameStore()
   const [starters, setStarters] = useState<PokemonSpecies[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [selectedId, setSelectedId] = useState<number | null>(null)
+  const [trainerName, setTrainerName] = useState('')
 
   useEffect(() => {
     let cancelled = false
@@ -60,15 +62,31 @@ export default function StarterSelect({ onBack }: Props) {
 
   function handleBegin() {
     const species = starters.find(s => s.id === selectedId)
-    if (!species) return
-    startNewGame(species)
+    if (!species || !trainerName.trim()) return
+    startNewGame(trainerName.trim(), species, slot)
   }
+
+  const canBegin = selectedId !== null && trainerName.trim().length > 0
 
   return (
     <div className="starter-select">
       <div className="starter-select__inner">
-        <h1 className="starter-select__title">Choose Your Partner!</h1>
-        <p className="starter-select__subtitle">Your Pokémon will travel with you on your math adventure.</p>
+        <h1 className="starter-select__title">New Adventure!</h1>
+        <p className="starter-select__subtitle">What's your name, Trainer?</p>
+
+        <div className="starter-name-row">
+          <input
+            className="starter-name-input"
+            type="text"
+            placeholder="Enter your name…"
+            maxLength={12}
+            value={trainerName}
+            onChange={e => setTrainerName(e.target.value)}
+            autoFocus
+          />
+        </div>
+
+        <p className="starter-select__subtitle">Choose your starting Pokémon!</p>
 
         {loading && (
           <div className="starter-select__loading">
@@ -123,7 +141,7 @@ export default function StarterSelect({ onBack }: Props) {
               <button
                 className="btn btn-primary btn-lg"
                 onClick={handleBegin}
-                disabled={selectedId === null}
+                disabled={!canBegin}
               >
                 Begin Adventure!
               </button>
