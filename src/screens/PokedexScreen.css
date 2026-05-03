@@ -49,9 +49,9 @@
 
 .pokedex-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
-  gap: 0.6rem;
-  padding: 1rem 1.25rem;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 0.85rem;
+  padding: 1.25rem 1.5rem;
   overflow-y: auto;
   flex: 1;
 }
@@ -63,9 +63,9 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 2px;
-  padding: 0.5rem 0.25rem 0.4rem;
-  border-radius: 10px;
+  gap: 3px;
+  padding: 0.3rem 0.25rem 0.3rem;
+  border-radius: 12px;
   border: 2px solid #ffffff18;
   background: #ffffff07;
   text-align: center;
@@ -91,25 +91,27 @@
 }
 
 .pokedex-card__number {
-  font-size: 0.62rem;
+  font-size: 0.7rem;
   color: #7a9cc0;
   font-weight: 600;
   letter-spacing: 0.04em;
 }
 
 .pokedex-card__sprite {
-  width: 64px;
-  height: 64px;
+  width: 138px;
+  height: 138px;
   image-rendering: pixelated;
 }
 
 .pokedex-card__sprite--silhouette {
+  width: 72px;
+  height: 72px;
   filter: brightness(0);
   opacity: 0.5;
 }
 
 .pokedex-card__name {
-  font-size: 0.7rem;
+  font-size: 0.8rem;
   font-weight: 700;
   color: #dde;
   line-height: 1.2;

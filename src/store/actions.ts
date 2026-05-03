@@ -1,9 +1,6 @@
-import type { OwnedPokemon, MathOperator, DifficultyLevel, PokemonSpecies, BaseStats } from '../types'
+import type { OwnedPokemon, MathOperator, DifficultyLevel, BaseStats } from '../types'
 
 export type GameAction =
-  | { type: 'NEW_GAME'; payload: { starterSpecies: PokemonSpecies } }
-  | { type: 'LOAD_GAME' }
-  | { type: 'DELETE_SAVE' }
   | { type: 'GAIN_TRAINER_XP'; payload: { amount: number } }
   | { type: 'GAIN_POKEMON_XP'; payload: { uid: string; amount: number } }
   | { type: 'CATCH_POKEMON'; payload: { pokemon: OwnedPokemon } }

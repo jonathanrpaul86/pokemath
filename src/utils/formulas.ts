@@ -1,4 +1,4 @@
-import type { BaseStats, OwnedPokemon, PokemonSpecies } from '../types'
+import type { BaseStats, Move, OwnedPokemon, PokemonSpecies } from '../types'
 
 // ---- Stat calculations ------------------------------------------------------
 
@@ -47,6 +47,19 @@ export function trainerXpReward(wildLevel: number): number {
 
 // ---- Pokemon factory --------------------------------------------------------
 
+/** Returns the 4 most recently learned moves for a species at a given level. */
+export function pickMoveset(species: PokemonSpecies, level: number): Move[] {
+  const entries: Array<{ learnLevel: number; move: Move }> = []
+  for (const [learnLevelStr, moves] of Object.entries(species.levelUpMoves)) {
+    const learnLevel = Number(learnLevelStr)
+    if (learnLevel <= level) {
+      for (const move of moves) entries.push({ learnLevel, move })
+    }
+  }
+  entries.sort((a, b) => b.learnLevel - a.learnLevel)
+  return entries.slice(0, 4).map(e => e.move)
+}
+
 /** Create a fresh OwnedPokemon from a species at a given level */
 export function createOwnedPokemon(
   species: PokemonSpecies,
@@ -63,7 +76,7 @@ export function createOwnedPokemon(
     currentHp: stats.hp,
     maxHp: stats.hp,
     stats,
-    moves: [],
+    moves: pickMoveset(species, level),
     caughtAt: Date.now(),
   }
 }

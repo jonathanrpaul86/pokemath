@@ -22,4 +22,6 @@ export interface Trainer {
   /** IDs of areas unlocked so far */
   unlockedAreaIds: string[]
   mathStats: MathStats
+  /** Unix ms timestamp of the last save — set by writeSave */
+  savedAt?: number
 }

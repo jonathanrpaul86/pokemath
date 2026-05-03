@@ -1,5 +1,5 @@
 import type { Move, PokemonSpecies, WildPokemon } from '../types'
-import { calcStats } from './formulas'
+import { calcStats, pickMoveset } from './formulas'
 
 // ---- Damage -----------------------------------------------------------------
 
@@ -63,20 +63,6 @@ export function calcCatchDifficulty(
 
 export function spawnWildPokemon(species: PokemonSpecies, level: number): WildPokemon {
   const stats = calcStats(species.baseStats, level)
-
-  // Collect all moves learned up to this level, keep the 4 most recently learned
-  const learnedMoves: Array<{ learnLevel: number; move: Move }> = []
-  for (const [learnLevelStr, moves] of Object.entries(species.levelUpMoves)) {
-    const learnLevel = Number(learnLevelStr)
-    if (learnLevel <= level) {
-      for (const move of moves) {
-        learnedMoves.push({ learnLevel, move })
-      }
-    }
-  }
-  learnedMoves.sort((a, b) => b.learnLevel - a.learnLevel)
-  const moves = learnedMoves.slice(0, 4).map((e) => e.move)
-
   return {
     speciesId: species.id,
     name: species.name,
@@ -84,7 +70,7 @@ export function spawnWildPokemon(species: PokemonSpecies, level: number): WildPo
     currentHp: stats.hp,
     maxHp: stats.hp,
     stats,
-    moves,
+    moves: pickMoveset(species, level),
   }
 }
 

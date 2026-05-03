@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useRef, useCallback, type CSSProperties } from 'react'
 import { useTrainer, useGameStore } from '../store'
 import { fetchPokemonSpecies } from '../services/pokeApi'
 import { spawnWildPokemon, calcDamage, calcCatchDifficulty } from '../utils/battle'
@@ -22,6 +22,12 @@ const TACKLE: Move = {
 function pickEnemyMove(wild: WildPokemon): Move {
   const damaging = wild.moves.filter(m => m.power !== null && (m.power ?? 0) > 0)
   if (damaging.length === 0) return TACKLE
+  return damaging[Math.floor(Math.random() * damaging.length)]
+}
+
+function pickPlayerMove(pokemon: OwnedPokemon): Move {
+  const damaging = pokemon.moves.filter(m => m.power !== null && (m.power ?? 0) > 0)
+  if (damaging.length === 0) return MATH_ATTACK
   return damaging[Math.floor(Math.random() * damaging.length)]
 }
 
@@ -51,6 +57,31 @@ interface BattleData {
   log: string[]
   wildSprite: string
   playerSprites: string[]
+}
+
+// ---- Battle field backgrounds -----------------------------------------------
+
+// Each entry: [sky-top, sky-bottom, ground-top, ground-bottom]
+const FIELD_THEMES: Record<string, [string, string, string, string]> = {
+  'route-1':         ['#87ceeb', '#b8e4f8', '#78c840', '#3a7a18'],
+  'viridian-city':   ['#6ab0c0', '#3a8898', '#5a7060', '#283830'],
+  'viridian-forest': ['#1a4028', '#0d2818', '#2a4a18', '#0a1c08'],
+  'pewter-city':     ['#8090a8', '#5a6890', '#808888', '#505858'],
+  'mt-moon':         ['#0a0520', '#1a0a40', '#100820', '#060410'],
+  'cerulean-city':   ['#70c8f8', '#38a0e0', '#1060c8', '#083880'],
+  'rock-tunnel':     ['#100808', '#1c0e08', '#2a1808', '#140c04'],
+  'lavender-town':   ['#280838', '#4a1870', '#2a1838', '#100818'],
+  'celadon-city':    ['#50b870', '#309050', '#20a060', '#0a5830'],
+  'fuchsia-city':    ['#780848', '#b83080', '#400820', '#200408'],
+  'cinnabar-island': ['#280408', '#681008', '#b83008', '#c04808'],
+  'victory-road':    ['#080c10', '#101820', '#181820', '#080810'],
+}
+
+function getBattleFieldStyle(areaId: string): CSSProperties {
+  const [st, sb, gt, gb] = FIELD_THEMES[areaId] ?? ['#0f3460', '#16213e', '#1a2238', '#1a1a2e']
+  return {
+    background: `linear-gradient(180deg, ${st} 0%, ${sb} 50%, ${gt} 53%, ${gb} 100%)`,
+  }
 }
 
 // ---- Sub-components ----------------------------------------------------------
@@ -364,13 +395,14 @@ export default function BattleScreen({ area, onBattleEnd }: Props) {
   function processCorrectAnswer(b: BattleData) {
     playCorrect()
     const attacker = trainer.party[b.activeIdx]
-    const damage = Math.max(1, calcDamage(MATH_ATTACK, attacker, b.wild))
+    const move = pickPlayerMove(attacker)
+    const damage = Math.max(1, calcDamage(move, attacker, b.wild))
     const newWildHp = Math.max(0, b.wildHp - damage)
     setBattle(prev => prev ? {
       ...prev,
       phase: 'resolving-correct',
       wildHp: newWildHp,
-      log: [...prev.log.slice(-3), `${capitalize(attacker.name)} attacks for ${damage} damage!`],
+      log: [...prev.log.slice(-3), `${capitalize(attacker.name)} used ${capitalize(move.name)} for ${damage} damage!`],
     } : prev)
   }
 
@@ -533,7 +565,7 @@ export default function BattleScreen({ area, onBattleEnd }: Props) {
       </button>
 
       {/* ── Field ── */}
-      <div className="battle-field">
+      <div className="battle-field" style={getBattleFieldStyle(area.id)}>
         <div className="battle-field__enemy-status">
           <span className="battle-status__name">{capitalize(wild.name)}</span>
           <span className="battle-status__level">Lv.{wild.level}</span>

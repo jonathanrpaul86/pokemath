@@ -1,13 +1,12 @@
 import type { Trainer, OwnedPokemon, MathStats, DifficultyLevel } from '../types'
 import type { GameAction } from './actions'
 import { createOwnedPokemon, trainerXpToNextLevel, pokemonXpToNextLevel, calcStats } from '../utils/formulas'
-import { saveTrainer } from './localStorage'
 
 const PARTY_MAX = 6
 
 // ---- Trainer factory --------------------------------------------------------
 
-export function createNewTrainer(starterSpecies: Parameters<typeof createOwnedPokemon>[0]): Trainer {
+export function createNewTrainer(name: string, starterSpecies: Parameters<typeof createOwnedPokemon>[0]): Trainer {
   const starter = createOwnedPokemon(starterSpecies, 5)
   const mathStats: MathStats = {
     difficultyLevel: 1,
@@ -20,7 +19,7 @@ export function createNewTrainer(starterSpecies: Parameters<typeof createOwnedPo
   }
 
   return {
-    name: 'Valentine',
+    name,
     level: 1,
     xp: 0,
     xpToNextLevel: trainerXpToNextLevel(1),
@@ -278,6 +277,5 @@ export function gameReducer(trainer: Trainer, action: GameAction): Trainer {
       return trainer
   }
 
-  saveTrainer(next)
   return next
 }
