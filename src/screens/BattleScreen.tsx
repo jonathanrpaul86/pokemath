@@ -26,7 +26,7 @@ function pickEnemyMove(wild: WildPokemon): Move {
 }
 
 function pickPlayerMove(pokemon: OwnedPokemon): Move {
-  const damaging = pokemon.moves.filter(m => m.power !== null && (m.power ?? 0) > 0)
+  const damaging = (pokemon.moves ?? []).filter(m => m.power !== null && (m.power ?? 0) > 0)
   if (damaging.length === 0) return MATH_ATTACK
   return damaging[Math.floor(Math.random() * damaging.length)]
 }

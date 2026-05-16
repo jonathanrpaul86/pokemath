@@ -1,4 +1,4 @@
-import type { Trainer } from '../types'
+import type { Trainer, OwnedPokemon } from '../types'
 
 const SLOT_COUNT = 3
 const LEGACY_KEY = 'pmg_trainer_v1'
@@ -7,10 +7,24 @@ function slotKey(slot: number): string {
   return `pmg_save_v1_${slot}`
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function migratePokemon(p: any): OwnedPokemon {
+  return { moves: [], ...p }
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function migrateTrainer(raw: any): Trainer {
+  return {
+    ...raw,
+    party: (raw.party ?? []).map(migratePokemon),
+    pc: (raw.pc ?? []).map(migratePokemon),
+  }
+}
+
 export function loadSave(slot: number): Trainer | null {
   try {
     const raw = localStorage.getItem(slotKey(slot))
-    return raw ? (JSON.parse(raw) as Trainer) : null
+    return raw ? migrateTrainer(JSON.parse(raw)) : null
   } catch {
     return null
   }
