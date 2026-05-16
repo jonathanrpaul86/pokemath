@@ -116,12 +116,40 @@ function TimerBar({ remaining, total }: { remaining: number; total: number }) {
   )
 }
 
-function NumberPad({ onDigit, onDelete, onSubmit, disabled }: {
-  onDigit: (d: string) => void
-  onDelete: () => void
-  onSubmit: () => void
+const ACTION_BUTTONS = [
+  ['fight',  '⚔',  'Fight'],
+  ['catch',  '🎯', 'Catch'],
+  ['switch', '🔄', 'Switch'],
+  ['run',    '🏃', 'Run'],
+] as const
+
+function NumberPad({ mode = 'digits', onDigit, onDelete, onSubmit, onAction, switchableCount, disabled }: {
+  mode?: 'digits' | 'actions'
+  onDigit?: (d: string) => void
+  onDelete?: () => void
+  onSubmit?: () => void
+  onAction?: (a: 'fight' | 'catch' | 'switch' | 'run') => void
+  switchableCount?: number
   disabled?: boolean
 }) {
+  if (mode === 'actions') {
+    return (
+      <div className="numpad numpad--actions">
+        {ACTION_BUTTONS.map(([action, icon, label], idx) => (
+          <button
+            key={action}
+            className={`numpad-btn numpad-btn--${action}`}
+            disabled={action === 'switch' && (switchableCount ?? 0) === 0}
+            onClick={() => onAction?.(action)}
+          >
+            {icon} {label}
+            <span className="numpad-btn__key-hint">[{idx + 1}]</span>
+          </button>
+        ))}
+      </div>
+    )
+  }
+
   return (
     <div className="numpad">
       {['1','2','3','4','5','6','7','8','9','⌫','0','✓'].map(key => (
@@ -130,9 +158,9 @@ function NumberPad({ onDigit, onDelete, onSubmit, disabled }: {
           className={`numpad-btn ${key === '✓' ? 'numpad-btn--submit' : ''} ${key === '⌫' ? 'numpad-btn--delete' : ''}`}
           onClick={() => {
             if (disabled) return
-            if (key === '⌫') onDelete()
-            else if (key === '✓') onSubmit()
-            else onDigit(key)
+            if (key === '⌫') onDelete?.()
+            else if (key === '✓') onSubmit?.()
+            else onDigit?.(key)
           }}
           disabled={disabled}
         >
@@ -373,7 +401,38 @@ export default function BattleScreen({ area, onBattleEnd }: Props) {
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
       const b = battleRef.current
-      if (!b || (b.phase !== 'player-turn' && b.phase !== 'catch-attempt')) return
+      if (!b) return
+
+      // Branch A: action selection
+      if (b.phase === 'choose-action' && !showSwitch) {
+        const switchable = trainer.party.filter((_, i) => i !== b.activeIdx && (b.partyHps[i] ?? 0) > 0)
+        const actionMap: Record<string, () => void> = {
+          '1': handleFight,
+          '2': handleStartCatch,
+          '4': handleFlee,
+        }
+        if (e.key === '3' && switchable.length > 0) { e.preventDefault(); setShowSwitch(true); return }
+        const fn = actionMap[e.key]
+        if (fn) { e.preventDefault(); fn() }
+        return
+      }
+
+      // Branch B: switch menu navigation
+      if (b.phase === 'choose-action' && showSwitch) {
+        if (e.key === 'Escape') { e.preventDefault(); setShowSwitch(false); return }
+        const n = parseInt(e.key, 10)
+        if (!isNaN(n) && n >= 1) {
+          const switchable = trainer.party
+            .map((p, i) => ({ p, i }))
+            .filter(({ i }) => i !== b.activeIdx && (b.partyHps[i] ?? 0) > 0)
+          const target = switchable[n - 1]
+          if (target) { e.preventDefault(); handleSwitch(target.i) }
+        }
+        return
+      }
+
+      // Branch C: digit entry
+      if (b.phase !== 'player-turn' && b.phase !== 'catch-attempt') return
       if (e.key >= '0' && e.key <= '9') {
         e.preventDefault()
         setAnswer(a => a.length < 4 ? a + e.key : a)
@@ -388,7 +447,7 @@ export default function BattleScreen({ area, onBattleEnd }: Props) {
     }
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
-  }, [answer]) // eslint-disable-line
+  }, [answer, showSwitch]) // eslint-disable-line
 
   // ---- Action handlers -------------------------------------------------------
 
@@ -526,6 +585,13 @@ export default function BattleScreen({ area, onBattleEnd }: Props) {
     setAnswer('')
   }
 
+  function handleAction(action: 'fight' | 'catch' | 'switch' | 'run') {
+    if (action === 'fight')  handleFight()
+    if (action === 'catch')  handleStartCatch()
+    if (action === 'switch') setShowSwitch(true)
+    if (action === 'run')    handleFlee()
+  }
+
   // ---- Derived values --------------------------------------------------------
 
   if (!battle) {
@@ -604,7 +670,7 @@ export default function BattleScreen({ area, onBattleEnd }: Props) {
                   <p key={i} className="battle-log__line">{msg}</p>
                 ))}
               </div>
-              <div className="battle-action-grid battle-action-grid--result">
+              <div className="battle-result-panel">
                 <button className="btn btn-primary" onClick={onBattleEnd}>
                   {phase === 'blacked-out' ? 'Continue\n(healed)' : 'Continue'}
                 </button>
@@ -636,18 +702,11 @@ export default function BattleScreen({ area, onBattleEnd }: Props) {
                   </button>
                 </div>
               ) : (
-                <div className="battle-action-grid">
-                  <button className="btn btn-fight" onClick={handleFight}>⚔ Fight!</button>
-                  <button className="btn btn-catch" onClick={handleStartCatch}>🎯 Catch!</button>
-                  <button
-                    className="btn btn-switch"
-                    onClick={() => setShowSwitch(true)}
-                    disabled={switchableCount === 0}
-                  >
-                    🔄 Switch
-                  </button>
-                  <button className="btn btn-flee" onClick={handleFlee}>🏃 Run</button>
-                </div>
+                <NumberPad
+                  mode="actions"
+                  onAction={handleAction}
+                  switchableCount={switchableCount}
+                />
               )}
             </div>
 

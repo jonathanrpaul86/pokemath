@@ -429,148 +429,48 @@
   font-size: 0.82rem;
 }
 
-/* ── 2×2 action button grid (choose-action phase) ── */
+/* ── Terminal phase "Continue" panel ── */
 
-.battle-action-grid {
+.battle-result-panel {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  grid-template-rows: 1fr 1fr;
-  gap: 0.3rem;
   flex-shrink: 0;
   width: 174px;
   height: 100%;
   box-sizing: border-box;
 }
 
-.battle-action-grid .btn {
-  padding: 0;
-  font-size: 0.82rem;
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.battle-action-grid--result .btn {
+.battle-result-panel .btn {
   grid-column: 1 / -1;
   grid-row: 1 / -1;
   font-size: 1.1rem;
 }
 
-/* ── Action buttons (legacy row, kept for any future use) ── */
+/* ── NumPad action mode (choose-action phase) ── */
 
-.battle-action-btns {
-  display: flex;
-  gap: 0.4rem;
+.numpad--actions {
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
 }
 
-.btn-fight {
-  flex: 1;
-  font-family: inherit;
-  font-size: 0.9rem;
-  font-weight: 800;
-  padding: 0.5rem 0.5rem;
-  border-radius: 10px;
-  border: none;
-  background: #e63946;
-  color: #fff;
-  cursor: pointer;
-  box-shadow: 0 4px 0 #8b0000;
-  transition: filter 0.1s, transform 0.1s, box-shadow 0.1s;
-}
+.numpad-btn--fight  { background: #c0392b; border-color: #8b2020; color: #fff; }
+.numpad-btn--catch  { background: #1e6b4a; border-color: #14532d; color: #fff; }
+.numpad-btn--switch { background: #1a4c8a; border-color: #0d3566; color: #fff; }
+.numpad-btn--run    { background: #8c4a0a; border-color: #6b3208; color: #fff; }
 
-.btn-fight:hover {
-  filter: brightness(1.1);
-  transform: translateY(-2px);
-  box-shadow: 0 6px 0 #8b0000;
-}
+.numpad-btn--fight:hover:not(:disabled),
+.numpad-btn--catch:hover:not(:disabled),
+.numpad-btn--switch:hover:not(:disabled),
+.numpad-btn--run:hover:not(:disabled)   { filter: brightness(1.12); }
 
-.btn-fight:active {
-  transform: translateY(2px);
-  box-shadow: 0 2px 0 #8b0000;
-}
+.numpad-btn--switch:disabled { opacity: 0.35; cursor: not-allowed; }
 
-.btn-catch {
-  flex: 1;
-  font-family: inherit;
-  font-size: 0.9rem;
-  font-weight: 800;
-  padding: 0.5rem 0.5rem;
-  border-radius: 10px;
-  border: none;
-  background: #276749;
-  color: #fff;
-  cursor: pointer;
-  box-shadow: 0 4px 0 #14532d;
-  transition: filter 0.1s, transform 0.1s, box-shadow 0.1s;
-}
-
-.btn-catch:hover {
-  filter: brightness(1.1);
-  transform: translateY(-2px);
-  box-shadow: 0 6px 0 #14532d;
-}
-
-.btn-catch:active {
-  transform: translateY(2px);
-  box-shadow: 0 2px 0 #14532d;
-}
-
-.btn-switch {
-  flex: 1;
-  font-family: inherit;
-  font-size: 0.9rem;
-  font-weight: 800;
-  padding: 0.5rem 0.5rem;
-  border-radius: 10px;
-  border: none;
-  background: #1a5ca8;
-  color: #fff;
-  cursor: pointer;
-  box-shadow: 0 4px 0 #0d3566;
-  transition: filter 0.1s, transform 0.1s, box-shadow 0.1s;
-}
-
-.btn-switch:hover:not(:disabled) {
-  filter: brightness(1.1);
-  transform: translateY(-2px);
-  box-shadow: 0 6px 0 #0d3566;
-}
-
-.btn-switch:active:not(:disabled) {
-  transform: translateY(2px);
-  box-shadow: 0 2px 0 #0d3566;
-}
-
-.btn-switch:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
-
-.btn-flee {
-  flex: 1;
-  font-family: inherit;
-  font-size: 0.9rem;
-  font-weight: 800;
-  padding: 0.5rem 0.5rem;
-  border-radius: 10px;
-  border: none;
-  background: #b45309;
-  color: #fff;
-  cursor: pointer;
-  box-shadow: 0 4px 0 #78350f;
-  transition: filter 0.1s, transform 0.1s, box-shadow 0.1s;
-}
-
-.btn-flee:hover {
-  filter: brightness(1.1);
-  transform: translateY(-2px);
-  box-shadow: 0 6px 0 #78350f;
-}
-
-.btn-flee:active {
-  transform: translateY(2px);
-  box-shadow: 0 2px 0 #78350f;
+.numpad-btn__key-hint {
+  font-size: 0.55rem;
+  font-weight: 500;
+  opacity: 0.55;
+  display: block;
+  margin-top: 2px;
+  letter-spacing: 0.02em;
 }
 
 /* ── Catch attempt header ── */
