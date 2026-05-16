@@ -229,10 +229,15 @@ export default function BattleScreen({ area, onBattleEnd }: Props) {
 
   // ---- Helpers ---------------------------------------------------------------
 
-  const nextProblem = useCallback(() =>
-    generateProblem(trainer.mathStats.difficultyLevel),
-    [trainer.mathStats.difficultyLevel]
-  )
+  const nextProblem = useCallback(() => {
+    const base = generateProblem(area.mathDifficulty)
+    const b = battleRef.current
+    const playerLevel = trainer.party[b?.activeIdx ?? 0]?.level ?? 1
+    const wildLevel = b?.wild.level ?? 1
+    const levelDiff = playerLevel - wildLevel
+    const adjusted = Math.max(5, Math.min(45, base.timeLimit + Math.round(levelDiff * 0.5)))
+    return { ...base, timeLimit: adjusted }
+  }, [area.mathDifficulty, trainer.party])
 
   function persistHps(b: BattleData) {
     trainer.party.forEach((member, i) => {
@@ -451,17 +456,30 @@ export default function BattleScreen({ area, onBattleEnd }: Props) {
 
   // ---- Action handlers -------------------------------------------------------
 
-  function processCorrectAnswer(b: BattleData) {
+  function processCorrectAnswer(b: BattleData, fast: boolean) {
     playCorrect()
     const attacker = trainer.party[b.activeIdx]
     const move = pickPlayerMove(attacker)
-    const damage = Math.max(1, calcDamage(move, attacker, b.wild))
-    const newWildHp = Math.max(0, b.wildHp - damage)
+    const playerDmg = Math.max(1, calcDamage(move, attacker, b.wild))
+    const newWildHp = Math.max(0, b.wildHp - playerDmg)
+    const logLines = [`${capitalize(attacker.name)} used ${capitalize(move.name)} for ${playerDmg} damage!`]
+    let newPartyHps = b.partyHps
+
+    if (!fast) {
+      const counterMove = pickEnemyMove(b.wild)
+      const counterDmg = Math.max(1, calcDamage(counterMove, b.wild, attacker))
+      newPartyHps = b.partyHps.map((hp, i) =>
+        i === b.activeIdx ? Math.max(0, hp - counterDmg) : hp
+      )
+      logLines.push(`But ${capitalize(b.wild.name)} countered for ${counterDmg}!`)
+    }
+
     setBattle(prev => prev ? {
       ...prev,
       phase: 'resolving-correct',
       wildHp: newWildHp,
-      log: [...prev.log.slice(-3), `${capitalize(attacker.name)} used ${capitalize(move.name)} for ${damage} damage!`],
+      partyHps: newPartyHps,
+      log: [...prev.log.slice(-3), ...logLines],
     } : prev)
   }
 
@@ -488,7 +506,7 @@ export default function BattleScreen({ area, onBattleEnd }: Props) {
     const correct = checkAnswer(b.problem, num)
     dispatch({ type: 'RECORD_ANSWER', payload: { operator: b.problem.operator, correct } })
     setAnswer('')
-    if (correct) processCorrectAnswer(b)
+    if (correct) processCorrectAnswer(b, b.timeRemaining >= b.problem.timeLimit / 2)
     else processWrongAnswer(b)
   }
 
@@ -723,7 +741,7 @@ export default function BattleScreen({ area, onBattleEnd }: Props) {
                   </div>
                   <div className="battle-problem">
                     <span className="battle-problem__text">
-                      {battle.catchProblem.operand1} {battle.catchProblem.operator} {battle.catchProblem.operand2} = ?
+                      {battle.catchProblem.operands.join(` ${battle.catchProblem.operator} `)} = ?
                     </span>
                     <span className="battle-problem__answer">{answer || '_'}</span>
                   </div>
@@ -733,7 +751,7 @@ export default function BattleScreen({ area, onBattleEnd }: Props) {
                 <>
                   <div className="battle-problem">
                     <span className="battle-problem__text">
-                      {problem.operand1} {problem.operator} {problem.operand2} = ?
+                      {problem.operands.join(` ${problem.operator} `)} = ?
                     </span>
                     <span className="battle-problem__answer">{answer || '_'}</span>
                   </div>
