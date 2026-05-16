@@ -27,12 +27,15 @@ export function generateProblem(
   let operand2: number
 
   if (op === '+') {
-    operand1 = randInt(0, config.max)
-    operand2 = randInt(0, config.max - operand1)
+    // Pick the answer first so all sums in [0, max] are equally likely
+    const sum = randInt(0, config.max)
+    operand1 = randInt(0, sum)
+    operand2 = sum - operand1
   } else {
-    // Subtraction: ensure non-negative result
-    operand2 = randInt(0, config.max)
-    operand1 = randInt(operand2, config.max)
+    // Pick the answer first so all differences in [0, max] are equally likely
+    const diff = randInt(0, config.max)
+    operand2 = randInt(0, config.max - diff)
+    operand1 = operand2 + diff
   }
 
   return {
