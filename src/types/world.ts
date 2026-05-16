@@ -19,4 +19,6 @@ export interface Area {
   /** Position on the world map canvas (internal 600×380 coordinate space) */
   mapX: number
   mapY: number
+  /** 1–100 scalar driving math problem difficulty in this area */
+  mathDifficulty: number
 }

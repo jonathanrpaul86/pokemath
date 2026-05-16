@@ -8,6 +8,7 @@ export const KANTO_AREAS: Area[] = [
     requiredTrainerLevel: 1,
     connectedAreaIds: ['viridian-city'],
     mapX: 200, mapY: 320,
+    mathDifficulty: 5,
     encounters: [
       { speciesId: 16, weight: 50, minLevel: 2, maxLevel: 4 },  // Pidgey
       { speciesId: 19, weight: 50, minLevel: 2, maxLevel: 4 },  // Rattata
@@ -20,6 +21,7 @@ export const KANTO_AREAS: Area[] = [
     requiredTrainerLevel: 3,
     connectedAreaIds: ['route-1', 'viridian-forest'],
     mapX: 200, mapY: 260,
+    mathDifficulty: 13,
     encounters: [
       { speciesId: 16, weight: 35, minLevel: 3, maxLevel: 6 },  // Pidgey
       { speciesId: 19, weight: 35, minLevel: 3, maxLevel: 6 },  // Rattata
@@ -34,6 +36,7 @@ export const KANTO_AREAS: Area[] = [
     requiredTrainerLevel: 5,
     connectedAreaIds: ['viridian-city', 'pewter-city'],
     mapX: 200, mapY: 196,
+    mathDifficulty: 22,
     encounters: [
       { speciesId: 10, weight: 35, minLevel: 3, maxLevel: 7 },  // Caterpie
       { speciesId: 13, weight: 35, minLevel: 3, maxLevel: 7 },  // Weedle
@@ -49,6 +52,7 @@ export const KANTO_AREAS: Area[] = [
     requiredTrainerLevel: 8,
     connectedAreaIds: ['viridian-forest', 'mt-moon'],
     mapX: 200, mapY: 136,
+    mathDifficulty: 30,
     encounters: [
       { speciesId: 21, weight: 35, minLevel: 6, maxLevel: 10 }, // Spearow
       { speciesId: 39, weight: 20, minLevel: 6, maxLevel: 10 }, // Jigglypuff
@@ -63,6 +67,7 @@ export const KANTO_AREAS: Area[] = [
     requiredTrainerLevel: 11,
     connectedAreaIds: ['pewter-city', 'cerulean-city'],
     mapX: 306, mapY: 106,
+    mathDifficulty: 39,
     encounters: [
       { speciesId: 41, weight: 45, minLevel: 8,  maxLevel: 12 }, // Zubat
       { speciesId: 74, weight: 30, minLevel: 8,  maxLevel: 12 }, // Geodude
@@ -77,6 +82,7 @@ export const KANTO_AREAS: Area[] = [
     requiredTrainerLevel: 14,
     connectedAreaIds: ['mt-moon', 'rock-tunnel'],
     mapX: 410, mapY: 120,
+    mathDifficulty: 47,
     encounters: [
       { speciesId: 43, weight: 25, minLevel: 12, maxLevel: 16 }, // Oddish
       { speciesId: 69, weight: 25, minLevel: 12, maxLevel: 16 }, // Bellsprout
@@ -92,6 +98,7 @@ export const KANTO_AREAS: Area[] = [
     requiredTrainerLevel: 18,
     connectedAreaIds: ['cerulean-city', 'lavender-town'],
     mapX: 466, mapY: 192,
+    mathDifficulty: 55,
     encounters: [
       { speciesId: 74, weight: 30, minLevel: 16, maxLevel: 20 }, // Geodude
       { speciesId: 66, weight: 25, minLevel: 16, maxLevel: 20 }, // Machop
@@ -107,6 +114,7 @@ export const KANTO_AREAS: Area[] = [
     requiredTrainerLevel: 22,
     connectedAreaIds: ['rock-tunnel', 'celadon-city'],
     mapX: 466, mapY: 262,
+    mathDifficulty: 63,
     encounters: [
       { speciesId: 92, weight: 40, minLevel: 20, maxLevel: 25 }, // Gastly
       { speciesId: 96, weight: 25, minLevel: 20, maxLevel: 24 }, // Drowzee
@@ -121,6 +129,7 @@ export const KANTO_AREAS: Area[] = [
     requiredTrainerLevel: 26,
     connectedAreaIds: ['lavender-town', 'fuchsia-city'],
     mapX: 340, mapY: 238,
+    mathDifficulty: 70,
     encounters: [
       { speciesId: 48, weight: 30, minLevel: 24, maxLevel: 28 }, // Venonat
       { speciesId: 52, weight: 30, minLevel: 24, maxLevel: 28 }, // Meowth
@@ -136,6 +145,7 @@ export const KANTO_AREAS: Area[] = [
     requiredTrainerLevel: 30,
     connectedAreaIds: ['celadon-city', 'cinnabar-island'],
     mapX: 306, mapY: 328,
+    mathDifficulty: 78,
     encounters: [
       { speciesId: 111, weight: 25, minLevel: 28, maxLevel: 35 }, // Rhyhorn
       { speciesId: 30,  weight: 20, minLevel: 28, maxLevel: 32 }, // Nidorina
@@ -152,6 +162,7 @@ export const KANTO_AREAS: Area[] = [
     requiredTrainerLevel: 35,
     connectedAreaIds: ['fuchsia-city', 'victory-road'],
     mapX: 148, mapY: 358,
+    mathDifficulty: 87,
     encounters: [
       { speciesId: 77,  weight: 35, minLevel: 33, maxLevel: 40 }, // Ponyta
       { speciesId: 58,  weight: 35, minLevel: 33, maxLevel: 40 }, // Growlithe
@@ -165,6 +176,7 @@ export const KANTO_AREAS: Area[] = [
     requiredTrainerLevel: 40,
     connectedAreaIds: ['cinnabar-island'],
     mapX: 96, mapY: 240,
+    mathDifficulty: 100,
     encounters: [
       { speciesId: 67,  weight: 25, minLevel: 38, maxLevel: 45 }, // Machoke
       { speciesId: 95,  weight: 25, minLevel: 38, maxLevel: 45 }, // Onix

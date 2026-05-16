@@ -1,4 +1,4 @@
-import type { Trainer, OwnedPokemon, MathStats, DifficultyLevel } from '../types'
+import type { Trainer, OwnedPokemon, MathStats } from '../types'
 import type { GameAction } from './actions'
 import { createOwnedPokemon, trainerXpToNextLevel, pokemonXpToNextLevel, calcStats } from '../utils/formulas'
 
@@ -9,10 +9,11 @@ const PARTY_MAX = 6
 export function createNewTrainer(name: string, starterSpecies: Parameters<typeof createOwnedPokemon>[0]): Trainer {
   const starter = createOwnedPokemon(starterSpecies, 5)
   const mathStats: MathStats = {
-    difficultyLevel: 1,
     operators: {
       '+': { totalAttempts: 0, correctAnswers: 0 },
       '-': { totalAttempts: 0, correctAnswers: 0 },
+      '×': { totalAttempts: 0, correctAnswers: 0 },
+      '÷': { totalAttempts: 0, correctAnswers: 0 },
     },
     lifetimeTotal: 0,
     lifetimeCorrect: 0,
@@ -60,31 +61,6 @@ function applyPokemonLevelUp(pokemon: OwnedPokemon): OwnedPokemon {
   return { ...pokemon, level, xp, xpToNextLevel, maxHp: newMaxHp, currentHp: newCurrentHp }
 }
 
-// ---- Adaptive difficulty ----------------------------------------------------
-
-const ACCURACY_THRESHOLD_UP = 0.90   // promote if correct ≥ 90% over last 20
-const ACCURACY_THRESHOLD_DOWN = 0.55 // demote if correct < 55% over last 20
-const WINDOW = 20
-
-function adjustDifficulty(stats: MathStats): MathStats {
-  const combined =
-    stats.operators['+'].totalAttempts + stats.operators['-'].totalAttempts
-  if (combined < WINDOW) return stats
-
-  const correct =
-    stats.operators['+'].correctAnswers + stats.operators['-'].correctAnswers
-  const accuracy = correct / combined
-
-  let { difficultyLevel } = stats
-  if (accuracy >= ACCURACY_THRESHOLD_UP && difficultyLevel < 5) {
-    difficultyLevel = (difficultyLevel + 1) as DifficultyLevel
-  } else if (accuracy < ACCURACY_THRESHOLD_DOWN && difficultyLevel > 1) {
-    difficultyLevel = (difficultyLevel - 1) as DifficultyLevel
-  }
-
-  return { ...stats, difficultyLevel }
-}
-
 // ---- Reducer ----------------------------------------------------------------
 
 export function gameReducer(trainer: Trainer, action: GameAction): Trainer {
@@ -129,26 +105,18 @@ export function gameReducer(trainer: Trainer, action: GameAction): Trainer {
 
     case 'RECORD_ANSWER': {
       const { operator, correct } = action.payload
-      const prev = trainer.mathStats.operators[operator]
+      const prev = trainer.mathStats.operators[operator] ?? { totalAttempts: 0, correctAnswers: 0 }
       const updatedOp = {
         totalAttempts: prev.totalAttempts + 1,
         correctAnswers: prev.correctAnswers + (correct ? 1 : 0),
       }
-      const updatedStats: MathStats = adjustDifficulty({
+      const updatedStats: MathStats = {
         ...trainer.mathStats,
         operators: { ...trainer.mathStats.operators, [operator]: updatedOp },
         lifetimeTotal: trainer.mathStats.lifetimeTotal + 1,
         lifetimeCorrect: trainer.mathStats.lifetimeCorrect + (correct ? 1 : 0),
-      })
-      next = { ...trainer, mathStats: updatedStats }
-      break
-    }
-
-    case 'SET_DIFFICULTY': {
-      next = {
-        ...trainer,
-        mathStats: { ...trainer.mathStats, difficultyLevel: action.payload.level },
       }
+      next = { ...trainer, mathStats: updatedStats }
       break
     }
 
