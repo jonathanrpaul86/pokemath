@@ -37,7 +37,7 @@ function difficultyToConfig(d: number): ProblemConfig {
   const maxFactor = Math.round(5 + Math.max(0, (d - 50) / 50) * 10)
 
   // time limit: 30s at d=1, 12s at d=100
-  const timeLimit = Math.max(12, Math.round(30 - (d - 1) / 99 * 18))
+  const timeLimit = Math.max(6, Math.round(15 - (d - 1) / 99 * 9))
 
   return { operators, maxAddSub, minOperand, threeTermAddition, randomAdditionOrder, maxFactor, timeLimit }
 }
