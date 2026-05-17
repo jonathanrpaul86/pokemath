@@ -187,7 +187,7 @@ export default function BattleScreen({ area, onBattleEnd }: Props) {
   const [showSwitch, setShowSwitch] = useState(false)
   const battleRef = useRef<BattleData | null>(null)
   const evolvedRef = useRef<Set<string>>(new Set())
-  const prevLevelRef = useRef<number | null>(null)
+  const prevLevelRef = useRef<Record<string, number>>({})
   const [muted, setMutedState] = useState(isMuted())
 
   useEffect(() => { battleRef.current = battle }, [battle])
@@ -361,11 +361,13 @@ export default function BattleScreen({ area, onBattleEnd }: Props) {
 
   useEffect(() => {
     if (!battle || battle.phase === 'intro') return
-    const level = trainer.party[battle.activeIdx]?.level ?? null
-    if (prevLevelRef.current !== null && level !== null && level > prevLevelRef.current) {
+    const pokemon = trainer.party[battle.activeIdx]
+    if (!pokemon) return
+    const prev = prevLevelRef.current[pokemon.uid]
+    if (prev !== undefined && pokemon.level > prev) {
       playLevelUp()
     }
-    prevLevelRef.current = level
+    prevLevelRef.current[pokemon.uid] = pokemon.level
   }, [trainer.party[battle?.activeIdx ?? 0]?.level]) // eslint-disable-line
 
   // ---- Evolution check -------------------------------------------------------
