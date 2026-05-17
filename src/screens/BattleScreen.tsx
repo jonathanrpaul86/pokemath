@@ -373,7 +373,7 @@ export default function BattleScreen({ area, onBattleEnd }: Props) {
     setBattle(prev => prev ? {
       ...prev, phase: 'player-turn', problem: p, timeRemaining: p.timeLimit,
       catchProgress: null, catchProblem: null,
-      log: [...prev.log.slice(-3), `${capitalize(prev.wild.name)} broke free!`],
+      log: [...prev.log.slice(-3), `Wild ${capitalize(prev.wild.name)} broke free!`],
     } : prev)
     setAnswer('')
   }, [battle?.phase, battle?.catchTimeRemaining])  // eslint-disable-line
@@ -571,7 +571,7 @@ export default function BattleScreen({ area, onBattleEnd }: Props) {
       newPartyHps = b.partyHps.map((hp, i) =>
         i === b.activeIdx ? Math.max(0, hp - counterDmg) : hp
       )
-      logLines[0] += ` But ${capitalize(b.wild.name)} countered for ${counterDmg}!`
+      logLines[0] += ` But Wild ${capitalize(b.wild.name)} countered for ${counterDmg}!`
     }
 
     setBattle(prev => prev ? {
@@ -605,7 +605,7 @@ export default function BattleScreen({ area, onBattleEnd }: Props) {
     const damage = Math.max(1, calcDamage(move, b.wild, defender))
     const newHp = Math.max(0, b.partyHps[b.activeIdx] - damage)
     const newPartyHps = b.partyHps.map((hp, i) => i === b.activeIdx ? newHp : hp)
-    const failMsg = `Couldn't escape! ${capitalize(b.wild.name)} used ${capitalize(move.name)} for ${damage} damage!`
+    const failMsg = `Couldn't escape! Wild ${capitalize(b.wild.name)} used ${capitalize(move.name)} for ${damage} damage!`
 
     if (newHp <= 0) {
       const nextIdx = newPartyHps.findIndex((hp, i) => i !== b.activeIdx && hp > 0)
@@ -791,7 +791,7 @@ export default function BattleScreen({ area, onBattleEnd }: Props) {
     const damage = Math.max(1, calcDamage(move, b.wild, defender))
     const newHp = Math.max(0, b.partyHps[targetIdx] - damage)
     const newPartyHps = b.partyHps.map((hp, i) => i === targetIdx ? newHp : hp)
-    const switchMsg = `${capitalize(trainer.party[targetIdx].name)} came in! But ${capitalize(b.wild.name)} used ${capitalize(move.name)} for ${damage} damage!`
+    const switchMsg = `${capitalize(trainer.party[targetIdx].name)} came in! But Wild ${capitalize(b.wild.name)} used ${capitalize(move.name)} for ${damage} damage!`
 
     if (newHp <= 0) {
       const nextIdx = newPartyHps.findIndex((hp, i) => i !== targetIdx && hp > 0)
