@@ -487,7 +487,7 @@ export default function BattleScreen({ area, onBattleEnd }: Props) {
           'c': handleStartCatch,
           'r': handleFlee,
         }
-        if (e.key === 's' && switchable.length > 0) { e.preventDefault(); setShowSwitch(true); return }
+        if (e.key === 's' && switchable.length > 0) { e.preventDefault(); openSwitchMenu(); return }
         const fn = actionMap[e.key]
         if (fn) { e.preventDefault(); fn() }
         return
@@ -514,7 +514,7 @@ export default function BattleScreen({ area, onBattleEnd }: Props) {
       if (b.phase === 'player-turn') {
         const switchable = trainer.party.filter((_, i) => i !== b.activeIdx && (b.partyHps[i] ?? 0) > 0)
         if (e.key === 'c') { e.preventDefault(); handleStartCatch(); return }
-        if (e.key === 's' && switchable.length > 0) { e.preventDefault(); setShowSwitch(true); return }
+        if (e.key === 's' && switchable.length > 0) { e.preventDefault(); openSwitchMenu(); return }
         if (e.key === 'r') { e.preventDefault(); handleFlee(); return }
       }
 
@@ -804,10 +804,18 @@ export default function BattleScreen({ area, onBattleEnd }: Props) {
     setAnswer('')
   }
 
+  function openSwitchMenu() {
+    setBattle(prev => prev ? {
+      ...prev,
+      log: [...prev.log.slice(-3), 'Which Pokémon should battle next?'],
+    } : prev)
+    openSwitchMenu()
+  }
+
   function handleAction(action: 'fight' | 'catch' | 'switch' | 'run') {
     if (action === 'fight')  handleFight()
     if (action === 'catch')  handleStartCatch()
-    if (action === 'switch') setShowSwitch(true)
+    if (action === 'switch') openSwitchMenu()
     if (action === 'run')    handleFlee()
   }
 
