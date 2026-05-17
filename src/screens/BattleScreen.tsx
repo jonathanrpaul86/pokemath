@@ -211,6 +211,7 @@ export default function BattleScreen({ area, onBattleEnd }: Props) {
   const [battle, setBattle] = useState<BattleData | null>(null)
   const [answer, setAnswer] = useState('')
   const [showSwitch, setShowSwitch] = useState(false)
+  const [switchHighlight, setSwitchHighlight] = useState<number | null>(null)
   const battleRef = useRef<BattleData | null>(null)
   const evolvedRef = useRef<Set<string>>(new Set())
   const prevLevelRef = useRef<Record<string, number>>({})
@@ -493,14 +494,35 @@ export default function BattleScreen({ area, onBattleEnd }: Props) {
         return
       }
 
-      // Branch B: switch menu navigation
+      // Branch B: switch menu navigation (two-step: number highlights, Enter confirms)
       if (showSwitch) {
-        if (e.key === 'Escape') { e.preventDefault(); setShowSwitch(false); return }
+        if (e.key === 'Escape') { e.preventDefault(); closeSwitchMenu(true); return }
+
+        if (e.key === 'Enter') {
+          if (switchHighlight !== null) {
+            e.preventDefault()
+            const isCurrent = switchHighlight === b.activeIdx
+            const isFainted = (b.partyHps[switchHighlight] ?? 0) === 0
+            if (isCurrent) {
+              setBattle(prev => prev ? { ...prev, log: [...prev.log.slice(-3), `${capitalize(trainer.party[switchHighlight].name)} is already battling!`] } : prev)
+            } else if (isFainted) {
+              setBattle(prev => prev ? { ...prev, log: [...prev.log.slice(-3), `${capitalize(trainer.party[switchHighlight].name)} has no will to battle!`] } : prev)
+            } else {
+              handleSwitch(switchHighlight)
+            }
+          }
+          return
+        }
+
         const n = parseInt(e.key, 10)
         if (!isNaN(n) && n >= 1 && n <= trainer.party.length) {
+          e.preventDefault()
           const partyIdx = n - 1
-          const available = partyIdx !== b.activeIdx && (b.partyHps[partyIdx] ?? 0) > 0
-          if (available) { e.preventDefault(); handleSwitch(partyIdx) }
+          setSwitchHighlight(partyIdx)
+          setBattle(prev => prev ? {
+            ...prev,
+            log: [...prev.log.slice(-3), `Send out ${capitalize(trainer.party[partyIdx].name)}?`],
+          } : prev)
         }
         return
       }
@@ -530,7 +552,7 @@ export default function BattleScreen({ area, onBattleEnd }: Props) {
     }
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
-  }, [answer, showSwitch]) // eslint-disable-line
+  }, [answer, showSwitch, switchHighlight]) // eslint-disable-line
 
   // ---- Action handlers -------------------------------------------------------
 
@@ -743,7 +765,7 @@ export default function BattleScreen({ area, onBattleEnd }: Props) {
       timeRemaining: switchProblem.timeLimit,
       log: [...prev.log.slice(-3), `Solve to bring in ${capitalize(trainer.party[partyIdx].name)} safely!`],
     } : prev)
-    setShowSwitch(false)
+    closeSwitchMenu()
     setAnswer('')
   }
 
@@ -802,12 +824,25 @@ export default function BattleScreen({ area, onBattleEnd }: Props) {
     setAnswer('')
   }
 
+  function closeSwitchMenu(cancelled = false) {
+    if (cancelled) {
+      const activeName = capitalize(trainer.party[battleRef.current?.activeIdx ?? 0]?.name ?? '')
+      setBattle(prev => prev ? {
+        ...prev,
+        log: [...prev.log.slice(-3), `What will ${activeName} do?`],
+      } : prev)
+    }
+    setShowSwitch(false)
+    setSwitchHighlight(null)
+  }
+
   function openSwitchMenu() {
     setBattle(prev => prev ? {
       ...prev,
       log: [...prev.log.slice(-3), 'Which Pokémon should battle next?'],
     } : prev)
     setShowSwitch(true)
+    setSwitchHighlight(null)
   }
 
   function handleAction(action: 'fight' | 'catch' | 'switch' | 'run') {
@@ -977,11 +1012,12 @@ export default function BattleScreen({ area, onBattleEnd }: Props) {
                     const isCurrent = i === activeIdx
                     const isFainted = hp === 0
                     const unavailable = isCurrent || isFainted
+                    const isHighlighted = i === switchHighlight && !unavailable
                     const tag = isCurrent ? 'active' : isFainted ? 'fainted' : null
                     return (
                       <button
                         key={p.uid}
-                        className={`switch-btn${isCurrent ? ' switch-btn--current' : isFainted ? ' switch-btn--fainted' : ''}`}
+                        className={`switch-btn${isCurrent ? ' switch-btn--current' : isFainted ? ' switch-btn--fainted' : ''}${isHighlighted ? ' switch-btn--highlighted' : ''}`}
                         disabled={unavailable}
                         onClick={() => handleSwitch(i)}
                       >
@@ -995,7 +1031,7 @@ export default function BattleScreen({ area, onBattleEnd }: Props) {
                       </button>
                     )
                   })}
-                  <button className="switch-btn switch-btn--cancel" onClick={() => setShowSwitch(false)}>
+                  <button className="switch-btn switch-btn--cancel" onClick={() => closeSwitchMenu(true)}>
                     Cancel
                   </button>
                 </div>

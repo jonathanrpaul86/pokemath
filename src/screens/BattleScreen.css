@@ -495,6 +495,11 @@
   border-color: #6b1a20;
 }
 
+.switch-btn--highlighted {
+  border-color: #ffd700;
+  background: #ffffff20;
+}
+
 .switch-btn__name {
   font-size: 0.82rem;
   font-weight: 700;
