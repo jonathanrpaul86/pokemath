@@ -225,6 +225,11 @@
   min-height: 0;
 }
 
+.battle-commands__row--switch .battle-commands__right {
+  flex: 1;
+  width: auto;
+}
+
 .battle-commands__left {
   flex: 1;
   display: flex;
@@ -541,6 +546,23 @@
   align-items: center;
   font-weight: 700;
   font-size: 0.82rem;
+}
+
+.switch-menu--grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.22rem;
+  overflow-y: hidden;
+  align-content: start;
+}
+
+.switch-menu--grid .switch-btn {
+  padding: 0.22rem 0.45rem;
+}
+
+.switch-menu--grid .switch-btn--cancel {
+  grid-column: 1 / -1;
+  margin-top: 0;
 }
 
 /* ── Terminal phase "Continue" panel ── */
