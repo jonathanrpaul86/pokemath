@@ -809,7 +809,7 @@ export default function BattleScreen({ area, onBattleEnd }: Props) {
       ...prev,
       log: [...prev.log.slice(-3), 'Which Pokémon should battle next?'],
     } : prev)
-    openSwitchMenu()
+    setShowSwitch(true)
   }
 
   function handleAction(action: 'fight' | 'catch' | 'switch' | 'run') {
