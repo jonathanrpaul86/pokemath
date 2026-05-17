@@ -490,7 +490,7 @@ export default function BattleScreen({ area, onBattleEnd }: Props) {
       newPartyHps = b.partyHps.map((hp, i) =>
         i === b.activeIdx ? Math.max(0, hp - counterDmg) : hp
       )
-      logLines.push(`But ${capitalize(b.wild.name)} countered for ${counterDmg}!`)
+      logLines[0] += ` But ${capitalize(b.wild.name)} countered for ${counterDmg}!`
     }
 
     setBattle(prev => prev ? {
