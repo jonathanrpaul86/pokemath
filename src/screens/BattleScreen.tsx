@@ -357,6 +357,23 @@ export default function BattleScreen({ area, onBattleEnd }: Props) {
     setAnswer('')
   }, [battle?.phase, battle?.catchTimeRemaining])  // eslint-disable-line
 
+  // Run-attempt timer tick
+  useEffect(() => {
+    if (!battle || battle.phase !== 'run-attempt' || battle.timeRemaining <= 0) return
+    const t = setTimeout(() => {
+      setBattle(prev => prev?.phase === 'run-attempt' ? { ...prev, timeRemaining: prev.timeRemaining - 1 } : prev)
+    }, 1000)
+    return () => clearTimeout(t)
+  }, [battle?.phase, battle?.timeRemaining])
+
+  // Run-attempt timer expired → failure
+  useEffect(() => {
+    if (!battle || battle.phase !== 'run-attempt' || battle.timeRemaining > 0) return
+    const b = battleRef.current
+    if (!b || b.phase !== 'run-attempt') return
+    processRunFailure(b)
+  }, [battle?.phase, battle?.timeRemaining])  // eslint-disable-line
+
   // ---- Level-up sound --------------------------------------------------------
 
   useEffect(() => {
@@ -446,8 +463,8 @@ export default function BattleScreen({ area, onBattleEnd }: Props) {
         return
       }
 
-      // Branch C: digit entry (player-turn / catch-attempt)
-      if (b.phase !== 'player-turn' && b.phase !== 'catch-attempt') return
+      // Branch C: digit entry (player-turn / catch-attempt / run-attempt)
+      if (b.phase !== 'player-turn' && b.phase !== 'catch-attempt' && b.phase !== 'run-attempt') return
 
       // Battle option hotkeys available during player-turn
       if (b.phase === 'player-turn') {
@@ -517,9 +534,55 @@ export default function BattleScreen({ area, onBattleEnd }: Props) {
     } : prev)
   }
 
+  function processRunFailure(b: BattleData) {
+    playWrong()
+    const move = pickEnemyMove(b.wild)
+    const defender = trainer.party[b.activeIdx]
+    const damage = Math.max(1, calcDamage(move, b.wild, defender))
+    const newHp = Math.max(0, b.partyHps[b.activeIdx] - damage)
+    const newPartyHps = b.partyHps.map((hp, i) => i === b.activeIdx ? newHp : hp)
+    const failMsg = `Couldn't escape! ${capitalize(b.wild.name)} used ${capitalize(move.name)} for ${damage} damage!`
+
+    if (newHp <= 0) {
+      const nextIdx = newPartyHps.findIndex((hp, i) => i !== b.activeIdx && hp > 0)
+      if (nextIdx === -1) {
+        dispatch({ type: 'HEAL_PARTY' })
+        setBattle(prev => prev ? { ...prev, partyHps: newPartyHps, phase: 'blacked-out', log: ['All your Pokémon fainted! You were sent back to safety...'] } : prev)
+        return
+      }
+      setBattle(prev => prev ? {
+        ...prev, partyHps: newPartyHps, phase: 'choose-action', activeIdx: nextIdx, problem: null,
+        log: [...prev.log.slice(-3), `${failMsg} Go, ${capitalize(trainer.party[nextIdx].name)}!`],
+      } : prev)
+      return
+    }
+
+    setBattle(prev => prev ? {
+      ...prev, partyHps: newPartyHps, phase: 'choose-action', problem: null,
+      log: [...prev.log.slice(-3), failMsg],
+    } : prev)
+    setAnswer('')
+  }
+
   function handleSubmitAnswer() {
     const b = battleRef.current
-    if (!b || b.phase !== 'player-turn' || !b.problem) return
+    if (!b || !b.problem) return
+
+    if (b.phase === 'run-attempt') {
+      const num = parseInt(answer, 10)
+      if (isNaN(num)) return
+      if (checkAnswer(b.problem, num)) {
+        playCorrect()
+        persistHps(b)
+        setBattle(prev => prev ? { ...prev, phase: 'fled', log: ['You got away safely!'] } : prev)
+      } else {
+        processRunFailure(b)
+      }
+      setAnswer('')
+      return
+    }
+
+    if (b.phase !== 'player-turn') return
     const num = parseInt(answer, 10)
     if (isNaN(num)) return
     const correct = checkAnswer(b.problem, num)
@@ -605,8 +668,16 @@ export default function BattleScreen({ area, onBattleEnd }: Props) {
   function handleFlee() {
     const b = battleRef.current
     if (!b) return
-    persistHps(b)
-    setBattle(prev => prev ? { ...prev, phase: 'fled', log: ['You got away safely!'] } : prev)
+    const rawProblem = generateProblem(Math.max(1, Math.floor(area.mathDifficulty / 2)))
+    const playerLevel = trainer.party[b.activeIdx]?.level ?? 1
+    const levelDiff = playerLevel - b.wild.level
+    const timeLimit = Math.max(5, Math.min(45, rawProblem.timeLimit + Math.round(levelDiff * 0.5)))
+    const p = { ...rawProblem, timeLimit }
+    setBattle(prev => prev ? {
+      ...prev, phase: 'run-attempt', problem: p, timeRemaining: p.timeLimit,
+      log: [...prev.log.slice(-3), 'Solve this to escape!'],
+    } : prev)
+    setAnswer('')
   }
 
   function handleSwitch(partyIdx: number) {
@@ -656,7 +727,7 @@ export default function BattleScreen({ area, onBattleEnd }: Props) {
   const activeParty = trainer.party[activeIdx]
   const activeHp = partyHps[activeIdx] ?? 0
   const isTerminal = phase === 'victory' || phase === 'caught' || phase === 'fled' || phase === 'blacked-out'
-  const inputBlocked = phase !== 'player-turn' && phase !== 'catch-attempt'
+  const inputBlocked = phase !== 'player-turn' && phase !== 'catch-attempt' && phase !== 'run-attempt'
   const switchableCount = trainer.party.filter((_, i) => i !== activeIdx && (partyHps[i] ?? 0) > 0).length
 
   const numpadProps = {
@@ -744,6 +815,11 @@ export default function BattleScreen({ area, onBattleEnd }: Props) {
                 </>
               ) : problem ? (
                 <>
+                  {phase === 'run-attempt' && (
+                    <div className="catch-header">
+                      <span className="catch-header__label">Solve to escape!</span>
+                    </div>
+                  )}
                   {(() => {
                     const isResolving = phase === 'resolving-correct' || phase === 'resolving-wrong'
                     return (
@@ -761,8 +837,8 @@ export default function BattleScreen({ area, onBattleEnd }: Props) {
                 </>
               ) : null}
 
-              {/* Action strip — always visible except during catch sequence */}
-              {phase !== 'catch-attempt' && (
+              {/* Action strip — always visible except during catch/run sequences */}
+              {phase !== 'catch-attempt' && phase !== 'run-attempt' && (
                 <div className="battle-action-strip">
                   {ACTION_BUTTONS.map(([action, icon, label]) => {
                     const isResolving = phase === 'resolving-correct' || phase === 'resolving-wrong'
@@ -788,7 +864,7 @@ export default function BattleScreen({ area, onBattleEnd }: Props) {
                 <div className="battle-log">
                   <p className="battle-log__line">{battle.log[battle.log.length - 1]}</p>
                 </div>
-                {(phase === 'player-turn' || phase === 'resolving-correct' || phase === 'resolving-wrong' || phase === 'catch-attempt') && (
+                {(phase === 'player-turn' || phase === 'resolving-correct' || phase === 'resolving-wrong' || phase === 'catch-attempt' || phase === 'run-attempt') && (
                   showSwitch ? (
                     <div className="switch-menu">
                       {trainer.party.map((p, i) => {
