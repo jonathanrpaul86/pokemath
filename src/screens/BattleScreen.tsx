@@ -178,7 +178,7 @@ function NumberPad({ mode = 'digits', onDigit, onDelete, onSubmit, onAction, swi
 
   return (
     <div className="numpad">
-      {['1','2','3','4','5','6','7','8','9','⌫','0','✓'].map(key => (
+      {['7','8','9','4','5','6','1','2','3','⌫','0','✓'].map(key => (
         <button
           key={key}
           className={`numpad-btn ${key === '✓' ? 'numpad-btn--submit' : ''} ${key === '⌫' ? 'numpad-btn--delete' : ''}`}
