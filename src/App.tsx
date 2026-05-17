@@ -73,7 +73,7 @@ function App() {
       onOpenParty={() => setGameScreen('party')}
       onOpenProfile={() => setGameScreen('profile')}
       onOpenBag={() => setGameScreen('bag')}
-      onGoToTitle={goToTitle}
+      onGoToTitle={() => { goToTitle(); setStarterSlot(null) }}
     />
   )
 }
