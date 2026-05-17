@@ -13,6 +13,7 @@ interface Props {
   onOpenPokedex: () => void
   onOpenParty: () => void
   onOpenProfile: () => void
+  onOpenBag: () => void
   onGoToTitle: () => void
 }
 
@@ -219,7 +220,7 @@ function PokemonCenterModal({
 
 // ---- Main screen ------------------------------------------------------------
 
-export default function OverworldScreen({ onStartBattle, onOpenPokedex, onOpenParty, onOpenProfile, onGoToTitle }: Props) {
+export default function OverworldScreen({ onStartBattle, onOpenPokedex, onOpenParty, onOpenProfile, onOpenBag, onGoToTitle }: Props) {
   const trainer = useTrainer()
   const { dispatch } = useGameStore()
   const [centerPhase, setCenterPhase] = useState<CenterPhase | null>(null)
@@ -283,6 +284,10 @@ export default function OverworldScreen({ onStartBattle, onOpenPokedex, onOpenPa
         <button className="btn btn-secondary pokedex-btn" onClick={onOpenPokedex}>
           <PokedexIcon /> Pokédex
         </button>
+        <button className="btn btn-secondary bag-btn" onClick={onOpenBag} title="Open Bag">
+          🎒 Bag
+        </button>
+        <span className="trainer-bar__money" title="Pokédollars">💰 ¥{trainer.money.toLocaleString()}</span>
         <button className="btn btn-secondary mute-toggle-btn" onClick={handleMuteToggle} title={muted ? 'Unmute' : 'Mute'}>
           {muted ? '🔇' : '🔊'}
         </button>

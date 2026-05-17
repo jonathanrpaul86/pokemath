@@ -3,4 +3,5 @@ export type { MathOperator, MathProblem, OperatorStats, MathStats } from './math
 export type { PokedexEntry, Trainer } from './trainer'
 export type { BattlePhase, CatchAttempt, BattleLog, BattleState } from './battle'
 export type { EncounterEntry, Area } from './world'
+export type { ItemPocket, ItemDefinition, InventorySlot, BadgeId } from './items'
 export type { PokeApiStat, PokeApiMove, PokeApiSprites, PokeApiPokemon, PokeApiMoveDetail } from './pokeapi'

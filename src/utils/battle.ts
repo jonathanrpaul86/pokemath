@@ -1,5 +1,6 @@
 import type { Move, PokemonSpecies, WildPokemon } from '../types'
 import { calcStats, pickMoveset } from './formulas'
+import { ITEM_MAP } from '../data/items'
 
 // ---- Damage -----------------------------------------------------------------
 
@@ -43,20 +44,30 @@ export interface CatchDifficulty {
 /**
  * Higher HP% remaining and higher level = harder to catch.
  * problemsRequired: 1–5, timePerProblem: 8–20 seconds.
+ * ballId modifies problemsRequired via the item's catchMultiplier.
  */
 export function calcCatchDifficulty(
   wildHpPct: number,
-  wildLevel: number
+  wildLevel: number,
+  ballId = 'poke-ball',
 ): CatchDifficulty {
   // Score 0–1: blend of remaining HP and level (levels cap at 60 for Kanto)
   const hpFactor = wildHpPct                       // 0 = near-fainted, 1 = full
   const levelFactor = Math.min(wildLevel / 60, 1)
   const score = hpFactor * 0.6 + levelFactor * 0.4
 
-  const problemsRequired = Math.max(1, Math.round(score * 4) + 1) // 1–5
-  const timePerProblem   = Math.round(20 - score * 12)            // 8–20s
+  const mult = ITEM_MAP[ballId]?.catchMultiplier ?? 1.0
+  const problemsRequired = Math.max(1, Math.round(score * 4 * mult) + 1) // 1–5
+  const timePerProblem   = Math.round(20 - score * 12)                   // 8–20s
 
   return { problemsRequired, timePerProblem }
+}
+
+// ---- Money reward -----------------------------------------------------------
+
+/** Pokédollars earned for defeating a wild Pokémon */
+export function moneyReward(wildLevel: number): number {
+  return Math.floor(wildLevel * 20 + 50)
 }
 
 // ---- Wild Pokemon spawn -----------------------------------------------------

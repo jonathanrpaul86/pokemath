@@ -66,9 +66,17 @@
   line-height: 1;
 }
 
-.pokedex-btn {
+.pokedex-btn,
+.bag-btn {
   font-size: 0.8rem;
   padding: 0.35rem 0.75rem;
+  white-space: nowrap;
+}
+
+.trainer-bar__money {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #ffd700;
   white-space: nowrap;
 }
 

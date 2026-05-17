@@ -1,4 +1,4 @@
-import type { OwnedPokemon, MathOperator, BaseStats } from '../types'
+import type { OwnedPokemon, MathOperator, BaseStats, BadgeId } from '../types'
 
 export type GameAction =
   | { type: 'GAIN_TRAINER_XP'; payload: { amount: number } }
@@ -17,3 +17,8 @@ export type GameAction =
   | { type: 'UPDATE_POKEMON_HP'; payload: { uid: string; currentHp: number } }
   | { type: 'RENAME_TRAINER'; payload: { name: string } }
   | { type: 'SET_TIMER_MULTIPLIER'; payload: { multiplier: number } }
+  | { type: 'GAIN_MONEY';  payload: { amount: number } }
+  | { type: 'SPEND_MONEY'; payload: { amount: number } }
+  | { type: 'ADD_ITEM';    payload: { itemId: string; quantity: number } }
+  | { type: 'REMOVE_ITEM'; payload: { itemId: string; quantity: number } }
+  | { type: 'EARN_BADGE';  payload: { badgeId: BadgeId } }

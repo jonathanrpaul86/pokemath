@@ -1,12 +1,13 @@
 import { useState, useEffect, useRef, useCallback, type CSSProperties } from 'react'
 import { useTrainer, useGameStore } from '../store'
 import { fetchPokemonSpecies } from '../services/pokeApi'
-import { spawnWildPokemon, calcDamage, calcCatchDifficulty } from '../utils/battle'
+import { spawnWildPokemon, calcDamage, calcCatchDifficulty, moneyReward } from '../utils/battle'
 import { pickEncounter, pickLevel } from '../utils/encounter'
 import { generateProblem, checkAnswer } from '../utils/math'
 import { battleXpReward, trainerXpReward, pokemonXpToNextLevel } from '../utils/formulas'
 import { playCorrect, playWrong, playCatch, playVictory, playLevelUp, isMuted, setMuted } from '../utils/sound'
 import { EVOLUTIONS } from '../data/evolutions'
+import { ITEM_MAP, BALL_EMOJI, ITEM_EMOJI } from '../data/items'
 import type { Area, BattlePhase, MathProblem, Move, OwnedPokemon, WildPokemon } from '../types'
 import './BattleScreen.css'
 
@@ -145,6 +146,7 @@ function TimerRing({ remaining, total, overlay, flash }: {
 const ACTION_BUTTONS = [
   ['fight',  '⚔',  'Fight'],
   ['catch',  '🎣', 'Catch'],
+  ['items',  '💊', 'Items'],
   ['switch', '🔄', 'Switch'],
   ['run',    '🏃', 'Run'],
 ] as const
@@ -154,7 +156,7 @@ function NumberPad({ mode = 'digits', onDigit, onDelete, onSubmit, onAction, swi
   onDigit?: (d: string) => void
   onDelete?: () => void
   onSubmit?: () => void
-  onAction?: (a: 'fight' | 'catch' | 'switch' | 'run') => void
+  onAction?: (a: 'fight' | 'catch' | 'items' | 'switch' | 'run') => void
   switchableCount?: number
   disabled?: boolean
 }) {
@@ -212,6 +214,9 @@ export default function BattleScreen({ area, onBattleEnd }: Props) {
   const [answer, setAnswer] = useState('')
   const [showSwitch, setShowSwitch] = useState(false)
   const [switchHighlight, setSwitchHighlight] = useState<number | null>(null)
+  const [showBallMenu, setShowBallMenu] = useState(false)
+  const [showItemMenu, setShowItemMenu] = useState(false)
+  const [usingItemInBattle, setUsingItemInBattle] = useState<string | null>(null)
   const battleRef = useRef<BattleData | null>(null)
   const evolvedRef = useRef<Set<string>>(new Set())
   const prevLevelRef = useRef<Record<string, number>>({})
@@ -286,13 +291,15 @@ export default function BattleScreen({ area, onBattleEnd }: Props) {
     playVictory()
     const pkmnXp = battleXpReward(b.wild.level)
     const trXp = trainerXpReward(b.wild.level)
+    const money = moneyReward(b.wild.level)
     persistHps(b)
     dispatch({ type: 'GAIN_TRAINER_XP', payload: { amount: trXp } })
     dispatch({ type: 'GAIN_POKEMON_XP', payload: { uid: trainer.party[b.activeIdx].uid, amount: pkmnXp } })
+    dispatch({ type: 'GAIN_MONEY', payload: { amount: money } })
     setBattle(prev => prev ? {
       ...prev,
       phase: 'victory',
-      log: [`Wild ${capitalize(b.wild.name)} fainted! ${capitalize(trainer.party[b.activeIdx].name)} gained ${pkmnXp} XP!`],
+      log: [`Wild ${capitalize(b.wild.name)} fainted! ${capitalize(trainer.party[b.activeIdx].name)} gained ${pkmnXp} XP! You received ¥${money}!`],
     } : prev)
   }
 
@@ -345,7 +352,7 @@ export default function BattleScreen({ area, onBattleEnd }: Props) {
 
   // Player-turn timer tick (paused while switch menu is open)
   useEffect(() => {
-    if (!battle || battle.phase !== 'player-turn' || battle.timeRemaining <= 0 || showSwitch) return
+    if (!battle || battle.phase !== 'player-turn' || battle.timeRemaining <= 0 || showSwitch || showBallMenu || showItemMenu || !!usingItemInBattle) return
     const t = setTimeout(() => {
       setBattle(prev => prev?.phase === 'player-turn' ? { ...prev, timeRemaining: prev.timeRemaining - 1 } : prev)
     }, 1000)
@@ -483,8 +490,15 @@ export default function BattleScreen({ area, onBattleEnd }: Props) {
         return
       }
 
+      // Escape closes any open sub-menu
+      if (e.key === 'Escape') {
+        if (showBallMenu) { e.preventDefault(); setShowBallMenu(false); return }
+        if (showItemMenu) { e.preventDefault(); setShowItemMenu(false); return }
+        if (usingItemInBattle) { e.preventDefault(); setUsingItemInBattle(null); return }
+      }
+
       // Branch A: action selection
-      if (b.phase === 'choose-action' && !showSwitch) {
+      if (b.phase === 'choose-action' && !showSwitch && !showBallMenu && !showItemMenu && !usingItemInBattle) {
         const switchable = trainer.party.filter((_, i) => i !== b.activeIdx && (b.partyHps[i] ?? 0) > 0)
         const actionMap: Record<string, () => void> = {
           'f': handleFight,
@@ -555,7 +569,7 @@ export default function BattleScreen({ area, onBattleEnd }: Props) {
     }
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
-  }, [answer, showSwitch, switchHighlight]) // eslint-disable-line
+  }, [answer, showSwitch, switchHighlight, showBallMenu, showItemMenu, usingItemInBattle]) // eslint-disable-line
 
   // ---- Action handlers -------------------------------------------------------
 
@@ -676,7 +690,19 @@ export default function BattleScreen({ area, onBattleEnd }: Props) {
   function handleStartCatch() {
     const b = battleRef.current
     if (!b || (b.phase !== 'player-turn' && b.phase !== 'choose-action')) return
-    const { problemsRequired, timePerProblem } = calcCatchDifficulty(b.wildHp / b.wild.maxHp, b.wild.level)
+    if (trainer.balls.length === 0) {
+      setBattle(prev => prev ? { ...prev, log: [...prev.log.slice(-3), 'No Poké Balls! Visit a Poké Mart!'] } : prev)
+      return
+    }
+    setShowBallMenu(true)
+  }
+
+  function handleSelectBall(ballId: string) {
+    const b = battleRef.current
+    if (!b) return
+    setShowBallMenu(false)
+    dispatch({ type: 'REMOVE_ITEM', payload: { itemId: ballId, quantity: 1 } })
+    const { problemsRequired, timePerProblem } = calcCatchDifficulty(b.wildHp / b.wild.maxHp, b.wild.level, ballId)
     const p = nextProblem()
     setBattle(prev => prev ? {
       ...prev,
@@ -687,6 +713,66 @@ export default function BattleScreen({ area, onBattleEnd }: Props) {
       log: [...prev.log.slice(-3), `Solve ${problemsRequired} problem${problemsRequired > 1 ? 's' : ''} to catch ${capitalize(prev.wild.name)}!`],
     } : prev)
     setAnswer('')
+  }
+
+  function handleOpenItemMenu() {
+    const usableItems = trainer.items.filter(slot => ITEM_MAP[slot.itemId]?.healAmount !== undefined)
+    if (usableItems.length === 0) {
+      setBattle(prev => prev ? { ...prev, log: [...prev.log.slice(-3), 'No usable items!'] } : prev)
+      return
+    }
+    setShowItemMenu(true)
+  }
+
+  function handleUseItemInBattle(itemId: string, targetUid: string) {
+    const b = battleRef.current
+    if (!b) return
+    const def = ITEM_MAP[itemId]
+    if (!def) return
+    const targetIdx = trainer.party.findIndex(p => p.uid === targetUid)
+    if (targetIdx === -1) return
+    const pokemon = trainer.party[targetIdx]
+
+    const currentHp = b.partyHps[targetIdx]
+    const gain = def.healAmount === 0
+      ? pokemon.maxHp - currentHp
+      : Math.min(def.healAmount ?? 0, pokemon.maxHp - currentHp)
+    const healedHp = currentHp + gain
+
+    const move = pickEnemyMove(b.wild)
+    const defender = trainer.party[b.activeIdx]
+    const damage = Math.max(1, calcDamage(move, b.wild, defender))
+
+    const newPartyHps = b.partyHps.map((hp, i) => {
+      if (i === targetIdx && i === b.activeIdx) return Math.max(0, healedHp - damage)
+      if (i === targetIdx) return healedHp
+      if (i === b.activeIdx) return Math.max(0, hp - damage)
+      return hp
+    })
+
+    dispatch({ type: 'REMOVE_ITEM', payload: { itemId, quantity: 1 } })
+    setUsingItemInBattle(null)
+
+    const logMsg = `Used ${def.name} on ${capitalize(pokemon.name)}! +${gain} HP, but Wild ${capitalize(b.wild.name)} used ${capitalize(move.name)} for ${damage} damage!`
+    const activeHpAfter = newPartyHps[b.activeIdx]
+
+    if (activeHpAfter <= 0) {
+      const nextIdx = newPartyHps.findIndex((hp, i) => i !== b.activeIdx && hp > 0)
+      if (nextIdx === -1) {
+        dispatch({ type: 'HEAL_PARTY' })
+        setBattle(prev => prev ? { ...prev, partyHps: newPartyHps, phase: 'blacked-out', log: ['All your Pokémon fainted! You were sent back to safety...'] } : prev)
+        return
+      }
+      setBattle(prev => prev ? {
+        ...prev, partyHps: newPartyHps, phase: 'choose-action', activeIdx: nextIdx,
+        log: [...prev.log.slice(-3), `${logMsg} Go, ${capitalize(trainer.party[nextIdx].name)}!`],
+      } : prev)
+      return
+    }
+    setBattle(prev => prev ? {
+      ...prev, partyHps: newPartyHps, phase: 'choose-action',
+      log: [...prev.log.slice(-3), logMsg],
+    } : prev)
   }
 
   function handleSubmitCatchAnswer() {
@@ -851,9 +937,10 @@ export default function BattleScreen({ area, onBattleEnd }: Props) {
     setSwitchHighlight(null)
   }
 
-  function handleAction(action: 'fight' | 'catch' | 'switch' | 'run') {
+  function handleAction(action: 'fight' | 'catch' | 'items' | 'switch' | 'run') {
     if (action === 'fight')  handleFight()
     if (action === 'catch')  handleStartCatch()
+    if (action === 'items')  handleOpenItemMenu()
     if (action === 'switch') openSwitchMenu()
     if (action === 'run')    handleFlee()
   }
@@ -981,7 +1068,7 @@ export default function BattleScreen({ area, onBattleEnd }: Props) {
               <div className="battle-log">
                 <p className="battle-log__line">{battle.log[battle.log.length - 1]}</p>
               </div>
-              {!isTerminal && phase !== 'catch-attempt' && phase !== 'run-attempt' && phase !== 'switch-attempt' && (
+              {!isTerminal && phase !== 'catch-attempt' && phase !== 'run-attempt' && phase !== 'switch-attempt' && !showBallMenu && !showItemMenu && !usingItemInBattle && (
                 <div className="battle-action-strip">
                   {ACTION_BUTTONS.map(([action, icon, label]) => {
                     const isResolving = phase === 'resolving-correct' || phase === 'resolving-wrong'
@@ -1038,6 +1125,65 @@ export default function BattleScreen({ area, onBattleEnd }: Props) {
                     )
                   })}
                   <button className="switch-btn switch-btn--cancel" onClick={() => closeSwitchMenu(true)}>
+                    Cancel
+                  </button>
+                </div>
+              ) : showBallMenu ? (
+                <div className="switch-menu">
+                  {trainer.balls.map(slot => {
+                    const def = ITEM_MAP[slot.itemId]
+                    if (!def) return null
+                    return (
+                      <button key={slot.itemId} className="switch-btn" onClick={() => handleSelectBall(slot.itemId)}>
+                        <span className="switch-btn__name">{BALL_EMOJI[slot.itemId] ?? '⚪'} {def.name}</span>
+                        <span className="switch-btn__hp">×{slot.quantity}</span>
+                      </button>
+                    )
+                  })}
+                  <button className="switch-btn switch-btn--cancel" onClick={() => setShowBallMenu(false)}>
+                    Cancel
+                  </button>
+                </div>
+              ) : showItemMenu ? (
+                <div className="switch-menu">
+                  {trainer.items.filter(slot => ITEM_MAP[slot.itemId]?.healAmount !== undefined).map(slot => {
+                    const def = ITEM_MAP[slot.itemId]!
+                    return (
+                      <button key={slot.itemId} className="switch-btn" onClick={() => { setShowItemMenu(false); setUsingItemInBattle(slot.itemId) }}>
+                        <span className="switch-btn__name">{ITEM_EMOJI[slot.itemId] ?? '📦'} {def.name}</span>
+                        <span className="switch-btn__hp">×{slot.quantity}</span>
+                      </button>
+                    )
+                  })}
+                  <button className="switch-btn switch-btn--cancel" onClick={() => setShowItemMenu(false)}>
+                    Cancel
+                  </button>
+                </div>
+              ) : usingItemInBattle ? (
+                <div className="switch-menu">
+                  <div className="switch-btn switch-btn--current" style={{ cursor: 'default', pointerEvents: 'none' }}>
+                    <span className="switch-btn__name">Use on which Pokémon?</span>
+                  </div>
+                  {trainer.party.map((p, i) => {
+                    const hp = partyHps[i] ?? 0
+                    const fainted = hp === 0
+                    const alreadyFull = hp === p.maxHp
+                    const disabled = fainted || alreadyFull
+                    return (
+                      <button
+                        key={p.uid}
+                        className={`switch-btn${disabled ? ' switch-btn--fainted' : ''}`}
+                        disabled={disabled}
+                        onClick={() => handleUseItemInBattle(usingItemInBattle, p.uid)}
+                      >
+                        <span className="switch-btn__name">{capitalize(p.name)}</span>
+                        <span className="switch-btn__hp">
+                          {fainted ? 'Fainted' : alreadyFull ? `${hp}/${p.maxHp} (full)` : `${hp}/${p.maxHp} HP`}
+                        </span>
+                      </button>
+                    )
+                  })}
+                  <button className="switch-btn switch-btn--cancel" onClick={() => setUsingItemInBattle(null)}>
                     Cancel
                   </button>
                 </div>
