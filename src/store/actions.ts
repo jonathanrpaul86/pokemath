@@ -15,3 +15,5 @@ export type GameAction =
   | { type: 'HEAL_PARTY' }
   | { type: 'SEE_POKEMON'; payload: { speciesId: number } }
   | { type: 'UPDATE_POKEMON_HP'; payload: { uid: string; currentHp: number } }
+  | { type: 'RENAME_TRAINER'; payload: { name: string } }
+  | { type: 'SET_TIMER_MULTIPLIER'; payload: { multiplier: number } }

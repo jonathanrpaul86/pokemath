@@ -266,9 +266,12 @@ export default function BattleScreen({ area, onBattleEnd }: Props) {
     const playerLevel = trainer.party[idx]?.level ?? 1
     const wildLevel = b?.wild.level ?? 1
     const levelDiff = playerLevel - wildLevel
-    const adjusted = Math.max(5, Math.min(45, base.timeLimit + Math.round(levelDiff * 0.5)))
+    const multiplier = trainer.timerMultiplier ?? 1
+    const adjusted = Math.max(5, Math.min(45, Math.round(
+      (base.timeLimit + Math.round(levelDiff * 0.5)) * multiplier
+    )))
     return { ...base, timeLimit: adjusted }
-  }, [area.mathDifficulty, trainer.party])
+  }, [area.mathDifficulty, trainer.party, trainer.timerMultiplier])
 
   function persistHps(b: BattleData) {
     trainer.party.forEach((member, i) => {
@@ -745,7 +748,10 @@ export default function BattleScreen({ area, onBattleEnd }: Props) {
     const rawProblem = generateProblem(Math.max(1, Math.floor(area.mathDifficulty / 2)))
     const playerLevel = trainer.party[b.activeIdx]?.level ?? 1
     const levelDiff = playerLevel - b.wild.level
-    const timeLimit = Math.max(5, Math.min(45, rawProblem.timeLimit + Math.round(levelDiff * 0.5)))
+    const multiplier = trainer.timerMultiplier ?? 1
+    const timeLimit = Math.max(5, Math.min(45, Math.round(
+      (rawProblem.timeLimit + Math.round(levelDiff * 0.5)) * multiplier
+    )))
     const p = { ...rawProblem, timeLimit }
     setBattle(prev => prev ? {
       ...prev, phase: 'run-attempt', problem: p, timeRemaining: p.timeLimit,

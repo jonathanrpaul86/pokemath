@@ -1,10 +1,21 @@
-import type { Trainer, OwnedPokemon } from '../types'
+import type { Trainer, OwnedPokemon, MathStats } from '../types'
 
 const SLOT_COUNT = 3
 const LEGACY_KEY = 'pmg_trainer_v1'
 
 function slotKey(slot: number): string {
   return `pmg_save_v1_${slot}`
+}
+
+const DEFAULT_MATH_STATS: MathStats = {
+  operators: {
+    '+': { totalAttempts: 0, correctAnswers: 0 },
+    '-': { totalAttempts: 0, correctAnswers: 0 },
+    '×': { totalAttempts: 0, correctAnswers: 0 },
+    '÷': { totalAttempts: 0, correctAnswers: 0 },
+  },
+  lifetimeTotal: 0,
+  lifetimeCorrect: 0,
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -14,10 +25,19 @@ function migratePokemon(p: any): OwnedPokemon {
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function migrateTrainer(raw: any): Trainer {
+  const mathStats: MathStats = {
+    ...DEFAULT_MATH_STATS,
+    ...(raw.mathStats ?? {}),
+    operators: {
+      ...DEFAULT_MATH_STATS.operators,
+      ...(raw.mathStats?.operators ?? {}),
+    },
+  }
   return {
     ...raw,
     party: (raw.party ?? []).map(migratePokemon),
-    pc: (raw.pc ?? []).map(migratePokemon),
+    pc:    (raw.pc    ?? []).map(migratePokemon),
+    mathStats,
   }
 }
 

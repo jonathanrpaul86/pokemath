@@ -23,6 +23,22 @@
   font-weight: 800;
   color: #ffd700;
   white-space: nowrap;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  font-family: inherit;
+  transition: opacity 0.15s;
+}
+
+.trainer-bar__name:hover {
+  opacity: 0.8;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.trainer-bar__name:active {
+  opacity: 0.6;
 }
 
 .trainer-bar__level {

@@ -12,6 +12,7 @@ interface Props {
   onStartBattle: () => void
   onOpenPokedex: () => void
   onOpenParty: () => void
+  onOpenProfile: () => void
   onGoToTitle: () => void
 }
 
@@ -218,7 +219,7 @@ function PokemonCenterModal({
 
 // ---- Main screen ------------------------------------------------------------
 
-export default function OverworldScreen({ onStartBattle, onOpenPokedex, onOpenParty, onGoToTitle }: Props) {
+export default function OverworldScreen({ onStartBattle, onOpenPokedex, onOpenParty, onOpenProfile, onGoToTitle }: Props) {
   const trainer = useTrainer()
   const { dispatch } = useGameStore()
   const [centerPhase, setCenterPhase] = useState<CenterPhase | null>(null)
@@ -277,7 +278,7 @@ export default function OverworldScreen({ onStartBattle, onOpenPokedex, onOpenPa
         <button className="btn btn-secondary title-btn" onClick={onGoToTitle} title="Title screen">
           🏠
         </button>
-        <div className="trainer-bar__name">{trainer.name}</div>
+        <button className="trainer-bar__name" onClick={onOpenProfile} title="View profile">{trainer.name}</button>
         <div className="trainer-bar__level">Lv.{trainer.level} Trainer</div>
         <button className="btn btn-secondary pokedex-btn" onClick={onOpenPokedex}>
           <PokedexIcon /> Pokédex
