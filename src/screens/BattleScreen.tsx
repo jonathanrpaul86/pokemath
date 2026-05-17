@@ -876,7 +876,7 @@ export default function BattleScreen({ area, onBattleEnd }: Props) {
             <XpBar xp={activeParty.xp} max={activeParty.xpToNextLevel} />
           </div>
         )}
-        {(phase === 'player-turn' || phase === 'run-attempt' || phase === 'switch-attempt' || phase === 'resolving-correct' || phase === 'resolving-wrong') && problem && (
+        {(phase === 'player-turn' || phase === 'run-attempt' || phase === 'switch-attempt' || phase === 'resolving-correct' || phase === 'resolving-wrong') && problem && !showSwitch && (
           <TimerRing
             remaining={timeRemaining}
             total={problem.timeLimit}
@@ -894,7 +894,7 @@ export default function BattleScreen({ area, onBattleEnd }: Props) {
         <div className="battle-commands__inner">
 
           {/* Full-width equation row */}
-          {!isTerminal && (
+          {!isTerminal && !showSwitch && (
             phase === 'catch-attempt' && battle.catchProgress && battle.catchProblem ? (
               <>
                 <div className="catch-header">
