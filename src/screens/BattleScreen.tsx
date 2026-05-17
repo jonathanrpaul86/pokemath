@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback, type CSSProperties } from 'react'
 import { useTrainer, useGameStore } from '../store'
 import { fetchPokemonSpecies } from '../services/pokeApi'
-import { spawnWildPokemon, calcDamage, calcCatchDifficulty, moneyReward } from '../utils/battle'
+import { spawnWildPokemon, calcDamage, calcCatchDifficulty } from '../utils/battle'
 import { pickEncounter, pickLevel } from '../utils/encounter'
 import { generateProblem, checkAnswer } from '../utils/math'
 import { battleXpReward, trainerXpReward, pokemonXpToNextLevel } from '../utils/formulas'
@@ -291,15 +291,13 @@ export default function BattleScreen({ area, onBattleEnd }: Props) {
     playVictory()
     const pkmnXp = battleXpReward(b.wild.level)
     const trXp = trainerXpReward(b.wild.level)
-    const money = moneyReward(b.wild.level)
     persistHps(b)
     dispatch({ type: 'GAIN_TRAINER_XP', payload: { amount: trXp } })
     dispatch({ type: 'GAIN_POKEMON_XP', payload: { uid: trainer.party[b.activeIdx].uid, amount: pkmnXp } })
-    dispatch({ type: 'GAIN_MONEY', payload: { amount: money } })
     setBattle(prev => prev ? {
       ...prev,
       phase: 'victory',
-      log: [`Wild ${capitalize(b.wild.name)} fainted! ${capitalize(trainer.party[b.activeIdx].name)} gained ${pkmnXp} XP! You received ¥${money}!`],
+      log: [`Wild ${capitalize(b.wild.name)} fainted! ${capitalize(trainer.party[b.activeIdx].name)} gained ${pkmnXp} XP!`],
     } : prev)
   }
 

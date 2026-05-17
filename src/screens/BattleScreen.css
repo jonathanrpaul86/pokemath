@@ -207,7 +207,7 @@
 }
 
 .battle-commands__inner {
-  max-width: 520px;
+  max-width: 680px;
   margin: 0 auto;
   padding: 0 0.85rem;
   display: flex;
@@ -565,11 +565,13 @@
 
 .numpad-btn--fight  { background: #c0392b; border-color: #8b2020; color: #fff; }
 .numpad-btn--catch  { background: #1e6b4a; border-color: #14532d; color: #fff; }
+.numpad-btn--items  { background: #5a1e8a; border-color: #3d1566; color: #fff; }
 .numpad-btn--switch { background: #1a4c8a; border-color: #0d3566; color: #fff; }
 .numpad-btn--run    { background: #8c4a0a; border-color: #6b3208; color: #fff; }
 
 .numpad-btn--fight:hover:not(:disabled),
 .numpad-btn--catch:hover:not(:disabled),
+.numpad-btn--items:hover:not(:disabled),
 .numpad-btn--switch:hover:not(:disabled),
 .numpad-btn--run:hover:not(:disabled)   { filter: brightness(1.12); }
 
