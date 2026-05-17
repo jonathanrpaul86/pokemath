@@ -231,12 +231,14 @@ export default function BattleScreen({ area, onBattleEnd }: Props) {
       if (cancelled) return
       const wild = spawnWildPokemon(wildSpecies, level)
       dispatch({ type: 'SEE_POKEMON', payload: { speciesId: wild.speciesId } })
+      const partyHps = trainer.party.map(p => p.currentHp)
+      const firstAlive = partyHps.findIndex(hp => hp > 0)
       setBattle({
         phase: 'choose-action',
         wild,
         wildHp: wild.maxHp,
-        partyHps: trainer.party.map(p => p.currentHp),
-        activeIdx: 0,
+        partyHps,
+        activeIdx: firstAlive >= 0 ? firstAlive : 0,
         problem: null,
         timeRemaining: 0,
         catchProgress: null,
