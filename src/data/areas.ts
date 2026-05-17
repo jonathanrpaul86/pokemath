@@ -22,7 +22,7 @@ export const KANTO_AREAS: Area[] = [
     name: 'Viridian City',
     description: 'The first city on your journey. Heal up at the Pokémon Center before pushing north through Viridian Forest.',
     areaType: 'city',
-    requiredTrainerLevel: 3,
+    requiredTrainerLevel: 0,
     connectedAreaIds: ['route-1', 'viridian-forest'],
     mapX: 200, mapY: 260,
     mathDifficulty: 13,
