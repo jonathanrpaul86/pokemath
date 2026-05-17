@@ -972,31 +972,29 @@ export default function BattleScreen({ area, onBattleEnd }: Props) {
                     Continue{phase === 'blacked-out' ? ' (healed)' : ''}
                   </button>
                 </div>
+              ) : showSwitch ? (
+                <div className="switch-menu">
+                  {trainer.party.map((p, i) => {
+                    if (i === activeIdx || (partyHps[i] ?? 0) === 0) return null
+                    const hp = partyHps[i] ?? 0
+                    return (
+                      <button key={p.uid} className="switch-btn" onClick={() => handleSwitch(i)}>
+                        <span className="switch-btn__name">{capitalize(p.name)}</span>
+                        <span className="switch-btn__level">Lv.{p.level}</span>
+                        <span className="switch-btn__hp">{hp}/{p.maxHp} HP</span>
+                      </button>
+                    )
+                  })}
+                  <button className="switch-btn switch-btn--cancel" onClick={() => setShowSwitch(false)}>
+                    Cancel
+                  </button>
+                </div>
               ) : (phase === 'player-turn' || phase === 'resolving-correct' || phase === 'resolving-wrong' || phase === 'catch-attempt' || phase === 'run-attempt' || phase === 'switch-attempt') ? (
-                showSwitch ? (
-                  <div className="switch-menu">
-                    {trainer.party.map((p, i) => {
-                      if (i === activeIdx || (partyHps[i] ?? 0) === 0) return null
-                      const hp = partyHps[i] ?? 0
-                      return (
-                        <button key={p.uid} className="switch-btn" onClick={() => handleSwitch(i)}>
-                          <span className="switch-btn__name">{capitalize(p.name)}</span>
-                          <span className="switch-btn__level">Lv.{p.level}</span>
-                          <span className="switch-btn__hp">{hp}/{p.maxHp} HP</span>
-                        </button>
-                      )
-                    })}
-                    <button className="switch-btn switch-btn--cancel" onClick={() => setShowSwitch(false)}>
-                      Cancel
-                    </button>
-                  </div>
-                ) : (
-                  <NumberPad
-                    {...numpadProps}
-                    onSubmit={phase === 'catch-attempt' ? handleSubmitCatchAnswer : handleSubmitAnswer}
-                    disabled={inputBlocked}
-                  />
-                )
+                <NumberPad
+                  {...numpadProps}
+                  onSubmit={phase === 'catch-attempt' ? handleSubmitCatchAnswer : handleSubmitAnswer}
+                  disabled={inputBlocked}
+                />
               ) : null}
             </div>
 
