@@ -1,13 +1,19 @@
 import type { Trainer, OwnedPokemon, MathStats } from '../types'
 import type { GameAction } from './actions'
 import { createOwnedPokemon, trainerXpToNextLevel, pokemonXpToNextLevel, calcStats } from '../utils/formulas'
+import { KANTO_AREAS } from '../data/areas'
 
 const PARTY_MAX = 6
+const DEV_TRAINER_NAME = 'DEBUG'
+const DEV_TRAINER_LEVEL = 40
 
 // ---- Trainer factory --------------------------------------------------------
 
 export function createNewTrainer(name: string, starterSpecies: Parameters<typeof createOwnedPokemon>[0]): Trainer {
-  const starter = createOwnedPokemon(starterSpecies, 5)
+  const isDev = name.trim().toUpperCase() === DEV_TRAINER_NAME
+  const starterLevel = isDev ? DEV_TRAINER_LEVEL : 5
+  const trainerLevel = isDev ? DEV_TRAINER_LEVEL : 1
+  const starter = createOwnedPokemon(starterSpecies, starterLevel)
   const mathStats: MathStats = {
     operators: {
       '+': { totalAttempts: 0, correctAnswers: 0 },
@@ -21,16 +27,16 @@ export function createNewTrainer(name: string, starterSpecies: Parameters<typeof
 
   return {
     name,
-    level: 1,
+    level: trainerLevel,
     xp: 0,
-    xpToNextLevel: trainerXpToNextLevel(1),
+    xpToNextLevel: trainerXpToNextLevel(trainerLevel),
     party: [starter],
     pc: [],
     pokedex: {
       [starterSpecies.id]: { seen: true, caught: true },
     },
     currentAreaId: 'route-1',
-    unlockedAreaIds: ['route-1'],
+    unlockedAreaIds: isDev ? KANTO_AREAS.map(a => a.id) : ['route-1'],
     mathStats,
   }
 }
