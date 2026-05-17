@@ -493,16 +493,14 @@ export default function BattleScreen({ area, onBattleEnd }: Props) {
         return
       }
 
-      // Branch B: switch menu navigation (choose-action or player-turn)
+      // Branch B: switch menu navigation
       if (showSwitch) {
         if (e.key === 'Escape') { e.preventDefault(); setShowSwitch(false); return }
         const n = parseInt(e.key, 10)
-        if (!isNaN(n) && n >= 1) {
-          const switchable = trainer.party
-            .map((p, i) => ({ p, i }))
-            .filter(({ i }) => i !== b.activeIdx && (b.partyHps[i] ?? 0) > 0)
-          const target = switchable[n - 1]
-          if (target) { e.preventDefault(); handleSwitch(target.i) }
+        if (!isNaN(n) && n >= 1 && n <= trainer.party.length) {
+          const partyIdx = n - 1
+          const available = partyIdx !== b.activeIdx && (b.partyHps[partyIdx] ?? 0) > 0
+          if (available) { e.preventDefault(); handleSwitch(partyIdx) }
         }
         return
       }
@@ -975,11 +973,23 @@ export default function BattleScreen({ area, onBattleEnd }: Props) {
               ) : showSwitch ? (
                 <div className="switch-menu">
                   {trainer.party.map((p, i) => {
-                    if (i === activeIdx || (partyHps[i] ?? 0) === 0) return null
                     const hp = partyHps[i] ?? 0
+                    const isCurrent = i === activeIdx
+                    const isFainted = hp === 0
+                    const unavailable = isCurrent || isFainted
+                    const tag = isCurrent ? 'active' : isFainted ? 'fainted' : null
                     return (
-                      <button key={p.uid} className="switch-btn" onClick={() => handleSwitch(i)}>
-                        <span className="switch-btn__name">{capitalize(p.name)}</span>
+                      <button
+                        key={p.uid}
+                        className={`switch-btn${isCurrent ? ' switch-btn--current' : isFainted ? ' switch-btn--fainted' : ''}`}
+                        disabled={unavailable}
+                        onClick={() => handleSwitch(i)}
+                      >
+                        <span className="switch-btn__name">
+                          <span className="switch-btn__num">{i + 1}</span>
+                          {capitalize(p.name)}
+                          {tag && <span className="switch-btn__tag">({tag})</span>}
+                        </span>
                         <span className="switch-btn__level">Lv.{p.level}</span>
                         <span className="switch-btn__hp">{hp}/{p.maxHp} HP</span>
                       </button>
