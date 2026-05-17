@@ -76,6 +76,24 @@ export const ITEM_DEFS: ItemDefinition[] = [
     sellPrice: 1500,
     healAmount: 0,
   },
+  {
+    id: 'revive',
+    name: 'Revive',
+    description: 'Revives a fainted Pokémon to half its max HP.',
+    pocket: 'item',
+    buyPrice: 1500,
+    sellPrice: 750,
+    revivePercent: 0.5,
+  },
+  {
+    id: 'max-revive',
+    name: 'Max Revive',
+    description: 'Revives a fainted Pokémon to full HP.',
+    pocket: 'item',
+    buyPrice: 4000,
+    sellPrice: 2000,
+    revivePercent: 1.0,
+  },
 
   // ── Key Items ─────────────────────────────────────────────────────────────────
   {
@@ -112,6 +130,8 @@ export const ITEM_EMOJI: Record<string, string> = {
   'super-potion':  '💉',
   'hyper-potion':  '🧪',
   'full-restore':  '✨',
+  'revive':        '💫',
+  'max-revive':    '⭐',
   'town-map':      '🗺️',
   'bicycle':       '🚲',
 }
