@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useRef, useCallback, type CSSProperties } from 'react'
+import { useState, useEffect, useRef, useCallback, type CSSProperties } from 'react'
 import { useTrainer, useGameStore } from '../store'
 import { fetchPokemonSpecies } from '../services/pokeApi'
 import { spawnWildPokemon, calcDamage, calcCatchDifficulty } from '../utils/battle'
@@ -105,13 +105,38 @@ function XpBar({ xp, max }: { xp: number; max: number }) {
   )
 }
 
-function TimerBar({ remaining, total }: { remaining: number; total: number }) {
-  const pct = total > 0 ? Math.min(100, Math.round((remaining / total) * 100)) : 0
-  const color = pct > 50 ? 'blue' : pct > 25 ? 'yellow' : 'red'
+function TimerRing({ remaining, total, overlay, flash }: {
+  remaining: number; total: number; overlay?: boolean; flash?: 'correct' | 'wrong'
+}) {
+  const pct = flash ? 1 : (total > 0 ? Math.min(1, remaining / total) : 0)
+  const stroke = flash === 'correct' ? '#48bb78'
+    : flash === 'wrong' ? '#e63946'
+    : pct > 0.5 ? '#4299e1' : pct > 0.25 ? '#f6e05e' : '#e63946'
+  const size = overlay ? 140 : 64
+  const r = overlay ? 58 : 26
+  const cx = size / 2
+  const circ = 2 * Math.PI * r
+  const offset = circ * (1 - pct)
+  const cls = ['timer-ring', overlay && 'timer-ring--overlay', flash && `timer-ring--flash-${flash}`].filter(Boolean).join(' ')
   return (
-    <div className="timer-bar">
-      <div className={`timer-bar__fill timer-bar__fill--${color}`} style={{ width: `${pct}%` }} />
-      <span className="timer-bar__label">{remaining}s</span>
+    <div className={cls}>
+      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} aria-hidden="true">
+        <circle cx={cx} cy={cx} r={r} fill="none" stroke="#ffffff20" strokeWidth="12" />
+        <circle
+          cx={cx} cy={cx} r={r}
+          fill="none"
+          stroke={stroke}
+          strokeWidth="12"
+          strokeDasharray={circ}
+          strokeDashoffset={offset}
+          strokeLinecap="round"
+          transform={`rotate(-90 ${cx} ${cx})`}
+          style={{ transition: flash ? 'none' : 'stroke-dashoffset 0.9s linear, stroke 0.3s ease' }}
+        />
+      </svg>
+      <span className="timer-ring__label">
+        {flash === 'correct' ? '✓' : flash === 'wrong' ? '✗' : remaining}
+      </span>
     </div>
   )
 }
@@ -143,7 +168,7 @@ function NumberPad({ mode = 'digits', onDigit, onDelete, onSubmit, onAction, swi
             onClick={() => onAction?.(action)}
           >
             <span className="numpad-btn__bg-icon" aria-hidden="true">{icon}</span>
-            <span className="numpad-btn__label">({label[0]}){' '}{label.slice(1)}</span>
+            <span className="numpad-btn__label">({label[0]}){' '}{label.slice(1)}</span>
           </button>
         ))}
       </div>
@@ -207,7 +232,7 @@ export default function BattleScreen({ area, onBattleEnd }: Props) {
       const wild = spawnWildPokemon(wildSpecies, level)
       dispatch({ type: 'SEE_POKEMON', payload: { speciesId: wild.speciesId } })
       setBattle({
-        phase: 'intro',
+        phase: 'choose-action',
         wild,
         wildHp: wild.maxHp,
         partyHps: trainer.party.map(p => p.currentHp),
@@ -273,15 +298,6 @@ export default function BattleScreen({ area, onBattleEnd }: Props) {
   }
 
   // ---- Phase effects ---------------------------------------------------------
-
-  // intro → choose-action
-  useEffect(() => {
-    if (!battle || battle.phase !== 'intro') return
-    const t = setTimeout(() => {
-      setBattle(prev => prev ? { ...prev, phase: 'choose-action' } : prev)
-    }, 1800)
-    return () => clearTimeout(t)
-  }, [battle?.phase])  // eslint-disable-line
 
   // resolving-correct / resolving-wrong → next phase
   useEffect(() => {
@@ -434,6 +450,13 @@ export default function BattleScreen({ area, onBattleEnd }: Props) {
     function onKeyDown(e: KeyboardEvent) {
       const b = battleRef.current
       if (!b) return
+
+      // Terminal phase: Enter continues
+      const terminal = b.phase === 'victory' || b.phase === 'caught' || b.phase === 'fled' || b.phase === 'blacked-out'
+      if (terminal) {
+        if (e.key === 'Enter') { e.preventDefault(); onBattleEnd() }
+        return
+      }
 
       // Branch A: action selection
       if (b.phase === 'choose-action' && !showSwitch) {
@@ -777,68 +800,65 @@ export default function BattleScreen({ area, onBattleEnd }: Props) {
             <XpBar xp={activeParty.xp} max={activeParty.xpToNextLevel} />
           </div>
         )}
+        {(phase === 'player-turn' || phase === 'run-attempt' || phase === 'resolving-correct' || phase === 'resolving-wrong') && problem && (
+          <TimerRing
+            remaining={timeRemaining}
+            total={problem.timeLimit}
+            overlay
+            flash={phase === 'resolving-correct' ? 'correct' : phase === 'resolving-wrong' ? 'wrong' : undefined}
+          />
+        )}
+        {phase === 'catch-attempt' && battle.catchProgress && (
+          <TimerRing remaining={battle.catchTimeRemaining} total={battle.catchProgress.timePerProblem} overlay />
+        )}
       </div>
 
       {/* ── Command panel ── */}
       <div className="battle-commands">
         <div className="battle-commands__inner">
-          {isTerminal ? (
-            <div className="battle-bottom-row">
+
+          {/* Full-width equation row */}
+          {!isTerminal && (
+            phase === 'catch-attempt' && battle.catchProgress && battle.catchProblem ? (
+              <>
+                <div className="catch-header">
+                  <span className="catch-header__label">Catching {capitalize(wild.name)}!</span>
+                  <span className="catch-header__progress">
+                    {battle.catchProgress.solved} / {battle.catchProgress.required} solved
+                  </span>
+                </div>
+                <div className="battle-problem">
+                  <span className="battle-problem__text">
+                    {battle.catchProblem.operands.join(` ${battle.catchProblem.operator} `)} = ?
+                  </span>
+                  <span className="battle-problem__answer">{answer || '_'}</span>
+                </div>
+              </>
+            ) : problem ? (
+              (() => {
+                const isResolving = phase === 'resolving-correct' || phase === 'resolving-wrong'
+                return (
+                  <div className={`battle-problem${phase === 'resolving-correct' ? ' battle-problem--correct' : phase === 'resolving-wrong' ? ' battle-problem--wrong' : ''}`}>
+                    <span className="battle-problem__text">
+                      {problem.operands.join(` ${problem.operator} `)} = {isResolving ? (answer || '?') : '?'}
+                    </span>
+                    {!isResolving && (
+                      <span className="battle-problem__answer">{answer || '_'}</span>
+                    )}
+                  </div>
+                )
+              })()
+            ) : null
+          )}
+
+          {/* Bottom row: log + actions (left) | numpad / result (right) */}
+          <div className="battle-commands__row">
+
+            <div className="battle-commands__left">
               <div className="battle-log">
                 <p className="battle-log__line">{battle.log[battle.log.length - 1]}</p>
               </div>
-              <div className="battle-result-panel">
-                <button className="btn btn-primary" onClick={onBattleEnd}>
-                  {phase === 'blacked-out' ? 'Continue\n(healed)' : 'Continue'}
-                </button>
-              </div>
-            </div>
-
-          ) : (
-            <>
-              {/* Problem / catch header */}
-              {phase === 'catch-attempt' && battle.catchProgress && battle.catchProblem ? (
-                <>
-                  <div className="catch-header">
-                    <span className="catch-header__label">Catching {capitalize(wild.name)}!</span>
-                    <span className="catch-header__progress">
-                      {battle.catchProgress.solved} / {battle.catchProgress.required} solved
-                    </span>
-                  </div>
-                  <div className="battle-problem">
-                    <span className="battle-problem__text">
-                      {battle.catchProblem.operands.join(` ${battle.catchProblem.operator} `)} = ?
-                    </span>
-                    <span className="battle-problem__answer">{answer || '_'}</span>
-                  </div>
-                  <TimerBar remaining={battle.catchTimeRemaining} total={battle.catchProgress.timePerProblem} />
-                </>
-              ) : problem ? (
-                <>
-                  {phase === 'run-attempt' && (
-                    <div className="catch-header">
-                      <span className="catch-header__label">Solve to escape!</span>
-                    </div>
-                  )}
-                  {(() => {
-                    const isResolving = phase === 'resolving-correct' || phase === 'resolving-wrong'
-                    return (
-                      <div className={`battle-problem${phase === 'resolving-correct' ? ' battle-problem--correct' : phase === 'resolving-wrong' ? ' battle-problem--wrong' : ''}`}>
-                        <span className="battle-problem__text">
-                          {problem.operands.join(` ${problem.operator} `)} = {isResolving ? (answer || '?') : '?'}
-                        </span>
-                        {!isResolving && (
-                          <span className="battle-problem__answer">{answer || '_'}</span>
-                        )}
-                      </div>
-                    )
-                  })()}
-                  <TimerBar remaining={timeRemaining} total={problem.timeLimit} />
-                </>
-              ) : null}
-
-              {/* Action strip — always visible except during catch/run sequences */}
-              {phase !== 'catch-attempt' && phase !== 'run-attempt' && (
+              {!isTerminal && phase !== 'catch-attempt' && phase !== 'run-attempt' && (
                 <div className="battle-action-strip">
                   {ACTION_BUTTONS.map(([action, icon, label]) => {
                     const isResolving = phase === 'resolving-correct' || phase === 'resolving-wrong'
@@ -852,47 +872,52 @@ export default function BattleScreen({ area, onBattleEnd }: Props) {
                         onClick={() => handleAction(action)}
                       >
                         <span className="numpad-btn__bg-icon" aria-hidden="true">{icon}</span>
-                        <span className="numpad-btn__label">({label[0]}){' '}{label.slice(1)}</span>
+                        <span className="numpad-btn__label">({label[0]}){' '}{label.slice(1)}</span>
                       </button>
                     )
                   })}
                 </div>
               )}
+            </div>
 
-              {/* Log + numpad slot (numpad only during fight/catch phases) */}
-              <div className="battle-bottom-row">
-                <div className="battle-log">
-                  <p className="battle-log__line">{battle.log[battle.log.length - 1]}</p>
+            {/* Right column always rendered so left column width stays fixed */}
+            <div className="battle-commands__right">
+              {isTerminal ? (
+                <div className="battle-result-panel">
+                  <button className="btn btn-primary" onClick={onBattleEnd}>
+                    Continue{phase === 'blacked-out' ? ' (healed)' : ''}
+                  </button>
                 </div>
-                {(phase === 'player-turn' || phase === 'resolving-correct' || phase === 'resolving-wrong' || phase === 'catch-attempt' || phase === 'run-attempt') && (
-                  showSwitch ? (
-                    <div className="switch-menu">
-                      {trainer.party.map((p, i) => {
-                        if (i === activeIdx || (partyHps[i] ?? 0) === 0) return null
-                        const hp = partyHps[i] ?? 0
-                        return (
-                          <button key={p.uid} className="switch-btn" onClick={() => handleSwitch(i)}>
-                            <span className="switch-btn__name">{capitalize(p.name)}</span>
-                            <span className="switch-btn__level">Lv.{p.level}</span>
-                            <span className="switch-btn__hp">{hp}/{p.maxHp} HP</span>
-                          </button>
-                        )
-                      })}
-                      <button className="switch-btn switch-btn--cancel" onClick={() => setShowSwitch(false)}>
-                        Cancel
-                      </button>
-                    </div>
-                  ) : (
-                    <NumberPad
-                      {...numpadProps}
-                      onSubmit={phase === 'catch-attempt' ? handleSubmitCatchAnswer : handleSubmitAnswer}
-                      disabled={inputBlocked}
-                    />
-                  )
-                )}
-              </div>
-            </>
-          )}
+              ) : (phase === 'player-turn' || phase === 'resolving-correct' || phase === 'resolving-wrong' || phase === 'catch-attempt' || phase === 'run-attempt') ? (
+                showSwitch ? (
+                  <div className="switch-menu">
+                    {trainer.party.map((p, i) => {
+                      if (i === activeIdx || (partyHps[i] ?? 0) === 0) return null
+                      const hp = partyHps[i] ?? 0
+                      return (
+                        <button key={p.uid} className="switch-btn" onClick={() => handleSwitch(i)}>
+                          <span className="switch-btn__name">{capitalize(p.name)}</span>
+                          <span className="switch-btn__level">Lv.{p.level}</span>
+                          <span className="switch-btn__hp">{hp}/{p.maxHp} HP</span>
+                        </button>
+                      )
+                    })}
+                    <button className="switch-btn switch-btn--cancel" onClick={() => setShowSwitch(false)}>
+                      Cancel
+                    </button>
+                  </div>
+                ) : (
+                  <NumberPad
+                    {...numpadProps}
+                    onSubmit={phase === 'catch-attempt' ? handleSubmitCatchAnswer : handleSubmitAnswer}
+                    disabled={inputBlocked}
+                  />
+                )
+              ) : null}
+            </div>
+
+          </div>
+
         </div>
       </div>
     </div>
