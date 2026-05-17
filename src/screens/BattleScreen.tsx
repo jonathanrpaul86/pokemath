@@ -1060,13 +1060,13 @@ export default function BattleScreen({ area, onBattleEnd }: Props) {
           )}
 
           {/* Bottom row: log + actions (left) | numpad / result (right) */}
-          <div className="battle-commands__row">
+          <div className={`battle-commands__row${showSwitch ? ' battle-commands__row--switch' : ''}`}>
 
             <div className="battle-commands__left">
               <div className="battle-log">
                 <p className="battle-log__line">{battle.log[battle.log.length - 1]}</p>
               </div>
-              {!isTerminal && phase !== 'catch-attempt' && phase !== 'run-attempt' && phase !== 'switch-attempt' && !showBallMenu && !showItemMenu && !usingItemInBattle && (
+              {!isTerminal && !showSwitch && phase !== 'catch-attempt' && phase !== 'run-attempt' && phase !== 'switch-attempt' && !showBallMenu && !showItemMenu && !usingItemInBattle && (
                 <div className="battle-action-strip">
                   {ACTION_BUTTONS.map(([action, icon, label]) => {
                     const isResolving = phase === 'resolving-correct' || phase === 'resolving-wrong'
@@ -1097,7 +1097,7 @@ export default function BattleScreen({ area, onBattleEnd }: Props) {
                   </button>
                 </div>
               ) : showSwitch ? (
-                <div className="switch-menu">
+                <div className="switch-menu switch-menu--grid">
                   {trainer.party.map((p, i) => {
                     const hp = partyHps[i] ?? 0
                     const isCurrent = i === activeIdx
