@@ -13,6 +13,8 @@ export interface ItemDefinition {
   catchMultiplier?: number
   /** Healing items: HP restored; 0 = full restore */
   healAmount?: number
+  /** Revive items: fraction of maxHp to restore (targets fainted Pokémon only) */
+  revivePercent?: number
 }
 
 export interface InventorySlot {

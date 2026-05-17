@@ -24,4 +24,6 @@ export interface Area {
   mapY: number
   /** 1–100 scalar driving math problem difficulty in this area */
   mathDifficulty: number
+  /** Item IDs available for purchase at this area's Poké Mart (cities/towns only) */
+  martItems?: string[]
 }

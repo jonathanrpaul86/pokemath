@@ -26,6 +26,7 @@ export const KANTO_AREAS: Area[] = [
     connectedAreaIds: ['route-1', 'viridian-forest'],
     mapX: 200, mapY: 260,
     mathDifficulty: 13,
+    martItems: ['poke-ball', 'potion'],
     encounters: [],
   },
   {
@@ -54,6 +55,7 @@ export const KANTO_AREAS: Area[] = [
     connectedAreaIds: ['viridian-forest', 'route-3'],
     mapX: 200, mapY: 136,
     mathDifficulty: 30,
+    martItems: ['poke-ball', 'potion', 'super-potion'],
     encounters: [],
   },
   {
@@ -115,6 +117,7 @@ export const KANTO_AREAS: Area[] = [
     connectedAreaIds: ['route-4', 'route-9'],
     mapX: 410, mapY: 120,
     mathDifficulty: 47,
+    martItems: ['poke-ball', 'great-ball', 'potion', 'super-potion'],
     encounters: [],
   },
   {
@@ -159,6 +162,7 @@ export const KANTO_AREAS: Area[] = [
     connectedAreaIds: ['rock-tunnel', 'route-7', 'pokemon-tower'],
     mapX: 466, mapY: 262,
     mathDifficulty: 63,
+    martItems: ['poke-ball', 'great-ball', 'potion', 'super-potion', 'revive'],
     encounters: [],
   },
   {
@@ -203,6 +207,7 @@ export const KANTO_AREAS: Area[] = [
     connectedAreaIds: ['route-7', 'cycling-road'],
     mapX: 340, mapY: 238,
     mathDifficulty: 70,
+    martItems: ['poke-ball', 'great-ball', 'ultra-ball', 'potion', 'super-potion', 'hyper-potion', 'revive'],
     encounters: [],
   },
   {
@@ -230,6 +235,7 @@ export const KANTO_AREAS: Area[] = [
     connectedAreaIds: ['cycling-road', 'safari-zone', 'seafoam-islands'],
     mapX: 306, mapY: 328,
     mathDifficulty: 78,
+    martItems: ['great-ball', 'ultra-ball', 'super-potion', 'hyper-potion', 'revive'],
     encounters: [],
   },
   {
@@ -276,6 +282,7 @@ export const KANTO_AREAS: Area[] = [
     connectedAreaIds: ['seafoam-islands', 'victory-road'],
     mapX: 148, mapY: 358,
     mathDifficulty: 87,
+    martItems: ['ultra-ball', 'hyper-potion', 'full-restore', 'max-revive'],
     encounters: [
       { speciesId: 77,  weight: 25, minLevel: 33, maxLevel: 40 }, // Ponyta
       { speciesId: 58,  weight: 25, minLevel: 33, maxLevel: 40 }, // Growlithe
