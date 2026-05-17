@@ -7,9 +7,10 @@ import OverworldScreen from './screens/OverworldScreen'
 import BattleScreen from './screens/BattleScreen'
 import PokedexScreen from './screens/PokedexScreen'
 import PartyScreen from './screens/PartyScreen'
+import ProfileScreen from './screens/ProfileScreen'
 import './index.css'
 
-type GameScreen = 'overworld' | 'battle' | 'pokedex' | 'party'
+type GameScreen = 'overworld' | 'battle' | 'pokedex' | 'party' | 'profile'
 
 function App() {
   const { trainer, currentSlot, saves, loadSlot, deleteSlot, goToTitle } = useGameStore()
@@ -56,11 +57,16 @@ function App() {
     return <PartyScreen onBack={() => setGameScreen('overworld')} />
   }
 
+  if (gameScreen === 'profile') {
+    return <ProfileScreen onBack={() => setGameScreen('overworld')} />
+  }
+
   return (
     <OverworldScreen
       onStartBattle={() => setGameScreen('battle')}
       onOpenPokedex={() => setGameScreen('pokedex')}
       onOpenParty={() => setGameScreen('party')}
+      onOpenProfile={() => setGameScreen('profile')}
       onGoToTitle={goToTitle}
     />
   )

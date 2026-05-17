@@ -247,6 +247,18 @@ export function gameReducer(trainer: Trainer, action: GameAction): Trainer {
       break
     }
 
+    case 'RENAME_TRAINER': {
+      const trimmed = action.payload.name.trim()
+      if (!trimmed) return trainer
+      next = { ...trainer, name: trimmed }
+      break
+    }
+
+    case 'SET_TIMER_MULTIPLIER': {
+      next = { ...trainer, timerMultiplier: action.payload.multiplier }
+      break
+    }
+
     default:
       return trainer
   }

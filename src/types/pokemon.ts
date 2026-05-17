@@ -37,7 +37,7 @@ export interface PokemonSpecies {
   levelUpMoves: Record<number, Move[]>
 }
 
-/** A Pokemon owned by Valentine */
+/** A Pokemon owned by the trainer */
 export interface OwnedPokemon {
   uid: string
   speciesId: number

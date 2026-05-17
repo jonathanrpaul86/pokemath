@@ -35,12 +35,12 @@ export function pokemonXpToNextLevel(currentLevel: number): number {
   return currentLevel * 50
 }
 
-/** XP rewarded to Valentine's active Pokemon after winning a battle */
+/** XP rewarded to the active Pokemon after winning a battle */
 export function battleXpReward(wildLevel: number): number {
   return Math.floor(wildLevel * 1.5 + 10)
 }
 
-/** XP rewarded to Valentine's trainer after winning a battle */
+/** XP rewarded to the trainer after winning a battle */
 export function trainerXpReward(wildLevel: number): number {
   return Math.floor(wildLevel * 2 + 5)
 }
