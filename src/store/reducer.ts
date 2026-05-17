@@ -27,7 +27,7 @@ export function createNewTrainer(name: string, starterSpecies: Parameters<typeof
   }
 
   return {
-    name,
+    name: isDev ? 'Trainer' : name,
     level: trainerLevel,
     xp: 0,
     xpToNextLevel: trainerXpToNextLevel(trainerLevel),
