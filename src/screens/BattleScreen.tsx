@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback, type CSSProperties } from 'react'
+﻿import { useState, useEffect, useRef, useCallback, type CSSProperties } from 'react'
 import { useTrainer, useGameStore } from '../store'
 import { fetchPokemonSpecies } from '../services/pokeApi'
 import { spawnWildPokemon, calcDamage, calcCatchDifficulty } from '../utils/battle'
@@ -118,7 +118,7 @@ function TimerBar({ remaining, total }: { remaining: number; total: number }) {
 
 const ACTION_BUTTONS = [
   ['fight',  '⚔',  'Fight'],
-  ['catch',  '🎯', 'Catch'],
+  ['catch',  '🎣', 'Catch'],
   ['switch', '🔄', 'Switch'],
   ['run',    '🏃', 'Run'],
 ] as const
@@ -135,15 +135,15 @@ function NumberPad({ mode = 'digits', onDigit, onDelete, onSubmit, onAction, swi
   if (mode === 'actions') {
     return (
       <div className="numpad numpad--actions">
-        {ACTION_BUTTONS.map(([action, icon, label], idx) => (
+        {ACTION_BUTTONS.map(([action, icon, label]) => (
           <button
             key={action}
             className={`numpad-btn numpad-btn--${action}`}
             disabled={action === 'switch' && (switchableCount ?? 0) === 0}
             onClick={() => onAction?.(action)}
           >
-            {icon} {label}
-            <span className="numpad-btn__key-hint">[{idx + 1}]</span>
+            <span className="numpad-btn__bg-icon" aria-hidden="true">{icon}</span>
+            <span className="numpad-btn__label">({label[0]}){' '}{label.slice(1)}</span>
           </button>
         ))}
       </div>
@@ -229,10 +229,11 @@ export default function BattleScreen({ area, onBattleEnd }: Props) {
 
   // ---- Helpers ---------------------------------------------------------------
 
-  const nextProblem = useCallback(() => {
+  const nextProblem = useCallback((overrideIdx?: number) => {
     const base = generateProblem(area.mathDifficulty)
     const b = battleRef.current
-    const playerLevel = trainer.party[b?.activeIdx ?? 0]?.level ?? 1
+    const idx = overrideIdx ?? b?.activeIdx ?? 0
+    const playerLevel = trainer.party[idx]?.level ?? 1
     const wildLevel = b?.wild.level ?? 1
     const levelDiff = playerLevel - wildLevel
     const adjusted = Math.max(5, Math.min(45, base.timeLimit + Math.round(levelDiff * 0.5)))
@@ -292,22 +293,29 @@ export default function BattleScreen({ area, onBattleEnd }: Props) {
 
       if (b.phase === 'resolving-correct') {
         if (b.wildHp <= 0) { handleVictory(b); return }
+        const p = nextProblem()
+        setBattle(prev => prev ? { ...prev, phase: 'player-turn', problem: p, timeRemaining: p.timeLimit } : prev)
+        setAnswer('')
+        return
       }
 
       if (b.phase === 'resolving-wrong') {
         if (b.partyHps[b.activeIdx] <= 0) {
           const nextIdx = b.partyHps.findIndex((hp, i) => i !== b.activeIdx && hp > 0)
           if (nextIdx === -1) { handleBlackout(b); return }
+          // Forced switch after faint — pause at choose-action so player can react
           setBattle(prev => prev ? {
             ...prev, phase: 'choose-action', activeIdx: nextIdx, problem: null,
             log: [...prev.log.slice(-3), `Go, ${capitalize(trainer.party[nextIdx].name)}!`],
           } : prev)
           return
         }
+        const p = nextProblem()
+        setBattle(prev => prev ? { ...prev, phase: 'player-turn', problem: p, timeRemaining: p.timeLimit } : prev)
+        setAnswer('')
+        return
       }
-
-      setBattle(prev => prev ? { ...prev, phase: 'choose-action', problem: null } : prev)
-    }, 1500)
+    }, 800)
     return () => clearTimeout(t)
   }, [battle?.phase])  // eslint-disable-line
 
@@ -412,18 +420,18 @@ export default function BattleScreen({ area, onBattleEnd }: Props) {
       if (b.phase === 'choose-action' && !showSwitch) {
         const switchable = trainer.party.filter((_, i) => i !== b.activeIdx && (b.partyHps[i] ?? 0) > 0)
         const actionMap: Record<string, () => void> = {
-          '1': handleFight,
-          '2': handleStartCatch,
-          '4': handleFlee,
+          'f': handleFight,
+          'c': handleStartCatch,
+          'r': handleFlee,
         }
-        if (e.key === '3' && switchable.length > 0) { e.preventDefault(); setShowSwitch(true); return }
+        if (e.key === 's' && switchable.length > 0) { e.preventDefault(); setShowSwitch(true); return }
         const fn = actionMap[e.key]
         if (fn) { e.preventDefault(); fn() }
         return
       }
 
-      // Branch B: switch menu navigation
-      if (b.phase === 'choose-action' && showSwitch) {
+      // Branch B: switch menu navigation (choose-action or player-turn)
+      if (showSwitch) {
         if (e.key === 'Escape') { e.preventDefault(); setShowSwitch(false); return }
         const n = parseInt(e.key, 10)
         if (!isNaN(n) && n >= 1) {
@@ -436,8 +444,17 @@ export default function BattleScreen({ area, onBattleEnd }: Props) {
         return
       }
 
-      // Branch C: digit entry
+      // Branch C: digit entry (player-turn / catch-attempt)
       if (b.phase !== 'player-turn' && b.phase !== 'catch-attempt') return
+
+      // Battle option hotkeys available during player-turn
+      if (b.phase === 'player-turn') {
+        const switchable = trainer.party.filter((_, i) => i !== b.activeIdx && (b.partyHps[i] ?? 0) > 0)
+        if (e.key === 'c') { e.preventDefault(); handleStartCatch(); return }
+        if (e.key === 's' && switchable.length > 0) { e.preventDefault(); setShowSwitch(true); return }
+        if (e.key === 'r') { e.preventDefault(); handleFlee(); return }
+      }
+
       if (e.key >= '0' && e.key <= '9') {
         e.preventDefault()
         setAnswer(a => a.length < 4 ? a + e.key : a)
@@ -505,7 +522,6 @@ export default function BattleScreen({ area, onBattleEnd }: Props) {
     if (isNaN(num)) return
     const correct = checkAnswer(b.problem, num)
     dispatch({ type: 'RECORD_ANSWER', payload: { operator: b.problem.operator, correct } })
-    setAnswer('')
     if (correct) processCorrectAnswer(b, b.timeRemaining >= b.problem.timeLimit / 2)
     else processWrongAnswer(b)
   }
@@ -592,13 +608,26 @@ export default function BattleScreen({ area, onBattleEnd }: Props) {
   }
 
   function handleSwitch(partyIdx: number) {
-    setBattle(prev => prev ? {
-      ...prev,
-      activeIdx: partyIdx,
-      phase: 'choose-action',
-      problem: null,
-      log: [...prev.log.slice(-3), `Go, ${capitalize(trainer.party[partyIdx].name)}!`],
-    } : prev)
+    const comingFromFight = battleRef.current?.phase === 'player-turn'
+    if (comingFromFight) {
+      const p = nextProblem(partyIdx)
+      setBattle(prev => prev ? {
+        ...prev,
+        activeIdx: partyIdx,
+        phase: 'player-turn',
+        problem: p,
+        timeRemaining: p.timeLimit,
+        log: [...prev.log.slice(-3), `Go, ${capitalize(trainer.party[partyIdx].name)}!`],
+      } : prev)
+    } else {
+      setBattle(prev => prev ? {
+        ...prev,
+        activeIdx: partyIdx,
+        phase: 'choose-action',
+        problem: null,
+        log: [...prev.log.slice(-3), `Go, ${capitalize(trainer.party[partyIdx].name)}!`],
+      } : prev)
+    }
     setShowSwitch(false)
     setAnswer('')
   }
@@ -625,7 +654,6 @@ export default function BattleScreen({ area, onBattleEnd }: Props) {
   const activeParty = trainer.party[activeIdx]
   const activeHp = partyHps[activeIdx] ?? 0
   const isTerminal = phase === 'victory' || phase === 'caught' || phase === 'fled' || phase === 'blacked-out'
-  const isChoosing = phase === 'choose-action'
   const inputBlocked = phase !== 'player-turn' && phase !== 'catch-attempt'
   const switchableCount = trainer.party.filter((_, i) => i !== activeIdx && (partyHps[i] ?? 0) > 0).length
 
@@ -684,48 +712,13 @@ export default function BattleScreen({ area, onBattleEnd }: Props) {
           {isTerminal ? (
             <div className="battle-bottom-row">
               <div className="battle-log">
-                {battle.log.slice(-3).map((msg, i) => (
-                  <p key={i} className="battle-log__line">{msg}</p>
-                ))}
+                <p className="battle-log__line">{battle.log[battle.log.length - 1]}</p>
               </div>
               <div className="battle-result-panel">
                 <button className="btn btn-primary" onClick={onBattleEnd}>
                   {phase === 'blacked-out' ? 'Continue\n(healed)' : 'Continue'}
                 </button>
               </div>
-            </div>
-
-          ) : isChoosing || showSwitch ? (
-            <div className="battle-bottom-row">
-              <div className="battle-log">
-                {battle.log.slice(-3).map((msg, i) => (
-                  <p key={i} className="battle-log__line">{msg}</p>
-                ))}
-              </div>
-              {showSwitch ? (
-                <div className="switch-menu">
-                  {trainer.party.map((p, i) => {
-                    if (i === activeIdx || (partyHps[i] ?? 0) === 0) return null
-                    const hp = partyHps[i] ?? 0
-                    return (
-                      <button key={p.uid} className="switch-btn" onClick={() => handleSwitch(i)}>
-                        <span className="switch-btn__name">{capitalize(p.name)}</span>
-                        <span className="switch-btn__level">Lv.{p.level}</span>
-                        <span className="switch-btn__hp">{hp}/{p.maxHp} HP</span>
-                      </button>
-                    )
-                  })}
-                  <button className="switch-btn switch-btn--cancel" onClick={() => setShowSwitch(false)}>
-                    Cancel
-                  </button>
-                </div>
-              ) : (
-                <NumberPad
-                  mode="actions"
-                  onAction={handleAction}
-                  switchableCount={switchableCount}
-                />
-              )}
             </div>
 
           ) : (
@@ -749,28 +742,76 @@ export default function BattleScreen({ area, onBattleEnd }: Props) {
                 </>
               ) : problem ? (
                 <>
-                  <div className="battle-problem">
-                    <span className="battle-problem__text">
-                      {problem.operands.join(` ${problem.operator} `)} = ?
-                    </span>
-                    <span className="battle-problem__answer">{answer || '_'}</span>
-                  </div>
+                  {(() => {
+                    const isResolving = phase === 'resolving-correct' || phase === 'resolving-wrong'
+                    return (
+                      <div className={`battle-problem${phase === 'resolving-correct' ? ' battle-problem--correct' : phase === 'resolving-wrong' ? ' battle-problem--wrong' : ''}`}>
+                        <span className="battle-problem__text">
+                          {problem.operands.join(` ${problem.operator} `)} = {isResolving ? (answer || '?') : '?'}
+                        </span>
+                        {!isResolving && (
+                          <span className="battle-problem__answer">{answer || '_'}</span>
+                        )}
+                      </div>
+                    )
+                  })()}
                   <TimerBar remaining={timeRemaining} total={problem.timeLimit} />
                 </>
               ) : null}
 
-              {/* Log + numpad side by side */}
+              {/* Action strip — always visible except during catch sequence */}
+              {phase !== 'catch-attempt' && (
+                <div className="battle-action-strip">
+                  {ACTION_BUTTONS.map(([action, icon, label]) => {
+                    const isResolving = phase === 'resolving-correct' || phase === 'resolving-wrong'
+                    const isFighting = action === 'fight' && phase !== 'choose-action'
+                    const noSwitchable = action === 'switch' && switchableCount === 0
+                    return (
+                      <button
+                        key={action}
+                        className={`numpad-btn numpad-btn--${action}`}
+                        disabled={isResolving || isFighting || noSwitchable}
+                        onClick={() => handleAction(action)}
+                      >
+                        <span className="numpad-btn__bg-icon" aria-hidden="true">{icon}</span>
+                        <span className="numpad-btn__label">({label[0]}){' '}{label.slice(1)}</span>
+                      </button>
+                    )
+                  })}
+                </div>
+              )}
+
+              {/* Log + numpad slot (numpad only during fight/catch phases) */}
               <div className="battle-bottom-row">
                 <div className="battle-log">
-                  {battle.log.slice(-3).map((msg, i) => (
-                    <p key={i} className="battle-log__line">{msg}</p>
-                  ))}
+                  <p className="battle-log__line">{battle.log[battle.log.length - 1]}</p>
                 </div>
-                <NumberPad
-                  {...numpadProps}
-                  onSubmit={phase === 'catch-attempt' ? handleSubmitCatchAnswer : handleSubmitAnswer}
-                  disabled={inputBlocked}
-                />
+                {(phase === 'player-turn' || phase === 'resolving-correct' || phase === 'resolving-wrong' || phase === 'catch-attempt') && (
+                  showSwitch ? (
+                    <div className="switch-menu">
+                      {trainer.party.map((p, i) => {
+                        if (i === activeIdx || (partyHps[i] ?? 0) === 0) return null
+                        const hp = partyHps[i] ?? 0
+                        return (
+                          <button key={p.uid} className="switch-btn" onClick={() => handleSwitch(i)}>
+                            <span className="switch-btn__name">{capitalize(p.name)}</span>
+                            <span className="switch-btn__level">Lv.{p.level}</span>
+                            <span className="switch-btn__hp">{hp}/{p.maxHp} HP</span>
+                          </button>
+                        )
+                      })}
+                      <button className="switch-btn switch-btn--cancel" onClick={() => setShowSwitch(false)}>
+                        Cancel
+                      </button>
+                    </div>
+                  ) : (
+                    <NumberPad
+                      {...numpadProps}
+                      onSubmit={phase === 'catch-attempt' ? handleSubmitCatchAnswer : handleSubmitAnswer}
+                      disabled={inputBlocked}
+                    />
+                  )
+                )}
               </div>
             </>
           )}
