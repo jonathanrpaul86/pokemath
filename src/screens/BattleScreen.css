@@ -232,6 +232,16 @@
   font-weight: 600;
 }
 
+.battle-problem--correct .battle-problem__text {
+  color: #1aff7a;
+  font-style: italic;
+}
+
+.battle-problem--wrong .battle-problem__text {
+  color: #ff3b30;
+  font-style: italic;
+}
+
 .battle-problem__text {
   font-size: 1.5rem;
   font-weight: 800;
@@ -284,7 +294,7 @@
 .battle-bottom-row {
   display: flex;
   gap: 0.5rem;
-  height: 220px;
+  height: 170px;
   flex-shrink: 0;
 }
 
@@ -292,24 +302,39 @@
 
 .battle-log {
   flex: 1;
-  background: #0a0a1a;
-  border: 2px solid #1a3c8c;
+  background: #0d1f3c;
+  border: 2px solid #ffd70066;
   border-radius: 10px;
-  padding: 0.5rem 0.75rem;
+  padding: 0.75rem 1rem;
   display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
-  gap: 3px;
+  align-items: center;
+  justify-content: center;
   height: 100%;
-  overflow-y: auto;
   box-sizing: border-box;
 }
 
 .battle-log__line {
   margin: 0;
-  font-size: 0.82rem;
-  line-height: 1.4;
-  color: #e0e8f0;
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1.45;
+  color: #e8f4ff;
+  text-align: center;
+}
+
+/* ── Compact action strip (player-turn / resolving phases) ── */
+
+.battle-action-strip {
+  display: flex;
+  gap: 0.35rem;
+  flex-shrink: 0;
+}
+
+.battle-action-strip .numpad-btn {
+  flex: 1;
+  aspect-ratio: 1;
+  font-size: 1.1rem;
+  padding: 0;
 }
 
 /* ── Number pad (right side of bottom row) ── */
@@ -339,6 +364,25 @@
   align-items: center;
   justify-content: center;
   padding: 0;
+  position: relative;
+  overflow: hidden;
+}
+
+.numpad-btn__bg-icon {
+  position: absolute;
+  font-size: 6rem;
+  opacity: 0.25;
+  pointer-events: none;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  line-height: 1;
+  z-index: 0;
+}
+
+.numpad-btn__label {
+  position: relative;
+  z-index: 1;
 }
 
 .numpad-btn:hover:not(:disabled) {
