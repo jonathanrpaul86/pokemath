@@ -339,14 +339,14 @@ export default function BattleScreen({ area, onBattleEnd }: Props) {
     return () => clearTimeout(t)
   }, [battle?.phase])  // eslint-disable-line
 
-  // Player-turn timer tick
+  // Player-turn timer tick (paused while switch menu is open)
   useEffect(() => {
-    if (!battle || battle.phase !== 'player-turn' || battle.timeRemaining <= 0) return
+    if (!battle || battle.phase !== 'player-turn' || battle.timeRemaining <= 0 || showSwitch) return
     const t = setTimeout(() => {
       setBattle(prev => prev?.phase === 'player-turn' ? { ...prev, timeRemaining: prev.timeRemaining - 1 } : prev)
     }, 1000)
     return () => clearTimeout(t)
-  }, [battle?.phase, battle?.timeRemaining])
+  }, [battle?.phase, battle?.timeRemaining, showSwitch])
 
   // Player-turn timer expired → wrong answer
   useEffect(() => {
