@@ -265,11 +265,17 @@ export default function OverworldScreen({ onStartBattle, onOpenPokedex, onOpenPa
 
   const partyHasLiveMember = trainer.party.some(p => p.currentHp > 0)
   const selectedIsCurrent = selectedAreaId === trainer.currentAreaId
+  const selectedIsAdjacent = currentArea.connectedAreaIds.includes(selectedAreaId)
+  // Undiscovered areas more than 1 hop away are masked as unknown
+  const selectedIsUnknown =
+    !trainer.unlockedAreaIds.includes(selectedAreaId) &&
+    !selectedIsAdjacent &&
+    !selectedIsCurrent
   const canTravelToSelected =
     !selectedIsCurrent &&
-    currentArea.connectedAreaIds.includes(selectedAreaId) &&
+    selectedIsAdjacent &&
     trainer.level >= selectedArea.requiredTrainerLevel
-  const selectedIsLocked = trainer.level < selectedArea.requiredTrainerLevel
+  const selectedIsLocked = !selectedIsUnknown && trainer.level < selectedArea.requiredTrainerLevel
 
   return (
     <div className="overworld">
@@ -320,8 +326,12 @@ export default function OverworldScreen({ onStartBattle, onOpenPokedex, onOpenPa
 
           {/* Area detail */}
           <div className="area-detail">
-            <h2 className="area-detail__name">{selectedArea.name}</h2>
-            <p className="area-detail__desc">{selectedArea.description}</p>
+            <h2 className="area-detail__name">{selectedIsUnknown ? '???' : selectedArea.name}</h2>
+            <p className="area-detail__desc">
+              {selectedIsUnknown
+                ? 'An unexplored area hidden beyond the horizon...'
+                : selectedArea.description}
+            </p>
 
             {selectedIsLocked && (
               <p className="area-detail__locked-hint">
@@ -361,7 +371,7 @@ export default function OverworldScreen({ onStartBattle, onOpenPokedex, onOpenPa
               )}
             </div>
 
-            {selectedArea.encounters.length > 0 && (
+            {!selectedIsUnknown && selectedArea.encounters.length > 0 && (
               <EncounterPreview encounters={selectedArea.encounters} />
             )}
           </div>

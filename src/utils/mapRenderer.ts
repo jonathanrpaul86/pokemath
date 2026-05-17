@@ -413,6 +413,8 @@ function drawNodes(
   ts: (s: number) => number,
 ): void {
   const unlockedSet = new Set(state.unlockedAreaIds)
+  const currentArea = state.areas.find(a => a.id === state.currentAreaId)
+  const adjacentIds = new Set(currentArea?.connectedAreaIds ?? [])
 
   for (const area of state.areas) {
     const cx = tx(area.mapX)
@@ -492,16 +494,20 @@ function drawNodes(
       drawLock(ctx, cx, cy, ts(13))
     }
 
-    // Label
-    const label = area.name.length > 13 ? area.name.slice(0, 12) + '…' : area.name
-    const fz = Math.round(ts(unlocked ? 10 : 8.5))
-    ctx.font = `bold ${fz}px 'Segoe UI', system-ui, sans-serif`
-    ctx.textAlign = 'center'
-    ctx.textBaseline = 'top'
-    ctx.fillStyle = 'rgba(0,0,0,0.65)'
-    ctx.fillText(label, cx + 1, cy + r + ts(4) + 1)
-    ctx.fillStyle = isCurrent ? '#ffe030' : (unlocked ? '#ffffff' : 'rgba(200,205,230,0.55)')
-    ctx.fillText(label, cx, cy + r + ts(4))
+    // Label — only shown when hovered/selected
+    if (area.id === state.selectedAreaId) {
+      const isUnknown = !unlocked && !adjacentIds.has(area.id)
+      const rawLabel = isUnknown ? '???' : area.name
+      const label = rawLabel.length > 13 ? rawLabel.slice(0, 12) + '…' : rawLabel
+      const fz = Math.round(ts(unlocked ? 10 : 8.5))
+      ctx.font = `bold ${fz}px 'Segoe UI', system-ui, sans-serif`
+      ctx.textAlign = 'center'
+      ctx.textBaseline = 'top'
+      ctx.fillStyle = 'rgba(0,0,0,0.65)'
+      ctx.fillText(label, cx + 1, cy + r + ts(4) + 1)
+      ctx.fillStyle = isCurrent ? '#ffe030' : (unlocked ? '#ffffff' : 'rgba(200,205,230,0.55)')
+      ctx.fillText(label, cx, cy + r + ts(4))
+    }
   }
 }
 
