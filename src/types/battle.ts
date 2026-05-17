@@ -10,6 +10,7 @@ export type BattlePhase =
   | 'enemy-turn'
   | 'catch-attempt'
   | 'run-attempt'
+  | 'switch-attempt'
   | 'victory'
   | 'caught'
   | 'fled'
