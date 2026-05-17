@@ -337,9 +337,11 @@ export default function OverworldScreen({ onStartBattle, onOpenPokedex, onOpenPa
                       ⚔ Battle!
                     </button>
                   )}
-                  <button className="btn btn-pokecenter" onClick={() => setCenterPhase('prompt')}>
-                    🏥 Pokémon Center
-                  </button>
+                  {(selectedArea.areaType === 'city' || selectedArea.areaType === 'town') && (
+                    <button className="btn btn-pokecenter" onClick={() => setCenterPhase('prompt')}>
+                      🏥 Pokémon Center
+                    </button>
+                  )}
                   {!partyHasLiveMember && selectedArea.areaType !== 'city' && selectedArea.areaType !== 'town' && (
                     <p className="area-detail__blackout-warning">
                       All Pokémon fainted — visit the Pokémon Center!
