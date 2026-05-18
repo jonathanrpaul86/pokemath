@@ -50,7 +50,7 @@ export default function GymScreen({ gymId, onExit }: Props) {
   const area = AREA_MAP[gym.cityAreaId]
   const progress = trainer.gymProgress?.[gymId] ?? { defeatedTrainerIds: [], leaderDefeated: false }
   const allTrainersDefeated = gym.trainers.every(t => progress.defeatedTrainerIds.includes(t.id))
-  const leaderDefeated = progress.leaderDefeated
+  const leaderDefeated = trainer.badges.includes(gym.leader.badge)
 
   function startTrainerBattle(trainerId: string) {
     const t = gym.trainers.find(t => t.id === trainerId)!
