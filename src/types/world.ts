@@ -7,10 +7,13 @@ export interface EncounterEntry {
   maxLevel: number
 }
 
+export type AreaType = 'city' | 'town' | 'route' | 'forest' | 'cave' | 'special'
+
 export interface Area {
   id: string
   name: string
   description: string
+  areaType: AreaType
   /** Trainer level required to unlock this area */
   requiredTrainerLevel: number
   encounters: EncounterEntry[]

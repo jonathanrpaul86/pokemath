@@ -1,7 +1,8 @@
-import type { Trainer, OwnedPokemon, MathStats } from '../types'
+import type { Trainer, OwnedPokemon, MathStats, ItemPocket } from '../types'
 import type { GameAction } from './actions'
 import { createOwnedPokemon, trainerXpToNextLevel, pokemonXpToNextLevel, calcStats } from '../utils/formulas'
 import { KANTO_AREAS } from '../data/areas'
+import { ITEM_MAP } from '../data/items'
 
 const PARTY_MAX = 6
 const DEV_TRAINER_NAME = 'DEBUG'
@@ -38,6 +39,11 @@ export function createNewTrainer(name: string, starterSpecies: Parameters<typeof
     currentAreaId: 'route-1',
     unlockedAreaIds: isDev ? KANTO_AREAS.map(a => a.id) : ['route-1'],
     mathStats,
+    money: 3000,
+    items: [],
+    balls: [{ itemId: 'poke-ball', quantity: isDev ? 99 : 5 }],
+    keyItems: [],
+    badges: [],
   }
 }
 
@@ -65,6 +71,14 @@ function applyPokemonLevelUp(pokemon: OwnedPokemon): OwnedPokemon {
   const newMaxHp = Math.floor(pokemon.stats.hp * 0.5 + level * 3 + 10)
   const newCurrentHp = Math.max(1, Math.floor(newMaxHp * hpRatio))
   return { ...pokemon, level, xp, xpToNextLevel, maxHp: newMaxHp, currentHp: newCurrentHp }
+}
+
+// ---- Inventory helper -------------------------------------------------------
+
+function pocketKey(pocket: ItemPocket): 'items' | 'balls' | 'keyItems' {
+  if (pocket === 'ball') return 'balls'
+  if (pocket === 'key-item') return 'keyItems'
+  return 'items'
 }
 
 // ---- Reducer ----------------------------------------------------------------
@@ -256,6 +270,51 @@ export function gameReducer(trainer: Trainer, action: GameAction): Trainer {
 
     case 'SET_TIMER_MULTIPLIER': {
       next = { ...trainer, timerMultiplier: action.payload.multiplier }
+      break
+    }
+
+    case 'GAIN_MONEY': {
+      next = { ...trainer, money: trainer.money + action.payload.amount }
+      break
+    }
+
+    case 'SPEND_MONEY': {
+      next = { ...trainer, money: Math.max(0, trainer.money - action.payload.amount) }
+      break
+    }
+
+    case 'ADD_ITEM': {
+      const { itemId, quantity } = action.payload
+      const def = ITEM_MAP[itemId]
+      if (!def) return trainer
+      const key = pocketKey(def.pocket)
+      const slots = trainer[key].map(s => ({ ...s }))
+      const existing = slots.find(s => s.itemId === itemId)
+      if (existing) {
+        existing.quantity += quantity
+      } else {
+        slots.push({ itemId, quantity })
+      }
+      next = { ...trainer, [key]: slots }
+      break
+    }
+
+    case 'REMOVE_ITEM': {
+      const { itemId, quantity } = action.payload
+      const def = ITEM_MAP[itemId]
+      if (!def) return trainer
+      const key = pocketKey(def.pocket)
+      const slots = trainer[key]
+        .map(s => s.itemId === itemId ? { ...s, quantity: s.quantity - quantity } : { ...s })
+        .filter(s => s.quantity > 0)
+      next = { ...trainer, [key]: slots }
+      break
+    }
+
+    case 'EARN_BADGE': {
+      const { badgeId } = action.payload
+      if (trainer.badges.includes(badgeId)) return trainer
+      next = { ...trainer, badges: [...trainer.badges, badgeId] }
       break
     }
 

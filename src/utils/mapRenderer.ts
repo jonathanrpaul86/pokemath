@@ -12,18 +12,26 @@ interface TerrainStyle {
 }
 
 const TERRAIN: Record<string, TerrainStyle> = {
-  'route-1':         { blob: '#a8e060', node: '#5ab828' },
-  'viridian-city':   { blob: '#60d8b8', node: '#1a9a78' },
-  'viridian-forest': { blob: '#38c050', node: '#1a7a28' },
-  'pewter-city':     { blob: '#b0b8d8', node: '#6878a8' },
-  'mt-moon':         { blob: '#d0b0f0', node: '#9060d0' },
-  'cerulean-city':   { blob: '#70d0ff', node: '#1880d8' },
-  'rock-tunnel':     { blob: '#d09060', node: '#8a5028' },
-  'lavender-town':   { blob: '#e890e8', node: '#a030b8' },
-  'celadon-city':    { blob: '#80e0a8', node: '#208858' },
-  'fuchsia-city':    { blob: '#ff88cc', node: '#cc1878' },
-  'cinnabar-island': { blob: '#ff8840', node: '#cc2808' },
-  'victory-road':    { blob: '#d0b060', node: '#8a6018' },
+  'route-1':          { blob: '#a8e060', node: '#5ab828' },
+  'viridian-city':    { blob: '#60d8b8', node: '#1a9a78' },
+  'viridian-forest':  { blob: '#38c050', node: '#1a7a28' },
+  'pewter-city':      { blob: '#b0b8d8', node: '#6878a8' },
+  'route-3':          { blob: '#b0e04a', node: '#5ab010' },
+  'mt-moon':          { blob: '#d0b0f0', node: '#9060d0' },
+  'route-4':          { blob: '#a0d870', node: '#4aa020' },
+  'cerulean-city':    { blob: '#70d0ff', node: '#1880d8' },
+  'route-9':          { blob: '#c8d860', node: '#7a9818' },
+  'rock-tunnel':      { blob: '#d09060', node: '#8a5028' },
+  'lavender-town':    { blob: '#e890e8', node: '#a030b8' },
+  'pokemon-tower':    { blob: '#7840c0', node: '#4010a0' },
+  'route-7':          { blob: '#d0e860', node: '#80a010' },
+  'celadon-city':     { blob: '#80e0a8', node: '#208858' },
+  'cycling-road':     { blob: '#b8c8e8', node: '#5878b8' },
+  'fuchsia-city':     { blob: '#ff88cc', node: '#cc1878' },
+  'safari-zone':      { blob: '#e0c870', node: '#a07820' },
+  'seafoam-islands':  { blob: '#a0e8f8', node: '#2090c0' },
+  'cinnabar-island':  { blob: '#ff8840', node: '#cc2808' },
+  'victory-road':     { blob: '#d0b060', node: '#8a6018' },
 }
 
 // ---- Public interface -------------------------------------------------------
@@ -516,6 +524,10 @@ function drawTerrainIcon(
 
   switch (id) {
     case 'route-1':
+    case 'route-3':
+    case 'route-4':
+    case 'route-7':
+    case 'route-9':
       // Three grass blades
       for (let i = -1; i <= 1; i++) {
         const bx = cx + i * ts(5)
@@ -526,6 +538,72 @@ function drawTerrainIcon(
         ctx.stroke()
       }
       break
+
+    case 'cycling-road': {
+      // Two horizontal road stripes
+      ctx.lineWidth = ts(2.2)
+      for (const offset of [-ts(4), ts(4)]) {
+        ctx.beginPath()
+        ctx.moveTo(cx - ts(8), cy + offset)
+        ctx.lineTo(cx + ts(8), cy + offset)
+        ctx.stroke()
+      }
+      // Speed chevron
+      ctx.lineWidth = ts(1.8)
+      ctx.beginPath()
+      ctx.moveTo(cx - ts(3), cy - ts(1))
+      ctx.lineTo(cx,         cy - ts(5))
+      ctx.lineTo(cx + ts(3), cy - ts(1))
+      ctx.stroke()
+      break
+    }
+
+    case 'pokemon-tower': {
+      // Tall narrow tower body
+      ctx.fillRect(cx - ts(5.5), cy - ts(7), ts(11), ts(13))
+      // Pointed roof
+      ctx.beginPath()
+      ctx.moveTo(cx - ts(6.5), cy - ts(7))
+      ctx.lineTo(cx,           cy - ts(14))
+      ctx.lineTo(cx + ts(6.5), cy - ts(7))
+      ctx.closePath()
+      ctx.fill()
+      // Dark windows
+      ctx.fillStyle = 'rgba(30,0,50,0.75)'
+      ctx.fillRect(cx - ts(3.5), cy - ts(5), ts(2.5), ts(2.5))
+      ctx.fillRect(cx + ts(1),   cy - ts(5), ts(2.5), ts(2.5))
+      ctx.fillRect(cx - ts(1.5), cy,         ts(3),   ts(4))
+      break
+    }
+
+    case 'safari-zone': {
+      // Paw print — main pad
+      ctx.beginPath()
+      ctx.ellipse(cx, cy + ts(3), ts(5), ts(4), 0, 0, Math.PI * 2)
+      ctx.fill()
+      // Toe beans
+      for (const [dx, dy] of [[-ts(5), -ts(1)], [-ts(2), -ts(5.5)], [ts(2), -ts(5.5)], [ts(5), -ts(1)]] as [number, number][]) {
+        ctx.beginPath()
+        ctx.arc(cx + dx, cy + dy, ts(2.2), 0, Math.PI * 2)
+        ctx.fill()
+      }
+      break
+    }
+
+    case 'seafoam-islands': {
+      // Snowflake — three crossing lines
+      ctx.lineWidth = ts(2)
+      for (let angle = 0; angle < Math.PI; angle += Math.PI / 3) {
+        ctx.beginPath()
+        ctx.moveTo(cx + Math.cos(angle) * ts(9), cy + Math.sin(angle) * ts(9))
+        ctx.lineTo(cx - Math.cos(angle) * ts(9), cy - Math.sin(angle) * ts(9))
+        ctx.stroke()
+      }
+      ctx.beginPath()
+      ctx.arc(cx, cy, ts(2.5), 0, Math.PI * 2)
+      ctx.fill()
+      break
+    }
 
     case 'viridian-city':
     case 'pewter-city':

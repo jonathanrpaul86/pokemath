@@ -34,6 +34,11 @@ function migrateTrainer(raw: any): Trainer {
     },
   }
   return {
+    money: 3000,
+    items: [],
+    balls: [{ itemId: 'poke-ball', quantity: 5 }],
+    keyItems: [],
+    badges: [],
     ...raw,
     party: (raw.party ?? []).map(migratePokemon),
     pc:    (raw.pc    ?? []).map(migratePokemon),

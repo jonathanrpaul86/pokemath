@@ -13,6 +13,7 @@ interface Props {
   onOpenPokedex: () => void
   onOpenParty: () => void
   onOpenProfile: () => void
+  onOpenBag: () => void
   onGoToTitle: () => void
 }
 
@@ -219,7 +220,7 @@ function PokemonCenterModal({
 
 // ---- Main screen ------------------------------------------------------------
 
-export default function OverworldScreen({ onStartBattle, onOpenPokedex, onOpenParty, onOpenProfile, onGoToTitle }: Props) {
+export default function OverworldScreen({ onStartBattle, onOpenPokedex, onOpenParty, onOpenProfile, onOpenBag, onGoToTitle }: Props) {
   const trainer = useTrainer()
   const { dispatch } = useGameStore()
   const [centerPhase, setCenterPhase] = useState<CenterPhase | null>(null)
@@ -283,6 +284,10 @@ export default function OverworldScreen({ onStartBattle, onOpenPokedex, onOpenPa
         <button className="btn btn-secondary pokedex-btn" onClick={onOpenPokedex}>
           <PokedexIcon /> Pokédex
         </button>
+        <button className="btn btn-secondary bag-btn" onClick={onOpenBag} title="Open Bag">
+          🎒 Bag
+        </button>
+        <span className="trainer-bar__money" title="Pokédollars">💰 ¥{trainer.money.toLocaleString()}</span>
         <button className="btn btn-secondary mute-toggle-btn" onClick={handleMuteToggle} title={muted ? 'Unmute' : 'Mute'}>
           {muted ? '🔇' : '🔊'}
         </button>
@@ -327,18 +332,22 @@ export default function OverworldScreen({ onStartBattle, onOpenPokedex, onOpenPa
             <div className="area-detail__actions">
               {selectedIsCurrent && (
                 <>
-                  <button
-                    className="btn btn-battle"
-                    onClick={onStartBattle}
-                    disabled={!partyHasLiveMember}
-                    title={!partyHasLiveMember ? 'All your Pokémon have fainted!' : undefined}
-                  >
-                    ⚔ Battle!
-                  </button>
-                  <button className="btn btn-pokecenter" onClick={() => setCenterPhase('prompt')}>
-                    🏥 Pokémon Center
-                  </button>
-                  {!partyHasLiveMember && (
+                  {selectedArea.areaType !== 'city' && selectedArea.areaType !== 'town' && (
+                    <button
+                      className="btn btn-battle"
+                      onClick={onStartBattle}
+                      disabled={!partyHasLiveMember}
+                      title={!partyHasLiveMember ? 'All your Pokémon have fainted!' : undefined}
+                    >
+                      ⚔ Battle!
+                    </button>
+                  )}
+                  {(selectedArea.areaType === 'city' || selectedArea.areaType === 'town') && (
+                    <button className="btn btn-pokecenter" onClick={() => setCenterPhase('prompt')}>
+                      🏥 Pokémon Center
+                    </button>
+                  )}
+                  {!partyHasLiveMember && selectedArea.areaType !== 'city' && selectedArea.areaType !== 'town' && (
                     <p className="area-detail__blackout-warning">
                       All Pokémon fainted — visit the Pokémon Center!
                     </p>
@@ -352,7 +361,9 @@ export default function OverworldScreen({ onStartBattle, onOpenPokedex, onOpenPa
               )}
             </div>
 
-            <EncounterPreview encounters={selectedArea.encounters} />
+            {selectedArea.encounters.length > 0 && (
+              <EncounterPreview encounters={selectedArea.encounters} />
+            )}
           </div>
 
           {/* Party panel */}
