@@ -4,7 +4,7 @@ import { fetchPokemonSpecies } from '../services/pokeApi'
 import { spawnWildPokemon, calcDamage, calcCatchDifficulty } from '../utils/battle'
 import { pickEncounter, pickLevel } from '../utils/encounter'
 import { generateProblem, checkAnswer } from '../utils/math'
-import { battleXpReward, trainerXpReward, pokemonXpToNextLevel } from '../utils/formulas'
+import { battleXpReward, trainerXpReward, trainerMoneyReward, pokemonXpToNextLevel } from '../utils/formulas'
 import { playCorrect, playWrong, playCatch, playVictory, playLevelUp, isMuted, setMuted } from '../utils/sound'
 import { EVOLUTIONS } from '../data/evolutions'
 import { ITEM_MAP, BALL_EMOJI, ITEM_EMOJI } from '../data/items'
@@ -359,11 +359,14 @@ export default function BattleScreen({ area, onBattleEnd, trainerBattle }: Props
         }
         return
       }
+      const topLevel = Math.max(...b.trainerTeam.map(p => p.level))
+      const prize = trainerMoneyReward(topLevel)
+      dispatch({ type: 'GAIN_MONEY', payload: { amount: prize } })
       playVictory()
       setBattle(prev => prev ? {
         ...prev,
         phase: 'victory',
-        log: [`${capitalize(b.wild.name)} fainted! You defeated ${trainerBattle.trainerName}!`],
+        log: [`${capitalize(b.wild.name)} fainted! You defeated ${trainerBattle.trainerName} and received ¥${prize}!`],
       } : prev)
       return
     }

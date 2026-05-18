@@ -45,6 +45,11 @@ export function trainerXpReward(wildLevel: number): number {
   return Math.floor(wildLevel * 2 + 5)
 }
 
+/** Money rewarded for defeating a trainer, based on their highest-level Pokémon */
+export function trainerMoneyReward(topLevel: number): number {
+  return Math.floor(topLevel * 30 + 50)
+}
+
 // ---- Pokemon factory --------------------------------------------------------
 
 /** Returns the 4 most recently learned moves for a species at a given level. */
