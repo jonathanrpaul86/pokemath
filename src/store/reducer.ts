@@ -318,6 +318,20 @@ export function gameReducer(trainer: Trainer, action: GameAction): Trainer {
       break
     }
 
+    case 'RECORD_GYM_TRAINER_DEFEAT': {
+      const { gymId, trainerId } = action.payload
+      const prev = trainer.gymProgress?.[gymId] ?? { defeatedTrainerIds: [], leaderDefeated: false }
+      if (prev.defeatedTrainerIds.includes(trainerId)) return trainer
+      next = {
+        ...trainer,
+        gymProgress: {
+          ...trainer.gymProgress,
+          [gymId]: { ...prev, defeatedTrainerIds: [...prev.defeatedTrainerIds, trainerId] },
+        },
+      }
+      break
+    }
+
     default:
       return trainer
   }

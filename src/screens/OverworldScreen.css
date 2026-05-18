@@ -637,6 +637,43 @@
   box-shadow: 0 2px 0 #0d3566;
 }
 
+/* ── Gym button ── */
+
+.btn-gym {
+  font-family: inherit;
+  font-size: 0.95rem;
+  font-weight: 800;
+  padding: 0.5rem 1.1rem;
+  background: #6b2300;
+  color: #ffe080;
+  border: none;
+  border-radius: 6px;
+  box-shadow: 0 4px 0 #3a0f00;
+  cursor: pointer;
+  transition: filter 0.15s, transform 0.1s, box-shadow 0.1s;
+}
+
+.btn-gym:hover {
+  filter: brightness(1.12);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 0 #3a0f00;
+}
+
+.btn-gym:active {
+  transform: translateY(2px);
+  box-shadow: 0 2px 0 #3a0f00;
+}
+
+.btn-gym--cleared {
+  background: #2a4a2a;
+  color: #68d391;
+  box-shadow: 0 4px 0 #0d2a0d;
+}
+
+.btn-gym--cleared:hover {
+  box-shadow: 0 6px 0 #0d2a0d;
+}
+
 /* ── Poké Mart modal ── */
 
 .mart-modal {

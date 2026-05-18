@@ -1,3 +1,5 @@
+import type { BadgeId } from './items'
+
 /** One entry in an area's encounter table */
 export interface EncounterEntry {
   speciesId: number
@@ -26,4 +28,6 @@ export interface Area {
   mathDifficulty: number
   /** Item IDs available for purchase at this area's Poké Mart (cities/towns only) */
   martItems?: string[]
+  /** Badge required to travel to this area (in addition to requiredTrainerLevel) */
+  requiredBadge?: BadgeId
 }

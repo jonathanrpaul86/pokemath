@@ -8,7 +8,7 @@ import { battleXpReward, trainerXpReward, pokemonXpToNextLevel } from '../utils/
 import { playCorrect, playWrong, playCatch, playVictory, playLevelUp, isMuted, setMuted } from '../utils/sound'
 import { EVOLUTIONS } from '../data/evolutions'
 import { ITEM_MAP, BALL_EMOJI, ITEM_EMOJI } from '../data/items'
-import type { Area, BattlePhase, MathProblem, Move, OwnedPokemon, WildPokemon } from '../types'
+import type { Area, BattlePhase, MathProblem, Move, OwnedPokemon, WildPokemon, TrainerBattle } from '../types'
 import './BattleScreen.css'
 
 // ---- Constants ---------------------------------------------------------------
@@ -59,6 +59,10 @@ interface BattleData {
   log: string[]
   wildSprite: string
   playerSprites: string[]
+  // Trainer battle only:
+  trainerTeam?: WildPokemon[]
+  trainerTeamIdx?: number
+  trainerSprites?: string[]
 }
 
 // ---- Battle field backgrounds -----------------------------------------------
@@ -204,9 +208,10 @@ function NumberPad({ mode = 'digits', onDigit, onDelete, onSubmit, onAction, swi
 interface Props {
   area: Area
   onBattleEnd: () => void
+  trainerBattle?: TrainerBattle
 }
 
-export default function BattleScreen({ area, onBattleEnd }: Props) {
+export default function BattleScreen({ area, onBattleEnd, trainerBattle }: Props) {
   const trainer = useTrainer()
   const { dispatch } = useGameStore()
 
@@ -229,17 +234,44 @@ export default function BattleScreen({ area, onBattleEnd }: Props) {
   useEffect(() => {
     let cancelled = false
     async function init() {
+      const partySpecies = await Promise.all(trainer.party.map(p => fetchPokemonSpecies(p.speciesId)))
+      if (cancelled) return
+      const partyHps = trainer.party.map(p => p.currentHp)
+      const firstAlive = partyHps.findIndex(hp => hp > 0)
+
+      if (trainerBattle) {
+        const teamSpecies = await Promise.all(trainerBattle.team.map(t => fetchPokemonSpecies(t.speciesId)))
+        if (cancelled) return
+        const trainerTeam = trainerBattle.team.map((t, i) => spawnWildPokemon(teamSpecies[i], t.level))
+        const wild = trainerTeam[0]
+        setBattle({
+          phase: 'choose-action',
+          wild,
+          wildHp: wild.maxHp,
+          partyHps,
+          activeIdx: firstAlive >= 0 ? firstAlive : 0,
+          switchTargetIdx: null,
+          problem: null,
+          timeRemaining: 0,
+          catchProgress: null,
+          catchProblem: null,
+          catchTimeRemaining: 0,
+          log: [`${trainerBattle.trainerName}: "${trainerBattle.quote}"`, `${trainerBattle.trainerName} sent out ${capitalize(wild.name)}!`],
+          wildSprite: teamSpecies[0].sprites.front,
+          playerSprites: partySpecies.map(s => s.sprites.back),
+          trainerTeam,
+          trainerTeamIdx: 0,
+          trainerSprites: teamSpecies.map(s => s.sprites.front),
+        })
+        return
+      }
+
       const entry = pickEncounter(area)
       const level = pickLevel(entry)
-      const [wildSpecies, ...partySpecies] = await Promise.all([
-        fetchPokemonSpecies(entry.speciesId),
-        ...trainer.party.map(p => fetchPokemonSpecies(p.speciesId)),
-      ])
+      const wildSpecies = await fetchPokemonSpecies(entry.speciesId)
       if (cancelled) return
       const wild = spawnWildPokemon(wildSpecies, level)
       dispatch({ type: 'SEE_POKEMON', payload: { speciesId: wild.speciesId } })
-      const partyHps = trainer.party.map(p => p.currentHp)
-      const firstAlive = partyHps.findIndex(hp => hp > 0)
       setBattle({
         phase: 'choose-action',
         wild,
@@ -288,12 +320,38 @@ export default function BattleScreen({ area, onBattleEnd }: Props) {
   }
 
   function handleVictory(b: BattleData) {
-    playVictory()
     const pkmnXp = battleXpReward(b.wild.level)
     const trXp = trainerXpReward(b.wild.level)
     persistHps(b)
     dispatch({ type: 'GAIN_TRAINER_XP', payload: { amount: trXp } })
     dispatch({ type: 'GAIN_POKEMON_XP', payload: { uid: trainer.party[b.activeIdx].uid, amount: pkmnXp } })
+
+    if (trainerBattle && b.trainerTeam && b.trainerTeamIdx !== undefined) {
+      const nextIdx = b.trainerTeamIdx + 1
+      if (nextIdx < b.trainerTeam.length) {
+        const nextEnemy = b.trainerTeam[nextIdx]
+        setBattle(prev => prev ? {
+          ...prev,
+          phase: 'choose-action',
+          wild: nextEnemy,
+          wildHp: nextEnemy.maxHp,
+          trainerTeamIdx: nextIdx,
+          wildSprite: b.trainerSprites![nextIdx],
+          problem: null,
+          log: [...prev.log.slice(-3), `${capitalize(b.wild.name)} fainted! ${trainerBattle.trainerName} sent out ${capitalize(nextEnemy.name)}!`],
+        } : prev)
+        return
+      }
+      playVictory()
+      setBattle(prev => prev ? {
+        ...prev,
+        phase: 'victory',
+        log: [`${capitalize(b.wild.name)} fainted! You defeated ${trainerBattle.trainerName}!`],
+      } : prev)
+      return
+    }
+
+    playVictory()
     setBattle(prev => prev ? {
       ...prev,
       phase: 'victory',
@@ -381,7 +439,7 @@ export default function BattleScreen({ area, onBattleEnd }: Props) {
     setBattle(prev => prev ? {
       ...prev, phase: 'player-turn', problem: p, timeRemaining: p.timeLimit,
       catchProgress: null, catchProblem: null,
-      log: [...prev.log.slice(-3), `Wild ${capitalize(prev.wild.name)} broke free!`],
+      log: [...prev.log.slice(-3), `${capitalize(prev.wild.name)} broke free!`],
     } : prev)
     setAnswer('')
   }, [battle?.phase, battle?.catchTimeRemaining])  // eslint-disable-line
@@ -484,7 +542,11 @@ export default function BattleScreen({ area, onBattleEnd }: Props) {
       // Terminal phase: Enter continues
       const terminal = b.phase === 'victory' || b.phase === 'caught' || b.phase === 'fled' || b.phase === 'blacked-out'
       if (terminal) {
-        if (e.key === 'Enter') { e.preventDefault(); onBattleEnd() }
+        if (e.key === 'Enter') {
+          e.preventDefault()
+          if (trainerBattle) trainerBattle.onComplete(b.phase === 'victory')
+          else onBattleEnd()
+        }
         return
       }
 
@@ -586,7 +648,8 @@ export default function BattleScreen({ area, onBattleEnd }: Props) {
       newPartyHps = b.partyHps.map((hp, i) =>
         i === b.activeIdx ? Math.max(0, hp - counterDmg) : hp
       )
-      logLines[0] += ` But Wild ${capitalize(b.wild.name)} countered for ${counterDmg}!`
+      const enemyLabel = trainerBattle ? capitalize(b.wild.name) : `Wild ${capitalize(b.wild.name)}`
+      logLines[0] += ` But ${enemyLabel} countered for ${counterDmg}!`
     }
 
     setBattle(prev => prev ? {
@@ -605,11 +668,12 @@ export default function BattleScreen({ area, onBattleEnd }: Props) {
     const damage = Math.max(1, calcDamage(move, b.wild, defender))
     const newHp = Math.max(0, b.partyHps[b.activeIdx] - damage)
     const newPartyHps = b.partyHps.map((hp, i) => i === b.activeIdx ? newHp : hp)
+    const enemyLabel = trainerBattle ? capitalize(b.wild.name) : `Wild ${capitalize(b.wild.name)}`
     setBattle(prev => prev ? {
       ...prev,
       phase: 'resolving-wrong',
       partyHps: newPartyHps,
-      log: [...prev.log.slice(-3), `Wild ${capitalize(b.wild.name)} used ${capitalize(move.name)} for ${damage} damage!`],
+      log: [...prev.log.slice(-3), `${enemyLabel} used ${capitalize(move.name)} for ${damage} damage!`],
     } : prev)
   }
 
@@ -620,7 +684,7 @@ export default function BattleScreen({ area, onBattleEnd }: Props) {
     const damage = Math.max(1, calcDamage(move, b.wild, defender))
     const newHp = Math.max(0, b.partyHps[b.activeIdx] - damage)
     const newPartyHps = b.partyHps.map((hp, i) => i === b.activeIdx ? newHp : hp)
-    const failMsg = `Couldn't escape! Wild ${capitalize(b.wild.name)} used ${capitalize(move.name)} for ${damage} damage!`
+    const failMsg = `Couldn't escape! ${capitalize(b.wild.name)} used ${capitalize(move.name)} for ${damage} damage!`
 
     if (newHp <= 0) {
       const nextIdx = newPartyHps.findIndex((hp, i) => i !== b.activeIdx && hp > 0)
@@ -751,7 +815,8 @@ export default function BattleScreen({ area, onBattleEnd }: Props) {
     dispatch({ type: 'REMOVE_ITEM', payload: { itemId, quantity: 1 } })
     setUsingItemInBattle(null)
 
-    const logMsg = `Used ${def.name} on ${capitalize(pokemon.name)}! +${gain} HP, but Wild ${capitalize(b.wild.name)} used ${capitalize(move.name)} for ${damage} damage!`
+    const enemyLabel = trainerBattle ? capitalize(b.wild.name) : `Wild ${capitalize(b.wild.name)}`
+    const logMsg = `Used ${def.name} on ${capitalize(pokemon.name)}! +${gain} HP, but ${enemyLabel} used ${capitalize(move.name)} for ${damage} damage!`
     const activeHpAfter = newPartyHps[b.activeIdx]
 
     if (activeHpAfter <= 0) {
@@ -881,7 +946,8 @@ export default function BattleScreen({ area, onBattleEnd }: Props) {
     const damage = Math.max(1, calcDamage(move, b.wild, defender))
     const newHp = Math.max(0, b.partyHps[targetIdx] - damage)
     const newPartyHps = b.partyHps.map((hp, i) => i === targetIdx ? newHp : hp)
-    const switchMsg = `${capitalize(trainer.party[targetIdx].name)} came in! But Wild ${capitalize(b.wild.name)} used ${capitalize(move.name)} for ${damage} damage!`
+    const enemyLabelSwitch = trainerBattle ? capitalize(b.wild.name) : `Wild ${capitalize(b.wild.name)}`
+    const switchMsg = `${capitalize(trainer.party[targetIdx].name)} came in! But ${enemyLabelSwitch} used ${capitalize(move.name)} for ${damage} damage!`
 
     if (newHp <= 0) {
       const nextIdx = newPartyHps.findIndex((hp, i) => i !== targetIdx && hp > 0)
@@ -949,7 +1015,7 @@ export default function BattleScreen({ area, onBattleEnd }: Props) {
     return (
       <div className="battle-screen battle-screen--loading">
         <div className="spinner" />
-        <p>A wild Pokémon appeared…</p>
+        <p>{trainerBattle ? `${trainerBattle.trainerName} wants to battle!` : 'A wild Pokémon appeared…'}</p>
       </div>
     )
   }
@@ -1068,7 +1134,7 @@ export default function BattleScreen({ area, onBattleEnd }: Props) {
               </div>
               {!isTerminal && !showSwitch && phase !== 'catch-attempt' && phase !== 'run-attempt' && phase !== 'switch-attempt' && !showBallMenu && !showItemMenu && !usingItemInBattle && (
                 <div className="battle-action-strip">
-                  {ACTION_BUTTONS.map(([action, icon, label]) => {
+                  {ACTION_BUTTONS.filter(([action]) => !trainerBattle || (action !== 'catch' && action !== 'run')).map(([action, icon, label]) => {
                     const isResolving = phase === 'resolving-correct' || phase === 'resolving-wrong'
                     const isFighting = action === 'fight' && phase !== 'choose-action'
                     const noSwitchable = action === 'switch' && switchableCount === 0
@@ -1092,7 +1158,13 @@ export default function BattleScreen({ area, onBattleEnd }: Props) {
             <div className="battle-commands__right">
               {isTerminal ? (
                 <div className="battle-result-panel">
-                  <button className="btn btn-primary" onClick={onBattleEnd}>
+                  <button
+                    className="btn btn-primary"
+                    onClick={() => {
+                      if (trainerBattle) trainerBattle.onComplete(phase === 'victory')
+                      else onBattleEnd()
+                    }}
+                  >
                     Continue{phase === 'blacked-out' ? ' (healed)' : ''}
                   </button>
                 </div>

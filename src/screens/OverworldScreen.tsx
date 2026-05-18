@@ -4,6 +4,7 @@ import { isMuted, setMuted } from '../utils/sound'
 import { AREA_MAP, KANTO_AREAS } from '../data/areas'
 import { ITEM_MAP, ITEM_EMOJI, BALL_EMOJI } from '../data/items'
 import { KANTO_NAMES } from '../data/pokedex'
+import { gymForCity, BADGE_NAMES } from '../data/gyms'
 import { preloadAreaSpecies } from '../services/pokeApi'
 import { WorldMapCanvas } from '../components/WorldMapCanvas'
 import type { Area, OwnedPokemon, EncounterEntry } from '../types'
@@ -16,6 +17,7 @@ interface Props {
   onOpenProfile: () => void
   onOpenBag: () => void
   onGoToTitle: () => void
+  onOpenGym: (gymId: string) => void
 }
 
 // ---- Pokédex icon -----------------------------------------------------------
@@ -347,7 +349,7 @@ function PokeMartModal({
 
 // ---- Main screen ------------------------------------------------------------
 
-export default function OverworldScreen({ onStartBattle, onOpenPokedex, onOpenParty, onOpenProfile, onOpenBag, onGoToTitle }: Props) {
+export default function OverworldScreen({ onStartBattle, onOpenPokedex, onOpenParty, onOpenProfile, onOpenBag, onGoToTitle, onOpenGym }: Props) {
   const trainer = useTrainer()
   const { dispatch } = useGameStore()
   const [centerPhase, setCenterPhase] = useState<CenterPhase | null>(null)
@@ -393,17 +395,24 @@ export default function OverworldScreen({ onStartBattle, onOpenPokedex, onOpenPa
 
   const partyHasLiveMember = trainer.party.some(p => p.currentHp > 0)
   const selectedIsCurrent = selectedAreaId === trainer.currentAreaId
+  const selectedAreaGym = gymForCity(selectedAreaId)
+  const selectedAreaGymCleared = selectedAreaGym
+    ? trainer.badges.includes(selectedAreaGym.leader.badge)
+    : false
   const selectedIsAdjacent = currentArea.connectedAreaIds.includes(selectedAreaId)
   // Undiscovered areas more than 1 hop away are masked as unknown
   const selectedIsUnknown =
     !trainer.unlockedAreaIds.includes(selectedAreaId) &&
     !selectedIsAdjacent &&
     !selectedIsCurrent
+  const meetsLevelReq = trainer.level >= selectedArea.requiredTrainerLevel
+  const meetsBadgeReq = !selectedArea.requiredBadge || trainer.badges.includes(selectedArea.requiredBadge)
   const canTravelToSelected =
     !selectedIsCurrent &&
     selectedIsAdjacent &&
-    trainer.level >= selectedArea.requiredTrainerLevel
-  const selectedIsLocked = !selectedIsUnknown && trainer.level < selectedArea.requiredTrainerLevel
+    meetsLevelReq &&
+    meetsBadgeReq
+  const selectedIsLocked = !selectedIsUnknown && (!meetsLevelReq || !meetsBadgeReq)
 
   return (
     <div className="overworld">
@@ -462,9 +471,14 @@ export default function OverworldScreen({ onStartBattle, onOpenPokedex, onOpenPa
             </p>
 
             {selectedIsLocked && (
-              <p className="area-detail__locked-hint">
-                🔒 Reach Lv.{selectedArea.requiredTrainerLevel} to travel here
-              </p>
+              <div className="area-detail__locked-hint">
+                {!meetsLevelReq && (
+                  <p>🔒 Reach Lv.{selectedArea.requiredTrainerLevel} to travel here</p>
+                )}
+                {meetsLevelReq && selectedArea.requiredBadge && !meetsBadgeReq && (
+                  <p>🏅 Earn the {BADGE_NAMES[selectedArea.requiredBadge] ?? selectedArea.requiredBadge} to travel here</p>
+                )}
+              </div>
             )}
 
             <div className="area-detail__actions">
@@ -488,6 +502,14 @@ export default function OverworldScreen({ onStartBattle, onOpenPokedex, onOpenPa
                   {selectedArea.martItems?.length && (
                     <button className="btn btn-mart" onClick={() => setShowMart(true)}>
                       🛒 Poké Mart
+                    </button>
+                  )}
+                  {selectedAreaGym && (
+                    <button
+                      className={`btn btn-gym${selectedAreaGymCleared ? ' btn-gym--cleared' : ''}`}
+                      onClick={() => onOpenGym(selectedAreaGym.id)}
+                    >
+                      🏆 {selectedAreaGymCleared ? `${selectedAreaGym.leader.name}'s Gym (Cleared)` : `${selectedAreaGym.leader.name}'s Gym`}
                     </button>
                   )}
                   {!partyHasLiveMember && selectedArea.areaType !== 'city' && selectedArea.areaType !== 'town' && (
