@@ -22,10 +22,11 @@ export const KANTO_AREAS: Area[] = [
     name: 'Viridian City',
     description: 'The first city on your journey. Heal up at the Pokémon Center before pushing north through Viridian Forest.',
     areaType: 'city',
-    requiredTrainerLevel: 3,
+    requiredTrainerLevel: 0,
     connectedAreaIds: ['route-1', 'viridian-forest'],
     mapX: 200, mapY: 260,
     mathDifficulty: 13,
+    martItems: ['poke-ball', 'potion'],
     encounters: [],
   },
   {
@@ -54,6 +55,7 @@ export const KANTO_AREAS: Area[] = [
     connectedAreaIds: ['viridian-forest', 'route-3'],
     mapX: 200, mapY: 136,
     mathDifficulty: 30,
+    martItems: ['poke-ball', 'potion', 'super-potion'],
     encounters: [],
   },
   {
@@ -62,6 +64,7 @@ export const KANTO_AREAS: Area[] = [
     description: 'Rugged terrain east of Pewter City. Bird and ground-type Pokémon nest among the rocky outcrops.',
     areaType: 'route',
     requiredTrainerLevel: 9,
+    requiredBadge: 'boulder-badge',
     connectedAreaIds: ['pewter-city', 'mt-moon'],
     mapX: 253, mapY: 121,
     mathDifficulty: 34,
@@ -115,6 +118,7 @@ export const KANTO_AREAS: Area[] = [
     connectedAreaIds: ['route-4', 'route-9'],
     mapX: 410, mapY: 120,
     mathDifficulty: 47,
+    martItems: ['poke-ball', 'great-ball', 'potion', 'super-potion'],
     encounters: [],
   },
   {
@@ -123,6 +127,7 @@ export const KANTO_AREAS: Area[] = [
     description: 'A rough, hilly path connecting Cerulean City to Rock Tunnel. Scrappy Pokémon patrol these dusty trails.',
     areaType: 'route',
     requiredTrainerLevel: 16,
+    requiredBadge: 'cascade-badge',
     connectedAreaIds: ['cerulean-city', 'rock-tunnel'],
     mapX: 438, mapY: 156,
     mathDifficulty: 51,
@@ -159,6 +164,7 @@ export const KANTO_AREAS: Area[] = [
     connectedAreaIds: ['rock-tunnel', 'route-7', 'pokemon-tower'],
     mapX: 466, mapY: 262,
     mathDifficulty: 63,
+    martItems: ['poke-ball', 'great-ball', 'potion', 'super-potion', 'revive'],
     encounters: [],
   },
   {
@@ -203,6 +209,7 @@ export const KANTO_AREAS: Area[] = [
     connectedAreaIds: ['route-7', 'cycling-road'],
     mapX: 340, mapY: 238,
     mathDifficulty: 70,
+    martItems: ['poke-ball', 'great-ball', 'ultra-ball', 'potion', 'super-potion', 'hyper-potion', 'revive'],
     encounters: [],
   },
   {
@@ -211,6 +218,7 @@ export const KANTO_AREAS: Area[] = [
     description: 'A long downhill road stretching south from Celadon City. Fast Pokémon race alongside trainers here.',
     areaType: 'route',
     requiredTrainerLevel: 27,
+    requiredBadge: 'rainbow-badge',
     connectedAreaIds: ['celadon-city', 'fuchsia-city'],
     mapX: 323, mapY: 283,
     mathDifficulty: 73,
@@ -230,6 +238,7 @@ export const KANTO_AREAS: Area[] = [
     connectedAreaIds: ['cycling-road', 'safari-zone', 'seafoam-islands'],
     mapX: 306, mapY: 328,
     mathDifficulty: 78,
+    martItems: ['great-ball', 'ultra-ball', 'super-potion', 'hyper-potion', 'revive'],
     encounters: [],
   },
   {
@@ -256,6 +265,7 @@ export const KANTO_AREAS: Area[] = [
     description: 'Frozen sea caves west of Fuchsia City. Ice and Water types thrive in the frigid waters.',
     areaType: 'cave',
     requiredTrainerLevel: 34,
+    requiredBadge: 'soul-badge',
     connectedAreaIds: ['fuchsia-city', 'cinnabar-island'],
     mapX: 227, mapY: 343,
     mathDifficulty: 86,
@@ -276,6 +286,7 @@ export const KANTO_AREAS: Area[] = [
     connectedAreaIds: ['seafoam-islands', 'victory-road'],
     mapX: 148, mapY: 358,
     mathDifficulty: 87,
+    martItems: ['ultra-ball', 'hyper-potion', 'full-restore', 'max-revive'],
     encounters: [
       { speciesId: 77,  weight: 25, minLevel: 33, maxLevel: 40 }, // Ponyta
       { speciesId: 58,  weight: 25, minLevel: 33, maxLevel: 40 }, // Growlithe
@@ -290,6 +301,7 @@ export const KANTO_AREAS: Area[] = [
     description: 'The final challenge before the Pokémon League. Only the strongest survive.',
     areaType: 'special',
     requiredTrainerLevel: 40,
+    requiredBadge: 'volcano-badge',
     connectedAreaIds: ['cinnabar-island'],
     mapX: 96, mapY: 240,
     mathDifficulty: 100,

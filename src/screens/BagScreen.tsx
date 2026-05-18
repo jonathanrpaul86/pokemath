@@ -32,6 +32,7 @@ function PartyPicker({
 }) {
   const trainer = useTrainer()
   const def = ITEM_MAP[itemId]
+  const isRevive = def?.revivePercent !== undefined
   const healFull = def?.healAmount === 0
 
   return (
@@ -41,7 +42,8 @@ function PartyPicker({
         {trainer.party.map(p => {
           const fainted = p.currentHp === 0
           const alreadyFull = p.currentHp === p.maxHp
-          const disabled = fainted || alreadyFull
+          const disabled = isRevive ? !fainted : (fainted || alreadyFull)
+          const reviveHp = isRevive ? Math.floor(p.maxHp * def!.revivePercent!) : 0
           return (
             <button
               key={p.uid}
@@ -51,9 +53,12 @@ function PartyPicker({
             >
               <span className="bag-picker__name">{p.name}</span>
               <span className="bag-picker__hp">
-                {fainted ? 'Fainted' : `${p.currentHp}/${p.maxHp} HP${alreadyFull ? ' (full)' : ''}`}
+                {fainted ? 'Fainted' : `${p.currentHp}/${p.maxHp} HP${alreadyFull && !isRevive ? ' (full)' : ''}`}
               </span>
-              {!fainted && !alreadyFull && (
+              {isRevive && fainted && (
+                <span className="bag-picker__gain">→ {reviveHp}/{p.maxHp} HP</span>
+              )}
+              {!isRevive && !fainted && !alreadyFull && (
                 <span className="bag-picker__gain">
                   +{healFull ? (p.maxHp - p.currentHp) : Math.min(def!.healAmount!, p.maxHp - p.currentHp)} HP
                 </span>
@@ -72,7 +77,7 @@ function PartyPicker({
 function ItemRow({ slot, onUseClick }: { slot: InventorySlot; onUseClick: (itemId: string) => void }) {
   const def = ITEM_MAP[slot.itemId]
   if (!def) return null
-  const canUse = def.pocket === 'item' && def.healAmount !== undefined
+  const canUse = def.pocket === 'item' && (def.healAmount !== undefined || def.revivePercent !== undefined)
   return (
     <div className="bag-row">
       <span className="bag-row__icon">{itemEmoji(slot.itemId)}</span>
@@ -104,10 +109,14 @@ export default function BagScreen({ onBack }: Props) {
     const pokemon = trainer.party.find(p => p.uid === targetUid)
     if (!pokemon) return
 
-    const healAmount = def.healAmount === 0
-      ? pokemon.maxHp - pokemon.currentHp
-      : (def.healAmount ?? 0)
-    const newHp = Math.min(pokemon.maxHp, pokemon.currentHp + healAmount)
+    let newHp: number
+    if (def.revivePercent !== undefined) {
+      newHp = Math.floor(pokemon.maxHp * def.revivePercent)
+    } else if (def.healAmount === 0) {
+      newHp = pokemon.maxHp
+    } else {
+      newHp = Math.min(pokemon.maxHp, pokemon.currentHp + (def.healAmount ?? 0))
+    }
 
     dispatch({ type: 'REMOVE_ITEM', payload: { itemId, quantity: 1 } })
     dispatch({ type: 'UPDATE_POKEMON_HP', payload: { uid: targetUid, currentHp: newHp } })

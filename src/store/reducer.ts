@@ -27,7 +27,7 @@ export function createNewTrainer(name: string, starterSpecies: Parameters<typeof
   }
 
   return {
-    name,
+    name: isDev ? 'Trainer' : name,
     level: trainerLevel,
     xp: 0,
     xpToNextLevel: trainerXpToNextLevel(trainerLevel),
@@ -315,6 +315,20 @@ export function gameReducer(trainer: Trainer, action: GameAction): Trainer {
       const { badgeId } = action.payload
       if (trainer.badges.includes(badgeId)) return trainer
       next = { ...trainer, badges: [...trainer.badges, badgeId] }
+      break
+    }
+
+    case 'RECORD_GYM_TRAINER_DEFEAT': {
+      const { gymId, trainerId } = action.payload
+      const prev = trainer.gymProgress?.[gymId] ?? { defeatedTrainerIds: [], leaderDefeated: false }
+      if (prev.defeatedTrainerIds.includes(trainerId)) return trainer
+      next = {
+        ...trainer,
+        gymProgress: {
+          ...trainer.gymProgress,
+          [gymId]: { ...prev, defeatedTrainerIds: [...prev.defeatedTrainerIds, trainerId] },
+        },
+      }
       break
     }
 

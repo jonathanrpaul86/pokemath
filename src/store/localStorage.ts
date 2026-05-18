@@ -39,6 +39,7 @@ function migrateTrainer(raw: any): Trainer {
     balls: [{ itemId: 'poke-ball', quantity: 5 }],
     keyItems: [],
     badges: [],
+    gymProgress: {},
     ...raw,
     party: (raw.party ?? []).map(migratePokemon),
     pc:    (raw.pc    ?? []).map(migratePokemon),

@@ -610,3 +610,275 @@
   gap: 0.5rem;
   padding: 0.5rem 0;
 }
+
+/* ── Poké Mart button ── */
+
+.btn-mart {
+  font-family: inherit;
+  font-size: 0.95rem;
+  font-weight: 800;
+  padding: 0.6rem 1.1rem;
+  border-radius: 12px;
+  background: #1a5ca8;
+  color: #fff;
+  box-shadow: 0 4px 0 #0d3566;
+  letter-spacing: 0.03em;
+  transition: filter 0.15s, transform 0.1s, box-shadow 0.1s;
+}
+
+.btn-mart:hover {
+  filter: brightness(1.12);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 0 #0d3566;
+}
+
+.btn-mart:active {
+  transform: translateY(2px);
+  box-shadow: 0 2px 0 #0d3566;
+}
+
+/* ── Gym button ── */
+
+.btn-gym {
+  font-family: inherit;
+  font-size: 0.95rem;
+  font-weight: 800;
+  padding: 0.5rem 1.1rem;
+  background: #6b2300;
+  color: #ffe080;
+  border: none;
+  border-radius: 6px;
+  box-shadow: 0 4px 0 #3a0f00;
+  cursor: pointer;
+  transition: filter 0.15s, transform 0.1s, box-shadow 0.1s;
+}
+
+.btn-gym:hover {
+  filter: brightness(1.12);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 0 #3a0f00;
+}
+
+.btn-gym:active {
+  transform: translateY(2px);
+  box-shadow: 0 2px 0 #3a0f00;
+}
+
+.btn-gym--cleared {
+  background: #2a4a2a;
+  color: #68d391;
+  box-shadow: 0 4px 0 #0d2a0d;
+}
+
+.btn-gym--cleared:hover {
+  box-shadow: 0 6px 0 #0d2a0d;
+}
+
+/* ── Poké Mart modal ── */
+
+.mart-modal {
+  border-color: #1a5ca8;
+  padding: 0;
+  overflow: hidden;
+  max-width: 480px;
+}
+
+.mart-modal__header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem 1.25rem 0.9rem;
+  background: #0f2a5a;
+  border-bottom: 2px solid #1a5ca8;
+}
+
+.mart-modal__title {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: #fff;
+  flex: 1;
+}
+
+.mart-modal__money {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #ffd700;
+}
+
+.mart-modal__close {
+  background: none;
+  border: none;
+  color: #aac4e0;
+  font-size: 1.1rem;
+  cursor: pointer;
+  padding: 0.15rem 0.4rem;
+  border-radius: 6px;
+  line-height: 1;
+  transition: color 0.15s, background 0.15s;
+}
+
+.mart-modal__close:hover {
+  color: #fff;
+  background: #ffffff18;
+}
+
+.mart-modal__tabs {
+  display: flex;
+  border-bottom: 2px solid #1a5ca8;
+}
+
+.mart-tab {
+  flex: 1;
+  background: none;
+  border: none;
+  color: #7a9cc0;
+  font-family: inherit;
+  font-size: 0.9rem;
+  font-weight: 700;
+  padding: 0.65rem 1rem;
+  cursor: pointer;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  transition: color 0.15s, background 0.15s;
+}
+
+.mart-tab:hover {
+  color: #eee;
+  background: #ffffff0a;
+}
+
+.mart-tab--active {
+  color: #63b3ed;
+  background: #ffffff0f;
+  border-bottom: 3px solid #63b3ed;
+  margin-bottom: -2px;
+}
+
+.mart-modal__list {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  max-height: 340px;
+  overflow-y: auto;
+  padding: 0.5rem 0;
+}
+
+.mart-empty {
+  text-align: center;
+  color: #7a9cc0;
+  font-size: 0.9rem;
+  padding: 2rem;
+  margin: 0;
+}
+
+.mart-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.6rem 1.25rem;
+  border-bottom: 1px solid #ffffff0d;
+  transition: background 0.1s;
+}
+
+.mart-row:last-child {
+  border-bottom: none;
+}
+
+.mart-row:hover {
+  background: #ffffff07;
+}
+
+.mart-row__icon {
+  font-size: 1.4rem;
+  flex-shrink: 0;
+  width: 1.8rem;
+  text-align: center;
+}
+
+.mart-row__info {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+}
+
+.mart-row__name {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #eee;
+}
+
+.mart-row__desc {
+  font-size: 0.75rem;
+  color: #7a9cc0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mart-row__owned {
+  font-size: 0.78rem;
+  color: #7a9cc0;
+  flex-shrink: 0;
+  min-width: 2rem;
+  text-align: right;
+}
+
+.mart-row__price {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #ffd700;
+  flex-shrink: 0;
+  min-width: 4rem;
+  text-align: right;
+}
+
+.mart-row__buy,
+.mart-row__sell {
+  font-size: 0.8rem;
+  font-weight: 700;
+  padding: 0.35rem 0.75rem;
+  border-radius: 8px;
+  flex-shrink: 0;
+}
+
+.mart-row__buy {
+  background: #1a5ca8;
+  color: #fff;
+  box-shadow: 0 3px 0 #0d3566;
+}
+
+.mart-row__buy:hover:not(:disabled) {
+  filter: brightness(1.15);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 0 #0d3566;
+}
+
+.mart-row__buy:active:not(:disabled) {
+  transform: translateY(1px);
+  box-shadow: 0 1px 0 #0d3566;
+}
+
+.mart-row__buy:disabled {
+  background: #333;
+  box-shadow: 0 3px 0 #222;
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.mart-row__sell {
+  background: #8c5a1a;
+  color: #fff;
+  box-shadow: 0 3px 0 #5c3a0d;
+}
+
+.mart-row__sell:hover {
+  filter: brightness(1.15);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 0 #5c3a0d;
+}
+
+.mart-row__sell:active {
+  transform: translateY(1px);
+  box-shadow: 0 1px 0 #5c3a0d;
+}
