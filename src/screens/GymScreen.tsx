@@ -93,18 +93,20 @@ export default function GymScreen({ gymId, onExit }: Props) {
 
   if (activeBattle) {
     return (
-      <BattleScreen
-        area={area}
-        onBattleEnd={() => setActiveBattle(null)}
-        trainerBattle={activeBattle}
-      />
+      <div className="gym-battle-fullscreen">
+        <BattleScreen
+          area={area}
+          onBattleEnd={() => setActiveBattle(null)}
+          trainerBattle={activeBattle}
+        />
+      </div>
     )
   }
 
   if (badgeFanfare) {
     const badgeName = BADGE_NAMES[gym.leader.badge] ?? gym.leader.badge
     return (
-      <div className="gym-screen gym-screen--fanfare">
+      <div className="gym-battle-fullscreen gym-screen--fanfare">
         <div className="gym-fanfare">
           <BadgeIcon badgeId={gym.leader.badge} earned />
           <h2 className="gym-fanfare__title">{badgeName} Obtained!</h2>
@@ -119,7 +121,8 @@ export default function GymScreen({ gymId, onExit }: Props) {
   }
 
   return (
-    <div className="gym-screen">
+    <div className="gym-overlay" onClick={onExit}>
+    <div className="gym-screen" onClick={e => e.stopPropagation()}>
       <div className="gym-header">
         <button className="btn btn-secondary gym-back-btn" onClick={onExit}>← Back</button>
         <div className="gym-header__info">
@@ -199,6 +202,7 @@ export default function GymScreen({ gymId, onExit }: Props) {
           </div>
         </div>
       </div>
+    </div>
     </div>
   )
 }

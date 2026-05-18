@@ -578,6 +578,27 @@
   font-size: 1.1rem;
 }
 
+/* ── Trainer send-next switch prompt ── */
+
+.trainer-send-prompt {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  flex: 1;
+}
+
+.trainer-send-prompt__question {
+  font-size: 0.85rem;
+  color: #a0b8d0;
+  margin: 0 0 0.25rem;
+  font-weight: 600;
+}
+
+.trainer-send-prompt__btn {
+  font-size: 0.85rem;
+  padding: 0.5rem 0.75rem;
+}
+
 /* ── NumPad action mode (choose-action phase) ── */
 
 .numpad--actions {

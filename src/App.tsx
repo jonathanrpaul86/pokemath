@@ -9,16 +9,14 @@ import PokedexScreen from './screens/PokedexScreen'
 import PartyScreen from './screens/PartyScreen'
 import ProfileScreen from './screens/ProfileScreen'
 import BagScreen from './screens/BagScreen'
-import GymScreen from './screens/GymScreen'
 import './index.css'
 
-type GameScreen = 'overworld' | 'battle' | 'pokedex' | 'party' | 'profile' | 'bag' | 'gym'
+type GameScreen = 'overworld' | 'battle' | 'pokedex' | 'party' | 'profile' | 'bag'
 
 function App() {
   const { trainer, currentSlot, saves, loadSlot, deleteSlot, goToTitle } = useGameStore()
   const [starterSlot, setStarterSlot] = useState<number | null>(null)
   const [gameScreen, setGameScreen] = useState<GameScreen>('overworld')
-  const [activeGymId, setActiveGymId] = useState<string | null>(null)
 
   // No active slot → show title or starter select
   if (currentSlot === null) {
@@ -68,15 +66,6 @@ function App() {
     return <BagScreen onBack={() => setGameScreen('overworld')} />
   }
 
-  if (gameScreen === 'gym' && activeGymId) {
-    return (
-      <GymScreen
-        gymId={activeGymId}
-        onExit={() => { setActiveGymId(null); setGameScreen('overworld') }}
-      />
-    )
-  }
-
   return (
     <OverworldScreen
       onStartBattle={() => setGameScreen('battle')}
@@ -85,7 +74,6 @@ function App() {
       onOpenProfile={() => setGameScreen('profile')}
       onOpenBag={() => setGameScreen('bag')}
       onGoToTitle={() => { goToTitle(); setStarterSlot(null) }}
-      onOpenGym={(gymId) => { setActiveGymId(gymId); setGameScreen('gym') }}
     />
   )
 }

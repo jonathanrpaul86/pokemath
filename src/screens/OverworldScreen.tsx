@@ -5,6 +5,7 @@ import { AREA_MAP, KANTO_AREAS } from '../data/areas'
 import { ITEM_MAP, ITEM_EMOJI, BALL_EMOJI } from '../data/items'
 import { KANTO_NAMES } from '../data/pokedex'
 import { gymForCity, BADGE_NAMES } from '../data/gyms'
+import GymScreen from './GymScreen'
 import { preloadAreaSpecies } from '../services/pokeApi'
 import { WorldMapCanvas } from '../components/WorldMapCanvas'
 import type { Area, OwnedPokemon, EncounterEntry } from '../types'
@@ -17,7 +18,6 @@ interface Props {
   onOpenProfile: () => void
   onOpenBag: () => void
   onGoToTitle: () => void
-  onOpenGym: (gymId: string) => void
 }
 
 // ---- Pokédex icon -----------------------------------------------------------
@@ -349,11 +349,12 @@ function PokeMartModal({
 
 // ---- Main screen ------------------------------------------------------------
 
-export default function OverworldScreen({ onStartBattle, onOpenPokedex, onOpenParty, onOpenProfile, onOpenBag, onGoToTitle, onOpenGym }: Props) {
+export default function OverworldScreen({ onStartBattle, onOpenPokedex, onOpenParty, onOpenProfile, onOpenBag, onGoToTitle }: Props) {
   const trainer = useTrainer()
   const { dispatch } = useGameStore()
   const [centerPhase, setCenterPhase] = useState<CenterPhase | null>(null)
   const [showMart, setShowMart] = useState(false)
+  const [activeGymId, setActiveGymId] = useState<string | null>(null)
   const [muted, setMutedState] = useState(isMuted())
   // Which area is shown in the side panel (defaults to current, updates on hover/click)
   const [selectedAreaId, setSelectedAreaId] = useState(trainer.currentAreaId)
@@ -507,7 +508,7 @@ export default function OverworldScreen({ onStartBattle, onOpenPokedex, onOpenPa
                   {selectedAreaGym && (
                     <button
                       className={`btn btn-gym${selectedAreaGymCleared ? ' btn-gym--cleared' : ''}`}
-                      onClick={() => onOpenGym(selectedAreaGym.id)}
+                      onClick={() => setActiveGymId(selectedAreaGym.id)}
                     >
                       🏆 {selectedAreaGymCleared ? `${selectedAreaGym.leader.name}'s Gym (Cleared)` : `${selectedAreaGym.leader.name}'s Gym`}
                     </button>
@@ -563,6 +564,11 @@ export default function OverworldScreen({ onStartBattle, onOpenPokedex, onOpenPa
           martItems={currentArea.martItems}
           onClose={() => setShowMart(false)}
         />
+      )}
+
+      {/* ── Gym modal ── */}
+      {activeGymId && (
+        <GymScreen gymId={activeGymId} onExit={() => setActiveGymId(null)} />
       )}
     </div>
   )

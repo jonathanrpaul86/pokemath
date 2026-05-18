@@ -219,6 +219,7 @@ export default function BattleScreen({ area, onBattleEnd, trainerBattle }: Props
   const [answer, setAnswer] = useState('')
   const [showSwitch, setShowSwitch] = useState(false)
   const [switchHighlight, setSwitchHighlight] = useState<number | null>(null)
+  const [pendingTrainerSend, setPendingTrainerSend] = useState<{ nextEnemy: WildPokemon; nextIdx: number; spriteSrc: string } | null>(null)
   const [showBallMenu, setShowBallMenu] = useState(false)
   const [showItemMenu, setShowItemMenu] = useState(false)
   const [usingItemInBattle, setUsingItemInBattle] = useState<string | null>(null)
@@ -330,16 +331,32 @@ export default function BattleScreen({ area, onBattleEnd, trainerBattle }: Props
       const nextIdx = b.trainerTeamIdx + 1
       if (nextIdx < b.trainerTeam.length) {
         const nextEnemy = b.trainerTeam[nextIdx]
-        setBattle(prev => prev ? {
-          ...prev,
-          phase: 'choose-action',
-          wild: nextEnemy,
-          wildHp: nextEnemy.maxHp,
-          trainerTeamIdx: nextIdx,
-          wildSprite: b.trainerSprites![nextIdx],
-          problem: null,
-          log: [...prev.log.slice(-3), `${capitalize(b.wild.name)} fainted! ${trainerBattle.trainerName} sent out ${capitalize(nextEnemy.name)}!`],
-        } : prev)
+        const hasSwitchable = b.partyHps.some((hp, i) => i !== b.activeIdx && hp > 0)
+        if (hasSwitchable) {
+          // Offer a free switch before the trainer sends their next Pokémon
+          setPendingTrainerSend({ nextEnemy, nextIdx, spriteSrc: b.trainerSprites![nextIdx] })
+          setBattle(prev => prev ? {
+            ...prev,
+            phase: 'choose-action',
+            wild: nextEnemy,
+            wildHp: nextEnemy.maxHp,
+            trainerTeamIdx: nextIdx,
+            wildSprite: b.trainerSprites![nextIdx],
+            problem: null,
+            log: [...prev.log.slice(-3), `${capitalize(b.wild.name)} fainted! ${trainerBattle.trainerName} is about to send out ${capitalize(nextEnemy.name)}!`],
+          } : prev)
+        } else {
+          setBattle(prev => prev ? {
+            ...prev,
+            phase: 'choose-action',
+            wild: nextEnemy,
+            wildHp: nextEnemy.maxHp,
+            trainerTeamIdx: nextIdx,
+            wildSprite: b.trainerSprites![nextIdx],
+            problem: null,
+            log: [...prev.log.slice(-3), `${capitalize(b.wild.name)} fainted! ${trainerBattle.trainerName} sent out ${capitalize(nextEnemy.name)}!`],
+          } : prev)
+        }
         return
       }
       playVictory()
@@ -557,13 +574,19 @@ export default function BattleScreen({ area, onBattleEnd, trainerBattle }: Props
         if (usingItemInBattle) { e.preventDefault(); setUsingItemInBattle(null); return }
       }
 
+      // Trainer send-next prompt: only n/Enter (no) or s (switch) valid
+      if (pendingTrainerSend && !showSwitch) {
+        if (e.key === 'Enter' || e.key.toLowerCase() === 'n') { e.preventDefault(); handleNoSwitchBeforeTrainerSend(); return }
+        if (e.key.toLowerCase() === 's') { e.preventDefault(); openSwitchMenuForTrainerSend(); return }
+        return
+      }
+
       // Branch A: action selection
       if (b.phase === 'choose-action' && !showSwitch && !showBallMenu && !showItemMenu && !usingItemInBattle) {
         const switchable = trainer.party.filter((_, i) => i !== b.activeIdx && (b.partyHps[i] ?? 0) > 0)
         const actionMap: Record<string, () => void> = {
           'f': handleFight,
-          'c': handleStartCatch,
-          'r': handleFlee,
+          ...(!trainerBattle && { 'c': handleStartCatch, 'r': handleFlee }),
         }
         if (e.key === 's' && switchable.length > 0) { e.preventDefault(); openSwitchMenu(); return }
         const fn = actionMap[e.key]
@@ -584,6 +607,8 @@ export default function BattleScreen({ area, onBattleEnd, trainerBattle }: Props
               setBattle(prev => prev ? { ...prev, log: [...prev.log.slice(-3), `${capitalize(trainer.party[switchHighlight].name)} is already battling!`] } : prev)
             } else if (isFainted) {
               setBattle(prev => prev ? { ...prev, log: [...prev.log.slice(-3), `${capitalize(trainer.party[switchHighlight].name)} has no will to battle!`] } : prev)
+            } else if (pendingTrainerSend) {
+              handleFreeSwitchForTrainerSend(switchHighlight)
             } else {
               handleSwitch(switchHighlight)
             }
@@ -610,9 +635,9 @@ export default function BattleScreen({ area, onBattleEnd, trainerBattle }: Props
       // Battle option hotkeys available during player-turn
       if (b.phase === 'player-turn') {
         const switchable = trainer.party.filter((_, i) => i !== b.activeIdx && (b.partyHps[i] ?? 0) > 0)
-        if (e.key === 'c') { e.preventDefault(); handleStartCatch(); return }
+        if (!trainerBattle && e.key === 'c') { e.preventDefault(); handleStartCatch(); return }
         if (e.key === 's' && switchable.length > 0) { e.preventDefault(); openSwitchMenu(); return }
-        if (e.key === 'r') { e.preventDefault(); handleFlee(); return }
+        if (!trainerBattle && e.key === 'r') { e.preventDefault(); handleFlee(); return }
       }
 
       if (e.key >= '0' && e.key <= '9') {
@@ -629,7 +654,7 @@ export default function BattleScreen({ area, onBattleEnd, trainerBattle }: Props
     }
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
-  }, [answer, showSwitch, switchHighlight, showBallMenu, showItemMenu, usingItemInBattle]) // eslint-disable-line
+  }, [answer, showSwitch, switchHighlight, showBallMenu, showItemMenu, usingItemInBattle, pendingTrainerSend]) // eslint-disable-line
 
   // ---- Action handlers -------------------------------------------------------
 
@@ -1001,6 +1026,37 @@ export default function BattleScreen({ area, onBattleEnd, trainerBattle }: Props
     setSwitchHighlight(null)
   }
 
+  function openSwitchMenuForTrainerSend() {
+    setBattle(prev => prev ? {
+      ...prev,
+      log: [...prev.log.slice(-3), 'Which Pokémon will you send out?'],
+    } : prev)
+    setShowSwitch(true)
+    setSwitchHighlight(null)
+  }
+
+  function handleNoSwitchBeforeTrainerSend() {
+    const ps = pendingTrainerSend!
+    setPendingTrainerSend(null)
+    setBattle(prev => prev ? {
+      ...prev,
+      log: [...prev.log.slice(-3), `${trainerBattle?.trainerName} sent out ${capitalize(ps.nextEnemy.name)}!`],
+    } : prev)
+  }
+
+  function handleFreeSwitchForTrainerSend(partyIdx: number) {
+    const ps = pendingTrainerSend!
+    setBattle(prev => prev ? {
+      ...prev,
+      activeIdx: partyIdx,
+      switchTargetIdx: null,
+      log: [...prev.log.slice(-3), `Go, ${capitalize(trainer.party[partyIdx].name)}! ${trainerBattle?.trainerName} sent out ${capitalize(ps.nextEnemy.name)}!`],
+    } : prev)
+    setPendingTrainerSend(null)
+    setShowSwitch(false)
+    setSwitchHighlight(null)
+  }
+
   function handleAction(action: 'fight' | 'catch' | 'items' | 'switch' | 'run') {
     if (action === 'fight')  handleFight()
     if (action === 'catch')  handleStartCatch()
@@ -1132,17 +1188,18 @@ export default function BattleScreen({ area, onBattleEnd, trainerBattle }: Props
               <div className="battle-log">
                 <p className="battle-log__line">{battle.log[battle.log.length - 1]}</p>
               </div>
-              {!isTerminal && !showSwitch && phase !== 'catch-attempt' && phase !== 'run-attempt' && phase !== 'switch-attempt' && !showBallMenu && !showItemMenu && !usingItemInBattle && (
+              {!isTerminal && !showSwitch && !pendingTrainerSend && phase !== 'catch-attempt' && phase !== 'run-attempt' && phase !== 'switch-attempt' && !showBallMenu && !showItemMenu && !usingItemInBattle && (
                 <div className="battle-action-strip">
-                  {ACTION_BUTTONS.filter(([action]) => !trainerBattle || (action !== 'catch' && action !== 'run')).map(([action, icon, label]) => {
+                  {ACTION_BUTTONS.map(([action, icon, label]) => {
                     const isResolving = phase === 'resolving-correct' || phase === 'resolving-wrong'
                     const isFighting = action === 'fight' && phase !== 'choose-action'
                     const noSwitchable = action === 'switch' && switchableCount === 0
+                    const notAllowed = !!trainerBattle && (action === 'catch' || action === 'run')
                     return (
                       <button
                         key={action}
                         className={`numpad-btn numpad-btn--${action}`}
-                        disabled={isResolving || isFighting || noSwitchable}
+                        disabled={isResolving || isFighting || noSwitchable || notAllowed}
                         onClick={() => handleAction(action)}
                       >
                         <span className="numpad-btn__bg-icon" aria-hidden="true">{icon}</span>
@@ -1182,7 +1239,7 @@ export default function BattleScreen({ area, onBattleEnd, trainerBattle }: Props
                         key={p.uid}
                         className={`switch-btn${isCurrent ? ' switch-btn--current' : isFainted ? ' switch-btn--fainted' : ''}${isHighlighted ? ' switch-btn--highlighted' : ''}`}
                         disabled={unavailable}
-                        onClick={() => handleSwitch(i)}
+                        onClick={() => pendingTrainerSend ? handleFreeSwitchForTrainerSend(i) : handleSwitch(i)}
                       >
                         <span className="switch-btn__name">
                           <span className="switch-btn__num">{i + 1}</span>
@@ -1227,6 +1284,16 @@ export default function BattleScreen({ area, onBattleEnd, trainerBattle }: Props
                   })}
                   <button className="switch-btn switch-btn--cancel" onClick={() => setShowItemMenu(false)}>
                     Cancel
+                  </button>
+                </div>
+              ) : pendingTrainerSend && !showSwitch ? (
+                <div className="battle-result-panel trainer-send-prompt">
+                  <p className="trainer-send-prompt__question">Switch Pokémon?</p>
+                  <button className="btn btn-primary trainer-send-prompt__btn" onClick={openSwitchMenuForTrainerSend}>
+                    (S) Yes, switch!
+                  </button>
+                  <button className="btn btn-secondary trainer-send-prompt__btn" onClick={handleNoSwitchBeforeTrainerSend}>
+                    (N) No, continue
                   </button>
                 </div>
               ) : usingItemInBattle ? (
