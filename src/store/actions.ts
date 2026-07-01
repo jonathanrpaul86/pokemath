@@ -22,3 +22,4 @@ export type GameAction =
   | { type: 'ADD_ITEM';    payload: { itemId: string; quantity: number } }
   | { type: 'REMOVE_ITEM'; payload: { itemId: string; quantity: number } }
   | { type: 'EARN_BADGE';  payload: { badgeId: BadgeId } }
+  | { type: 'RECORD_GYM_TRAINER_DEFEAT'; payload: { gymId: string; trainerId: string } }

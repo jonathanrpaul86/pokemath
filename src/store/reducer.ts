@@ -1,6 +1,6 @@
 import type { Trainer, OwnedPokemon, MathStats, ItemPocket } from '../types'
 import type { GameAction } from './actions'
-import { createOwnedPokemon, trainerXpToNextLevel, pokemonXpToNextLevel, calcStats } from '../utils/formulas'
+import { createOwnedPokemon, trainerXpToNextLevel, pokemonXpToNextLevel, pokemonLevelCap, calcStats } from '../utils/formulas'
 import { KANTO_AREAS } from '../data/areas'
 import { ITEM_MAP } from '../data/items'
 
@@ -59,13 +59,17 @@ function applyTrainerLevelUps(trainer: Trainer): Trainer {
   return { ...trainer, level, xp, xpToNextLevel }
 }
 
-function applyPokemonLevelUp(pokemon: OwnedPokemon): OwnedPokemon {
+function applyPokemonLevelUp(pokemon: OwnedPokemon, levelCap: number): OwnedPokemon {
   let { level, xp, xpToNextLevel } = pokemon
-  while (xp >= xpToNextLevel) {
+  while (xp >= xpToNextLevel && level < levelCap) {
     xp -= xpToNextLevel
     level += 1
     xpToNextLevel = pokemonXpToNextLevel(level)
   }
+  // At the cap, hold at most one full bar of XP so the next badge grants an
+  // immediate level-up instead of a multi-level surge
+  if (level >= levelCap) xp = Math.min(xp, xpToNextLevel)
+  if (level === pokemon.level && xp === pokemon.xp) return pokemon
   // Recalculate HP ceiling on level up (keep current HP ratio)
   const hpRatio = pokemon.currentHp / pokemon.maxHp
   const newMaxHp = Math.floor(pokemon.stats.hp * 0.5 + level * 3 + 10)
@@ -97,11 +101,12 @@ export function gameReducer(trainer: Trainer, action: GameAction): Trainer {
 
     case 'GAIN_POKEMON_XP': {
       const { uid, amount } = action.payload
+      const cap = pokemonLevelCap(trainer.badges.length)
       next = {
         ...trainer,
         party: trainer.party.map(p =>
           p.uid === uid
-            ? applyPokemonLevelUp({ ...p, xp: p.xp + amount })
+            ? applyPokemonLevelUp({ ...p, xp: p.xp + amount }, cap)
             : p
         ),
       }
@@ -314,7 +319,28 @@ export function gameReducer(trainer: Trainer, action: GameAction): Trainer {
     case 'EARN_BADGE': {
       const { badgeId } = action.payload
       if (trainer.badges.includes(badgeId)) return trainer
-      next = { ...trainer, badges: [...trainer.badges, badgeId] }
+      // Raising the cap may unlock a banked level-up for capped Pokemon
+      const newCap = pokemonLevelCap(trainer.badges.length + 1)
+      next = {
+        ...trainer,
+        badges: [...trainer.badges, badgeId],
+        party: trainer.party.map(p => applyPokemonLevelUp(p, newCap)),
+        pc: trainer.pc.map(p => applyPokemonLevelUp(p, newCap)),
+      }
+      break
+    }
+
+    case 'RECORD_GYM_TRAINER_DEFEAT': {
+      const { gymId, trainerId } = action.payload
+      const prev = trainer.gymProgress?.[gymId] ?? { defeatedTrainerIds: [], leaderDefeated: false }
+      if (prev.defeatedTrainerIds.includes(trainerId)) return trainer
+      next = {
+        ...trainer,
+        gymProgress: {
+          ...trainer.gymProgress,
+          [gymId]: { ...prev, defeatedTrainerIds: [...prev.defeatedTrainerIds, trainerId] },
+        },
+      }
       break
     }
 

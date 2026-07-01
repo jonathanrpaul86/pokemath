@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react'
-import type { Area } from '../types'
+import type { Area, BadgeId } from '../types'
 import { MapRenderer, type MapRenderState } from '../utils/mapRenderer'
 
 interface Props {
@@ -7,6 +7,7 @@ interface Props {
   currentAreaId: string
   unlockedAreaIds: string[]
   trainerLevel: number
+  badges: BadgeId[]
   /** The area currently shown in the side panel (hover or click) */
   selectedAreaId: string
   onSelectArea: (areaId: string | null) => void
@@ -19,6 +20,7 @@ export function WorldMapCanvas({
   currentAreaId,
   unlockedAreaIds,
   trainerLevel,
+  badges,
   selectedAreaId,
   onSelectArea,
   onTravel,
@@ -41,8 +43,8 @@ export function WorldMapCanvas({
   stateRef.current.selectedAreaId = selectedAreaId
 
   // Also keep a mutable ref for values needed in event handlers
-  const propsRef = useRef({ areas, currentAreaId, unlockedAreaIds, trainerLevel, onTravel, onSelectArea })
-  propsRef.current = { areas, currentAreaId, unlockedAreaIds, trainerLevel, onTravel, onSelectArea }
+  const propsRef = useRef({ areas, currentAreaId, unlockedAreaIds, trainerLevel, badges, onTravel, onSelectArea })
+  propsRef.current = { areas, currentAreaId, unlockedAreaIds, trainerLevel, badges, onTravel, onSelectArea }
 
   // Create renderer + ResizeObserver once on mount
   useEffect(() => {
@@ -96,13 +98,14 @@ export function WorldMapCanvas({
   }
 
   function isReachable(targetId: string): boolean {
-    const { currentAreaId, areas, trainerLevel } = propsRef.current
+    const { currentAreaId, areas, trainerLevel, badges } = propsRef.current
     const currentArea = areas.find(a => a.id === currentAreaId)
     const targetArea = areas.find(a => a.id === targetId)
     if (!currentArea || !targetArea) return false
     return (
       currentArea.connectedAreaIds.includes(targetId) &&
-      trainerLevel >= targetArea.requiredTrainerLevel
+      trainerLevel >= targetArea.requiredTrainerLevel &&
+      (!targetArea.requiredBadge || badges.includes(targetArea.requiredBadge))
     )
   }
 
