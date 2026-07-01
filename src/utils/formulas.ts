@@ -35,6 +35,15 @@ export function pokemonXpToNextLevel(currentLevel: number): number {
   return currentLevel * 50
 }
 
+/**
+ * Max Pokemon level, gated by badges earned. Tuned to sit just above each gym
+ * leader's ace (Brock 14, Misty 21, Erika 29, Koga 43, Blaine 47) so a single
+ * over-trained Pokemon can never trivialize the next gym.
+ */
+export function pokemonLevelCap(badgeCount: number): number {
+  return 15 + badgeCount * 8
+}
+
 /** XP rewarded to the active Pokemon after winning a battle */
 export function battleXpReward(wildLevel: number): number {
   return Math.floor(wildLevel * 1.5 + 10)

@@ -269,6 +269,12 @@
   text-align: right;
 }
 
+.pm-detail__cap-hint {
+  color: #f0c94a;
+  text-align: left;
+  margin-top: 4px;
+}
+
 .pm-detail__none {
   font-size: 0.75rem;
   color: #7a9cc0;

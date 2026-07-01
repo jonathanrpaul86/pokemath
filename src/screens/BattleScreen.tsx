@@ -397,6 +397,8 @@ export default function BattleScreen({ area, onBattleEnd, trainerBattle }: Props
     const t = setTimeout(() => {
       const b = battleRef.current
       if (!b) return
+      // Clear typed answer on every resolve exit (victory, next enemy, forced switch)
+      setAnswer('')
 
       if (b.phase === 'resolving-correct') {
         if (b.wildHp <= 0) { handleVictory(b); return }
@@ -775,6 +777,7 @@ export default function BattleScreen({ area, onBattleEnd, trainerBattle }: Props
   function handleFight() {
     const p = nextProblem()
     setBattle(prev => prev ? { ...prev, phase: 'player-turn', problem: p, timeRemaining: p.timeLimit } : prev)
+    setAnswer('')
   }
 
   function handleStartCatch() {

@@ -453,6 +453,7 @@ export default function OverworldScreen({ onStartBattle, onOpenPokedex, onOpenPa
             currentAreaId={trainer.currentAreaId}
             unlockedAreaIds={trainer.unlockedAreaIds}
             trainerLevel={trainer.level}
+            badges={trainer.badges}
             selectedAreaId={selectedAreaId}
             onSelectArea={handleSelectArea}
             onTravel={handleTravel}

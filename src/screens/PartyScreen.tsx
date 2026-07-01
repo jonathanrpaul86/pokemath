@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useTrainer, useGameStore } from '../store'
 import { spriteUrl } from '../data/pokedex'
+import { pokemonLevelCap } from '../utils/formulas'
 import type { OwnedPokemon, PokemonType } from '../types'
 import './PartyScreen.css'
 
@@ -34,6 +35,7 @@ function XpBar({ xp, max }: { xp: number; max: number }) {
 }
 
 function PokemonDetail({ pokemon }: { pokemon: OwnedPokemon | null }) {
+  const trainer = useTrainer()
   if (!pokemon) {
     return (
       <div className="pm-detail pm-detail--empty">
@@ -43,6 +45,8 @@ function PokemonDetail({ pokemon }: { pokemon: OwnedPokemon | null }) {
   }
 
   const { stats, xp, xpToNextLevel, currentHp, maxHp, level, caughtAt } = pokemon
+  const levelCap = pokemonLevelCap(trainer.badges.length)
+  const atCap = level >= levelCap
   const moves = pokemon.moves ?? []
   const hpPct = maxHp > 0 ? Math.min(100, Math.round((currentHp / maxHp) * 100)) : 0
   const hpColor = hpPct > 50 ? 'green' : hpPct > 20 ? 'yellow' : 'red'
@@ -73,6 +77,11 @@ function PokemonDetail({ pokemon }: { pokemon: OwnedPokemon | null }) {
         <h4 className="pm-detail__section-title">Experience</h4>
         <XpBar xp={xp} max={xpToNextLevel} />
         <p className="pm-detail__stat-text">{xp} / {xpToNextLevel} XP</p>
+        {atCap && (
+          <p className="pm-detail__stat-text pm-detail__cap-hint">
+            🏅 At max level ({levelCap}) — earn a Gym Badge to keep growing!
+          </p>
+        )}
       </section>
 
       <section className="pm-detail__section">
