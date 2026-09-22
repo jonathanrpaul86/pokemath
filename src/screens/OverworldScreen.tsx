@@ -8,11 +8,14 @@ import { gymForCity, BADGE_NAMES } from '../data/gyms'
 import GymScreen from './GymScreen'
 import { preloadAreaSpecies } from '../services/pokeApi'
 import { WorldMapCanvas } from '../components/WorldMapCanvas'
-import type { Area, OwnedPokemon, EncounterEntry } from '../types'
+import ExploreModal from '../components/ExploreModal'
+import { canExplore } from '../utils/explore'
+import type { Area, OwnedPokemon, EncounterEntry, RouteTrainer } from '../types'
 import './OverworldScreen.css'
 
 interface Props {
-  onStartBattle: () => void
+  /** Starts a wild battle, or a trainer battle when a route trainer is given */
+  onStartBattle: (routeTrainer?: RouteTrainer) => void
   onOpenPokedex: () => void
   onOpenParty: () => void
   onOpenProfile: () => void
@@ -355,6 +358,7 @@ export default function OverworldScreen({ onStartBattle, onOpenPokedex, onOpenPa
   const [centerPhase, setCenterPhase] = useState<CenterPhase | null>(null)
   const [showMart, setShowMart] = useState(false)
   const [activeGymId, setActiveGymId] = useState<string | null>(null)
+  const [exploring, setExploring] = useState(false)
   const [muted, setMutedState] = useState(isMuted())
   // Which area is shown in the side panel (defaults to current, updates on hover/click)
   const [selectedAreaId, setSelectedAreaId] = useState(trainer.currentAreaId)
@@ -488,14 +492,14 @@ export default function OverworldScreen({ onStartBattle, onOpenPokedex, onOpenPa
             <div className="area-detail__actions">
               {selectedIsCurrent && (
                 <>
-                  {selectedArea.areaType !== 'city' && selectedArea.areaType !== 'town' && (
+                  {canExplore(selectedArea) && (
                     <button
-                      className="btn btn-battle"
-                      onClick={onStartBattle}
+                      className="btn btn-explore btn-explore--large"
+                      onClick={() => setExploring(true)}
                       disabled={!partyHasLiveMember}
                       title={!partyHasLiveMember ? 'All your Pokémon have fainted!' : undefined}
                     >
-                      ⚔ Battle!
+                      🔍 Explore
                     </button>
                   )}
                   {(selectedArea.areaType === 'city' || selectedArea.areaType === 'town') && (
@@ -567,6 +571,16 @@ export default function OverworldScreen({ onStartBattle, onOpenPokedex, onOpenPa
         <PokeMartModal
           martItems={currentArea.martItems}
           onClose={() => setShowMart(false)}
+        />
+      )}
+
+      {/* ── Explore modal ── */}
+      {exploring && (
+        <ExploreModal
+          area={currentArea}
+          onWildEncounter={() => onStartBattle()}
+          onTrainerBattle={routeTrainer => onStartBattle(routeTrainer)}
+          onClose={() => setExploring(false)}
         />
       )}
 

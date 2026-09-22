@@ -1,0 +1,150 @@
+.explore-overlay {
+  position: fixed;
+  inset: 0;
+  background: #00000088;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  animation: pc-fade-in 0.15s ease;
+}
+
+.explore-modal {
+  background: #0f3460;
+  border: 3px solid #d69e2e;
+  border-radius: 20px;
+  padding: 1.5rem 1.75rem 1.75rem;
+  max-width: 420px;
+  width: 90%;
+  box-shadow: 0 8px 32px #00000066;
+  animation: pc-slide-up 0.18s ease;
+  text-align: center;
+}
+
+.explore-modal__area {
+  margin: 0 0 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #7a9cc0;
+}
+
+.explore-result {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 140px;
+  justify-content: center;
+}
+
+.explore-result__icon {
+  font-size: 3rem;
+  line-height: 1;
+}
+
+.explore-result__icon--searching {
+  animation: explore-rustle 0.3s ease-in-out infinite alternate;
+}
+
+.explore-result__icon--alert {
+  animation: explore-pop 0.25s ease-out;
+}
+
+.explore-result__icon--found {
+  animation: explore-bounce 0.5s ease-out;
+}
+
+@keyframes explore-rustle {
+  from { transform: rotate(-12deg); }
+  to   { transform: rotate(12deg); }
+}
+
+@keyframes explore-pop {
+  from { transform: scale(0.2); opacity: 0; }
+  70%  { transform: scale(1.25); }
+  to   { transform: scale(1); opacity: 1; }
+}
+
+@keyframes explore-bounce {
+  0%   { transform: translateY(12px) scale(0.6); opacity: 0; }
+  60%  { transform: translateY(-8px) scale(1.1); opacity: 1; }
+  100% { transform: translateY(0) scale(1); }
+}
+
+.explore-result__text {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: #eee;
+  line-height: 1.4;
+}
+
+.explore-result__quote {
+  margin: 0;
+  font-size: 0.9rem;
+  font-style: italic;
+  color: #c8d8ec;
+}
+
+.explore-result__sub {
+  margin: 0;
+  font-size: 0.85rem;
+  color: #7a9cc0;
+}
+
+.explore-result__team {
+  margin: 0;
+  display: flex;
+  gap: 0.3rem;
+  font-size: 1rem;
+}
+
+.explore-actions {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: center;
+  margin-top: 1.25rem;
+  flex-wrap: wrap;
+}
+
+.btn-explore {
+  font-family: inherit;
+  font-size: 1rem;
+  font-weight: 900;
+  padding: 0.7rem 1.3rem;
+  border: none;
+  border-radius: 14px;
+  background: #d69e2e;
+  color: #1a1a2e;
+  cursor: pointer;
+  letter-spacing: 0.03em;
+  box-shadow: 0 4px 0 #8a6010;
+  transition: filter 0.15s ease, transform 0.1s ease, box-shadow 0.1s ease;
+}
+
+.btn-explore:hover:not(:disabled) {
+  filter: brightness(1.1);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 0 #8a6010;
+}
+
+.btn-explore:active:not(:disabled) {
+  transform: translateY(2px);
+  box-shadow: 0 2px 0 #8a6010;
+}
+
+.btn-explore:disabled {
+  background: #555;
+  color: #ccc;
+  box-shadow: 0 4px 0 #333;
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* The big overworld Explore button matches the old Battle button's size */
+.btn-explore--large {
+  padding: 0.85rem 1.5rem;
+  font-size: 1.25rem;
+}

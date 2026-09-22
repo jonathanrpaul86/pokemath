@@ -9,6 +9,7 @@ import PokedexScreen from './screens/PokedexScreen'
 import PartyScreen from './screens/PartyScreen'
 import ProfileScreen from './screens/ProfileScreen'
 import BagScreen from './screens/BagScreen'
+import type { RouteTrainer } from './types'
 import './index.css'
 
 type GameScreen = 'overworld' | 'battle' | 'pokedex' | 'party' | 'profile' | 'bag'
@@ -17,6 +18,12 @@ function App() {
   const { trainer, currentSlot, saves, loadSlot, deleteSlot, goToTitle } = useGameStore()
   const [starterSlot, setStarterSlot] = useState<number | null>(null)
   const [gameScreen, setGameScreen] = useState<GameScreen>('overworld')
+  const [routeTrainer, setRouteTrainer] = useState<RouteTrainer | null>(null)
+
+  function returnToOverworld() {
+    setRouteTrainer(null)
+    setGameScreen('overworld')
+  }
 
   // No active slot → show title or starter select
   if (currentSlot === null) {
@@ -45,7 +52,14 @@ function App() {
     return (
       <BattleScreen
         area={AREA_MAP[trainer.currentAreaId]}
-        onBattleEnd={() => setGameScreen('overworld')}
+        onBattleEnd={returnToOverworld}
+        trainerBattle={routeTrainer ? {
+          trainerName: routeTrainer.name,
+          isLeader: false,
+          team: routeTrainer.team,
+          quote: routeTrainer.quote,
+          onComplete: returnToOverworld,
+        } : undefined}
       />
     )
   }
@@ -68,7 +82,7 @@ function App() {
 
   return (
     <OverworldScreen
-      onStartBattle={() => setGameScreen('battle')}
+      onStartBattle={rt => { setRouteTrainer(rt ?? null); setGameScreen('battle') }}
       onOpenPokedex={() => setGameScreen('pokedex')}
       onOpenParty={() => setGameScreen('party')}
       onOpenProfile={() => setGameScreen('profile')}
