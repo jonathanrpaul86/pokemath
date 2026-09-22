@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react'
 import type { Area, BadgeId } from '../types'
 import { MapRenderer, type MapRenderState } from '../utils/mapRenderer'
+import { meetsBadgeRequirement } from '../data/areas'
 
 interface Props {
   areas: Area[]
@@ -98,14 +99,14 @@ export function WorldMapCanvas({
   }
 
   function isReachable(targetId: string): boolean {
-    const { currentAreaId, areas, trainerLevel, badges } = propsRef.current
+    const { currentAreaId, areas, trainerLevel, badges, unlockedAreaIds } = propsRef.current
     const currentArea = areas.find(a => a.id === currentAreaId)
     const targetArea = areas.find(a => a.id === targetId)
     if (!currentArea || !targetArea) return false
     return (
       currentArea.connectedAreaIds.includes(targetId) &&
       trainerLevel >= targetArea.requiredTrainerLevel &&
-      (!targetArea.requiredBadge || badges.includes(targetArea.requiredBadge))
+      meetsBadgeRequirement(targetArea, badges, unlockedAreaIds)
     )
   }
 

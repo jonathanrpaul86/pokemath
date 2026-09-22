@@ -64,6 +64,42 @@ export const KANTO_GYMS: GymDefinition[] = [
     },
   },
   {
+    id: 'vermilion-gym',
+    cityAreaId: 'vermilion-city',
+    name: 'Vermilion City Gym',
+    type: 'Electric',
+    trainers: [
+      {
+        id: 'vermilion-t1',
+        name: 'Rocker Luca',
+        team: [
+          { speciesId: 100, level: 20 }, // Voltorb
+          { speciesId: 81,  level: 21 }, // Magnemite
+        ],
+        quote: "My band plays so loud it makes sparks fly! Get ready for a shock!",
+      },
+      {
+        id: 'vermilion-t2',
+        name: 'Gentleman Tucker',
+        team: [
+          { speciesId: 25, level: 22 }, // Pikachu
+        ],
+        quote: "A true gentleman never loses his cool. My Pikachu, however, is fully charged!",
+      },
+    ],
+    leader: {
+      name: 'Lt. Surge',
+      team: [
+        { speciesId: 100, level: 21 }, // Voltorb
+        { speciesId: 25,  level: 22 }, // Pikachu
+        { speciesId: 26,  level: 24 }, // Raichu
+      ],
+      badge: 'thunder-badge',
+      quote: "Hey, kid! I'm Lt. Surge! My Electric Pokémon are lightning fast — they'll zap you before you can blink!",
+      winQuote: "Whoa, you're the real deal, kid! The Thunder Badge is yours. Head back through Lavender Town and take Route 7 west!",
+    },
+  },
+  {
     id: 'celadon-gym',
     cityAreaId: 'celadon-city',
     name: 'Celadon City Gym',
@@ -105,7 +141,54 @@ export const KANTO_GYMS: GymDefinition[] = [
       ],
       badge: 'rainbow-badge',
       quote: "I'm Erika, the Grass-type master! My Pokémon are nurtured with tender care. Face their wrath!",
-      winQuote: "Wonderful! You've earned the Rainbow Badge. Cycling Road to the south awaits!",
+      winQuote: "Wonderful! You've earned the Rainbow Badge. The golden gates of Saffron City will now open for you!",
+    },
+  },
+  {
+    id: 'saffron-gym',
+    cityAreaId: 'saffron-city',
+    name: 'Saffron City Gym',
+    type: 'Psychic',
+    trainers: [
+      {
+        id: 'saffron-t1',
+        name: 'Psychic Johan',
+        team: [
+          { speciesId: 102, level: 33 }, // Exeggcute
+          { speciesId: 79,  level: 33 }, // Slowpoke
+        ],
+        quote: "I can read your mind... You're thinking about math problems, aren't you?",
+      },
+      {
+        id: 'saffron-t2',
+        name: 'Medium Cameron',
+        team: [
+          { speciesId: 64,  level: 34 }, // Kadabra
+          { speciesId: 122, level: 34 }, // Mr. Mime
+        ],
+        quote: "Sabrina taught us to see the future. I see you losing this battle!",
+      },
+      {
+        id: 'saffron-t3',
+        name: 'Psychic Preston',
+        team: [
+          { speciesId: 97, level: 35 }, // Hypno
+          { speciesId: 80, level: 36 }, // Slowbro
+        ],
+        quote: "Focus your mind... if you can! My Pokémon's psychic powers are unmatched!",
+      },
+    ],
+    leader: {
+      name: 'Sabrina',
+      team: [
+        { speciesId: 64,  level: 35 }, // Kadabra
+        { speciesId: 122, level: 35 }, // Mr. Mime
+        { speciesId: 49,  level: 36 }, // Venomoth
+        { speciesId: 65,  level: 38 }, // Alakazam
+      ],
+      badge: 'marsh-badge',
+      quote: "I am Sabrina. I knew you would come... My psychic Pokémon have already seen how this battle ends.",
+      winQuote: "I did not foresee this... The Marsh Badge is yours. Cycling Road, south of Celadon City, is now open!",
     },
   },
   {
@@ -198,7 +281,56 @@ export const KANTO_GYMS: GymDefinition[] = [
       ],
       badge: 'volcano-badge',
       quote: "I'm Blaine! I'm burning with a passion for battling! My Fire-type Pokémon will incinerate you!",
-      winQuote: "You're hot stuff! You've earned the Volcano Badge. Only Victory Road stands between you and the League!",
+      winQuote: "You're hot stuff! You've earned the Volcano Badge. Cross Victory Road to Viridian City — the final Gym awaits!",
+    },
+  },
+  {
+    id: 'viridian-gym',
+    cityAreaId: 'viridian-city',
+    name: 'Viridian City Gym',
+    type: 'Ground',
+    requiredBadgeCount: 7,
+    trainers: [
+      {
+        id: 'viridian-t1',
+        name: 'Cooltrainer Samuel',
+        team: [
+          { speciesId: 28, level: 44 }, // Sandslash
+          { speciesId: 51, level: 44 }, // Dugtrio
+        ],
+        quote: "Only the toughest trainers make it this far. Let's see if you really belong here!",
+      },
+      {
+        id: 'viridian-t2',
+        name: 'Cooltrainer Mira',
+        team: [
+          { speciesId: 31, level: 45 }, // Nidoqueen
+          { speciesId: 34, level: 45 }, // Nidoking
+        ],
+        quote: "Seven badges, huh? Impressive. But my royal pair won't go easy on you!",
+      },
+      {
+        id: 'viridian-t3',
+        name: 'Cooltrainer Yuji',
+        team: [
+          { speciesId: 111, level: 46 }, // Rhyhorn
+          { speciesId: 105, level: 46 }, // Marowak
+        ],
+        quote: "The ground itself shakes when my Pokémon attack. Hold on tight!",
+      },
+    ],
+    leader: {
+      name: 'Giovanni',
+      team: [
+        { speciesId: 111, level: 45 }, // Rhyhorn
+        { speciesId: 51,  level: 42 }, // Dugtrio
+        { speciesId: 31,  level: 44 }, // Nidoqueen
+        { speciesId: 34,  level: 45 }, // Nidoking
+        { speciesId: 112, level: 50 }, // Rhydon
+      ],
+      badge: 'earth-badge',
+      quote: "So, you've collected seven badges. I am Giovanni, the strongest Gym Leader in Kanto. Show me what you've got!",
+      winQuote: "Remarkable... The Earth Badge is yours. You've conquered every Gym in Kanto — you are a true Pokémon Master in the making!",
     },
   },
 ]

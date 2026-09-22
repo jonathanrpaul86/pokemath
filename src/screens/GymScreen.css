@@ -259,6 +259,32 @@
   margin-top: 0.1rem;
 }
 
+.gym-closed {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 2rem 1rem;
+  text-align: center;
+}
+
+.gym-closed__icon {
+  font-size: 2.5rem;
+}
+
+.gym-closed__title {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #e8e8f8;
+}
+
+.gym-closed__hint {
+  margin: 0;
+  font-size: 0.85rem;
+  color: #a0a0b8;
+}
+
 .gym-leader-row__challenge {
   flex-shrink: 0;
   padding: 0.55rem 1rem;

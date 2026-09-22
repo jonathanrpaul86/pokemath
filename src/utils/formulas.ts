@@ -36,12 +36,15 @@ export function pokemonXpToNextLevel(currentLevel: number): number {
 }
 
 /**
- * Max Pokemon level, gated by badges earned. Tuned to sit just above each gym
- * leader's ace (Brock 14, Misty 21, Erika 29, Koga 43, Blaine 47) so a single
- * over-trained Pokemon can never trivialize the next gym.
+ * Max Pokemon level by badges earned. Each cap sits just above the NEXT gym
+ * leader's ace (Brock 14, Misty 21, Surge 24, Erika 29, Sabrina 38, Koga 43,
+ * Blaine 47, Giovanni 50) so a single over-trained Pokemon can never
+ * trivialize the next gym. All 8 badges lifts the cap entirely.
  */
+const LEVEL_CAP_BY_BADGES = [15, 23, 26, 31, 40, 45, 49, 52, 100] as const
+
 export function pokemonLevelCap(badgeCount: number): number {
-  return 15 + badgeCount * 8
+  return LEVEL_CAP_BY_BADGES[Math.min(badgeCount, LEVEL_CAP_BY_BADGES.length - 1)]
 }
 
 /** XP rewarded to the active Pokemon after winning a battle */

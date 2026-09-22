@@ -15,8 +15,11 @@ const TYPE_COLORS: Record<string, string> = {
   Rock:   '#b8a038',
   Water:  '#6890f0',
   Grass:  '#78c850',
-  Poison: '#a040a0',
-  Fire:   '#f08030',
+  Poison:   '#a040a0',
+  Fire:     '#f08030',
+  Electric: '#e0b820',
+  Psychic:  '#f85888',
+  Ground:   '#c8a048',
 }
 
 function BadgeIcon({ badgeId, earned }: { badgeId: string; earned: boolean }) {
@@ -51,6 +54,7 @@ export default function GymScreen({ gymId, onExit }: Props) {
   const progress = trainer.gymProgress?.[gymId] ?? { defeatedTrainerIds: [], leaderDefeated: false }
   const allTrainersDefeated = gym.trainers.every(t => progress.defeatedTrainerIds.includes(t.id))
   const leaderDefeated = trainer.badges.includes(gym.leader.badge)
+  const gymClosed = !leaderDefeated && trainer.badges.length < (gym.requiredBadgeCount ?? 0)
 
   function startTrainerBattle(trainerId: string) {
     const t = gym.trainers.find(t => t.id === trainerId)!
@@ -141,6 +145,16 @@ export default function GymScreen({ gymId, onExit }: Props) {
       </div>
 
       <div className="gym-interior">
+        {gymClosed ? (
+        <div className="gym-closed">
+          <span className="gym-closed__icon">🔒</span>
+          <p className="gym-closed__title">The Gym doors are locked.</p>
+          <p className="gym-closed__hint">
+            Come back when you've earned {gym.requiredBadgeCount} badges!
+            You have {trainer.badges.length} so far.
+          </p>
+        </div>
+        ) : (
         <div className="gym-trainers">
           {gym.trainers.map((t, i) => {
             const beaten = progress.defeatedTrainerIds.includes(t.id)
@@ -201,6 +215,7 @@ export default function GymScreen({ gymId, onExit }: Props) {
             )}
           </div>
         </div>
+        )}
       </div>
     </div>
     </div>

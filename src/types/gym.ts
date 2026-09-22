@@ -25,6 +25,8 @@ export interface GymDefinition {
   cityAreaId: string
   name: string
   type: string
+  /** Badges needed before the gym opens (Viridian stays closed until the end) */
+  requiredBadgeCount?: number
   trainers: GymTrainer[]
   leader: GymLeader
 }

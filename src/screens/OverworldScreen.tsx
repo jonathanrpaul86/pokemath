@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useTrainer, useGameStore } from '../store'
 import { isMuted, setMuted } from '../utils/sound'
-import { AREA_MAP, KANTO_AREAS } from '../data/areas'
+import { AREA_MAP, KANTO_AREAS, meetsBadgeRequirement } from '../data/areas'
 import { ITEM_MAP, ITEM_EMOJI, BALL_EMOJI } from '../data/items'
 import { KANTO_NAMES } from '../data/pokedex'
 import { gymForCity, BADGE_NAMES } from '../data/gyms'
@@ -400,6 +400,8 @@ export default function OverworldScreen({ onStartBattle, onOpenPokedex, onOpenPa
   const selectedAreaGymCleared = selectedAreaGym
     ? trainer.badges.includes(selectedAreaGym.leader.badge)
     : false
+  const selectedAreaGymClosed = !!selectedAreaGym && !selectedAreaGymCleared &&
+    trainer.badges.length < (selectedAreaGym.requiredBadgeCount ?? 0)
   const selectedIsAdjacent = currentArea.connectedAreaIds.includes(selectedAreaId)
   // Undiscovered areas more than 1 hop away are masked as unknown
   const selectedIsUnknown =
@@ -407,7 +409,7 @@ export default function OverworldScreen({ onStartBattle, onOpenPokedex, onOpenPa
     !selectedIsAdjacent &&
     !selectedIsCurrent
   const meetsLevelReq = trainer.level >= selectedArea.requiredTrainerLevel
-  const meetsBadgeReq = !selectedArea.requiredBadge || trainer.badges.includes(selectedArea.requiredBadge)
+  const meetsBadgeReq = meetsBadgeRequirement(selectedArea, trainer.badges, trainer.unlockedAreaIds)
   const canTravelToSelected =
     !selectedIsCurrent &&
     selectedIsAdjacent &&
@@ -511,7 +513,8 @@ export default function OverworldScreen({ onStartBattle, onOpenPokedex, onOpenPa
                       className={`btn btn-gym${selectedAreaGymCleared ? ' btn-gym--cleared' : ''}`}
                       onClick={() => setActiveGymId(selectedAreaGym.id)}
                     >
-                      🏆 {selectedAreaGymCleared ? `${selectedAreaGym.leader.name}'s Gym (Cleared)` : `${selectedAreaGym.leader.name}'s Gym`}
+                      {selectedAreaGymClosed ? '🔒' : '🏆'} {selectedAreaGym.leader.name}'s Gym
+                      {selectedAreaGymCleared ? ' (Cleared)' : selectedAreaGymClosed ? ' (Locked)' : ''}
                     </button>
                   )}
                   {!partyHasLiveMember && selectedArea.areaType !== 'city' && selectedArea.areaType !== 'town' && (

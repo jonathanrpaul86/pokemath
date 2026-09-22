@@ -23,8 +23,10 @@ const TERRAIN: Record<string, TerrainStyle> = {
   'route-9':          { blob: '#c8d860', node: '#7a9818' },
   'rock-tunnel':      { blob: '#d09060', node: '#8a5028' },
   'lavender-town':    { blob: '#e890e8', node: '#a030b8' },
+  'vermilion-city':   { blob: '#ffa860', node: '#d85a18' },
   'pokemon-tower':    { blob: '#7840c0', node: '#4010a0' },
   'route-7':          { blob: '#d0e860', node: '#80a010' },
+  'saffron-city':     { blob: '#f8d860', node: '#c09010' },
   'celadon-city':     { blob: '#80e0a8', node: '#208858' },
   'cycling-road':     { blob: '#b8c8e8', node: '#5878b8' },
   'fuchsia-city':     { blob: '#ff88cc', node: '#cc1878' },
@@ -613,7 +615,9 @@ function drawTerrainIcon(
 
     case 'viridian-city':
     case 'pewter-city':
+    case 'vermilion-city':
     case 'celadon-city':
+    case 'saffron-city':
     case 'fuchsia-city': {
       // City skyline — 3 building rectangles
       const bldgs: [number, number, number, number][] = [

@@ -1,4 +1,4 @@
-import type { Area } from '../types'
+import type { Area, BadgeId } from '../types'
 
 export const KANTO_AREAS: Area[] = [
   {
@@ -20,10 +20,10 @@ export const KANTO_AREAS: Area[] = [
   {
     id: 'viridian-city',
     name: 'Viridian City',
-    description: 'The first city on your journey. Heal up at the Pokémon Center before pushing north through Viridian Forest.',
+    description: "The first city on your journey. Heal up before pushing north through Viridian Forest. The city's Gym stays locked until a trainer has earned seven badges.",
     areaType: 'city',
     requiredTrainerLevel: 0,
-    connectedAreaIds: ['route-1', 'viridian-forest'],
+    connectedAreaIds: ['route-1', 'viridian-forest', 'victory-road'],
     mapX: 200, mapY: 260,
     mathDifficulty: 13,
     martItems: ['poke-ball', 'potion'],
@@ -158,12 +158,24 @@ export const KANTO_AREAS: Area[] = [
   {
     id: 'lavender-town',
     name: 'Lavender Town',
-    description: 'A quiet, eerie town. The Pokémon Tower looms to the east — brave trainers dare to enter.',
+    description: 'A quiet, eerie town. The Pokémon Tower looms to the east, and the harbor city of Vermilion lies to the south.',
     areaType: 'town',
     requiredTrainerLevel: 22,
-    connectedAreaIds: ['rock-tunnel', 'route-7', 'pokemon-tower'],
+    connectedAreaIds: ['rock-tunnel', 'route-7', 'pokemon-tower', 'vermilion-city'],
     mapX: 466, mapY: 262,
     mathDifficulty: 63,
+    martItems: ['poke-ball', 'great-ball', 'potion', 'super-potion', 'revive'],
+    encounters: [],
+  },
+  {
+    id: 'vermilion-city',
+    name: 'Vermilion City',
+    description: "A busy harbor city where ships come and go. Lt. Surge's Electric-type Gym crackles with energy.",
+    areaType: 'city',
+    requiredTrainerLevel: 22,
+    connectedAreaIds: ['lavender-town'],
+    mapX: 430, mapY: 316,
+    mathDifficulty: 64,
     martItems: ['poke-ball', 'great-ball', 'potion', 'super-potion', 'revive'],
     encounters: [],
   },
@@ -189,7 +201,8 @@ export const KANTO_AREAS: Area[] = [
     description: 'A winding road linking Lavender Town to Celadon City. Electric and Fire types wander through tall grass.',
     areaType: 'route',
     requiredTrainerLevel: 23,
-    connectedAreaIds: ['lavender-town', 'celadon-city'],
+    requiredBadge: 'thunder-badge',
+    connectedAreaIds: ['lavender-town', 'celadon-city', 'saffron-city'],
     mapX: 400, mapY: 250,
     mathDifficulty: 65,
     encounters: [
@@ -213,12 +226,25 @@ export const KANTO_AREAS: Area[] = [
     encounters: [],
   },
   {
+    id: 'saffron-city',
+    name: 'Saffron City',
+    description: "A shining city at the heart of Kanto. Sabrina's Psychic-type Gym sits behind its golden gates.",
+    areaType: 'city',
+    requiredTrainerLevel: 27,
+    requiredBadge: 'rainbow-badge',
+    connectedAreaIds: ['route-7'],
+    mapX: 398, mapY: 190,
+    mathDifficulty: 72,
+    martItems: ['great-ball', 'ultra-ball', 'super-potion', 'hyper-potion', 'revive'],
+    encounters: [],
+  },
+  {
     id: 'cycling-road',
     name: 'Cycling Road',
     description: 'A long downhill road stretching south from Celadon City. Fast Pokémon race alongside trainers here.',
     areaType: 'route',
     requiredTrainerLevel: 27,
-    requiredBadge: 'rainbow-badge',
+    requiredBadge: 'marsh-badge',
     connectedAreaIds: ['celadon-city', 'fuchsia-city'],
     mapX: 323, mapY: 283,
     mathDifficulty: 73,
@@ -298,11 +324,11 @@ export const KANTO_AREAS: Area[] = [
   {
     id: 'victory-road',
     name: 'Victory Road',
-    description: 'The final challenge before the Pokémon League. Only the strongest survive.',
+    description: 'A treacherous cave linking Cinnabar Island back to Viridian City. Only the strongest survive.',
     areaType: 'special',
     requiredTrainerLevel: 40,
     requiredBadge: 'volcano-badge',
-    connectedAreaIds: ['cinnabar-island'],
+    connectedAreaIds: ['cinnabar-island', 'viridian-city'],
     mapX: 96, mapY: 240,
     mathDifficulty: 100,
     encounters: [
@@ -321,3 +347,11 @@ export const STARTER_SPECIES_IDS = [4, 7, 1] as const // Charmander, Squirtle, B
 export const AREA_MAP: Record<string, Area> = Object.fromEntries(
   KANTO_AREAS.map(area => [area.id, area])
 )
+
+/**
+ * Badge gates only block first entry. Areas already visited stay open, so
+ * re-tuned gates can never strand an older save on the wrong side of one.
+ */
+export function meetsBadgeRequirement(area: Area, badges: BadgeId[], unlockedAreaIds: string[]): boolean {
+  return !area.requiredBadge || badges.includes(area.requiredBadge) || unlockedAreaIds.includes(area.id)
+}
