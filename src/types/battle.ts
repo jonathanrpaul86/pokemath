@@ -16,6 +16,9 @@ export type BattlePhase =
   | 'fled'
   | 'blacked-out'
 
+/** The phases that end a battle */
+export type BattleOutcome = Extract<BattlePhase, 'victory' | 'caught' | 'fled' | 'blacked-out'>
+
 export interface CatchAttempt {
   problemsRequired: number
   problemsSolved: number

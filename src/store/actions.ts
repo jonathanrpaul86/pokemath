@@ -1,8 +1,9 @@
 import type { OwnedPokemon, MathOperator, BaseStats, BadgeId } from '../types'
 
 export type GameAction =
-  | { type: 'GAIN_TRAINER_XP'; payload: { amount: number } }
   | { type: 'GAIN_POKEMON_XP'; payload: { uid: string; amount: number } }
+  | { type: 'RECORD_EXPLORE'; payload: { areaId: string } }
+  | { type: 'SET_BASE_STATS'; payload: { uid: string; baseStats: BaseStats } }
   | { type: 'CATCH_POKEMON'; payload: { pokemon: OwnedPokemon } }
   | { type: 'RECORD_ANSWER'; payload: { operator: MathOperator; correct: boolean } }
   | { type: 'UNLOCK_AREA'; payload: { areaId: string } }

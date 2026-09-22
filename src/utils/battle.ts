@@ -1,6 +1,10 @@
-import type { Move, PokemonSpecies, WildPokemon } from '../types'
+import type { BattleOutcome, BattlePhase, Move, PokemonSpecies, WildPokemon } from '../types'
 import { calcStats, pickMoveset } from './formulas'
 import { ITEM_MAP } from '../data/items'
+
+export function isBattleOutcome(phase: BattlePhase): phase is BattleOutcome {
+  return phase === 'victory' || phase === 'caught' || phase === 'fled' || phase === 'blacked-out'
+}
 
 // ---- Damage -----------------------------------------------------------------
 
@@ -81,6 +85,7 @@ export function spawnWildPokemon(species: PokemonSpecies, level: number): WildPo
     currentHp: stats.hp,
     maxHp: stats.hp,
     stats,
+    baseStats: species.baseStats,
     moves: pickMoveset(species, level),
   }
 }

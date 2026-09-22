@@ -16,9 +16,12 @@ export interface Area {
   name: string
   description: string
   areaType: AreaType
-  /** Trainer level required to unlock this area */
-  requiredTrainerLevel: number
   encounters: EncounterEntry[]
+  /**
+   * Counted explores needed before the player can move on to a NEW area from
+   * here. 0 for areas with no wild Pokémon (cities, towns).
+   */
+  exploresToComplete: number
   /** IDs of areas this one connects to */
   connectedAreaIds: string[]
   /** Position on the world map canvas (internal 600×380 coordinate space) */
@@ -28,6 +31,6 @@ export interface Area {
   mathDifficulty: number
   /** Item IDs available for purchase at this area's Poké Mart (cities/towns only) */
   martItems?: string[]
-  /** Badge required to travel to this area (in addition to requiredTrainerLevel) */
+  /** Badge required to enter this area for the first time */
   requiredBadge?: BadgeId
 }

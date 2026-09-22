@@ -1,14 +1,14 @@
 import { useState, useEffect, useRef, useCallback, type CSSProperties } from 'react'
 import { useTrainer, useGameStore } from '../store'
 import { fetchPokemonSpecies } from '../services/pokeApi'
-import { spawnWildPokemon, calcDamage, calcCatchDifficulty } from '../utils/battle'
+import { spawnWildPokemon, calcDamage, calcCatchDifficulty, isBattleOutcome } from '../utils/battle'
 import { pickEncounter, pickLevel } from '../utils/encounter'
 import { generateProblem, checkAnswer } from '../utils/math'
-import { battleXpReward, trainerXpReward, trainerMoneyReward, pokemonXpToNextLevel } from '../utils/formulas'
+import { battleXpReward, trainerMoneyReward, pokemonXpToNextLevel } from '../utils/formulas'
 import { playCorrect, playWrong, playCatch, playVictory, playLevelUp, isMuted, setMuted } from '../utils/sound'
 import { EVOLUTIONS } from '../data/evolutions'
 import { ITEM_MAP, BALL_EMOJI, ITEM_EMOJI } from '../data/items'
-import type { Area, BattlePhase, MathProblem, Move, OwnedPokemon, WildPokemon, TrainerBattle } from '../types'
+import type { Area, BattlePhase, BattleOutcome, MathProblem, Move, OwnedPokemon, WildPokemon, TrainerBattle } from '../types'
 import './BattleScreen.css'
 
 // ---- Constants ---------------------------------------------------------------
@@ -207,7 +207,7 @@ function NumberPad({ mode = 'digits', onDigit, onDelete, onSubmit, onAction, swi
 
 interface Props {
   area: Area
-  onBattleEnd: () => void
+  onBattleEnd: (outcome: BattleOutcome) => void
   trainerBattle?: TrainerBattle
 }
 
@@ -322,9 +322,7 @@ export default function BattleScreen({ area, onBattleEnd, trainerBattle }: Props
 
   function handleVictory(b: BattleData) {
     const pkmnXp = battleXpReward(b.wild.level)
-    const trXp = trainerXpReward(b.wild.level)
     persistHps(b)
-    dispatch({ type: 'GAIN_TRAINER_XP', payload: { amount: trXp } })
     dispatch({ type: 'GAIN_POKEMON_XP', payload: { uid: trainer.party[b.activeIdx].uid, amount: pkmnXp } })
 
     if (trainerBattle && b.trainerTeam && b.trainerTeamIdx !== undefined) {
@@ -562,12 +560,11 @@ export default function BattleScreen({ area, onBattleEnd, trainerBattle }: Props
       if (!b) return
 
       // Terminal phase: Enter continues
-      const terminal = b.phase === 'victory' || b.phase === 'caught' || b.phase === 'fled' || b.phase === 'blacked-out'
-      if (terminal) {
+      if (isBattleOutcome(b.phase)) {
         if (e.key === 'Enter') {
           e.preventDefault()
           if (trainerBattle) trainerBattle.onComplete(b.phase === 'victory')
-          else onBattleEnd()
+          else onBattleEnd(b.phase)
         }
         return
       }
@@ -896,13 +893,13 @@ export default function BattleScreen({ area, onBattleEnd, trainerBattle }: Props
         currentHp: b.wildHp,
         maxHp: b.wild.maxHp,
         stats: b.wild.stats,
+        baseStats: b.wild.baseStats,
         moves: b.wild.moves,
         caughtAt: Date.now(),
       }
       playCatch()
       persistHps(b)
       dispatch({ type: 'CATCH_POKEMON', payload: { pokemon: caught } })
-      dispatch({ type: 'GAIN_TRAINER_XP', payload: { amount: trainerXpReward(b.wild.level) } })
       dispatch({ type: 'GAIN_POKEMON_XP', payload: { uid: trainer.party[b.activeIdx].uid, amount: battleXpReward(b.wild.level) } })
       setBattle(prev => prev ? {
         ...prev,
@@ -1085,7 +1082,7 @@ export default function BattleScreen({ area, onBattleEnd, trainerBattle }: Props
   const { phase, wild, wildHp, partyHps, activeIdx, problem, timeRemaining } = battle
   const activeParty = trainer.party[activeIdx]
   const activeHp = partyHps[activeIdx] ?? 0
-  const isTerminal = phase === 'victory' || phase === 'caught' || phase === 'fled' || phase === 'blacked-out'
+  const isTerminal = isBattleOutcome(phase)
   const inputBlocked = phase !== 'player-turn' && phase !== 'catch-attempt' && phase !== 'run-attempt' && phase !== 'switch-attempt'
   const switchableCount = trainer.party.filter((_, i) => i !== activeIdx && (partyHps[i] ?? 0) > 0).length
 
@@ -1225,7 +1222,7 @@ export default function BattleScreen({ area, onBattleEnd, trainerBattle }: Props
                     className="btn btn-primary"
                     onClick={() => {
                       if (trainerBattle) trainerBattle.onComplete(phase === 'victory')
-                      else onBattleEnd()
+                      else if (isBattleOutcome(phase)) onBattleEnd(phase)
                     }}
                   >
                     Continue{phase === 'blacked-out' ? ' (healed)' : ''}

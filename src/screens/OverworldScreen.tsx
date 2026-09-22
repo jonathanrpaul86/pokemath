@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react'
 import { useTrainer, useGameStore } from '../store'
 import { isMuted, setMuted } from '../utils/sound'
-import { AREA_MAP, KANTO_AREAS, meetsBadgeRequirement } from '../data/areas'
+import { AREA_MAP, KANTO_AREAS, meetsBadgeRequirement, travelBlocker, exploresDone, isAreaExplored } from '../data/areas'
 import { ITEM_MAP, ITEM_EMOJI, BALL_EMOJI } from '../data/items'
 import { KANTO_NAMES } from '../data/pokedex'
-import { gymForCity, BADGE_NAMES } from '../data/gyms'
+import { gymForCity, BADGE_NAMES, KANTO_GYMS } from '../data/gyms'
 import GymScreen from './GymScreen'
-import { preloadAreaSpecies } from '../services/pokeApi'
+import { preloadAreaSpecies, fetchPokemonSpecies } from '../services/pokeApi'
 import { WorldMapCanvas } from '../components/WorldMapCanvas'
 import ExploreModal from '../components/ExploreModal'
 import { canExplore } from '../utils/explore'
@@ -383,6 +383,23 @@ export default function OverworldScreen({ onStartBattle, onOpenPokedex, onOpenPa
     preloadAreaSpecies(ids)
   }, [currentArea.id])
 
+  // Pokémon from older saves lack base stats, so they can't grow on level-up.
+  // Look them up once (PokéAPI responses are cached) and recalculate.
+  const missingBaseStats = [...trainer.party, ...trainer.pc].filter(p => !p.baseStats)
+  const missingKey = missingBaseStats.map(p => p.uid).join(',')
+  useEffect(() => {
+    let cancelled = false
+    for (const p of missingBaseStats) {
+      fetchPokemonSpecies(p.speciesId)
+        .then(species => {
+          if (!cancelled) dispatch({ type: 'SET_BASE_STATS', payload: { uid: p.uid, baseStats: species.baseStats } })
+        })
+        .catch(() => { /* offline: retry on next visit */ })
+    }
+    return () => { cancelled = true }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [missingKey])
+
   function handleTravel(areaId: string) {
     dispatch({ type: 'UNLOCK_AREA', payload: { areaId } })
     dispatch({ type: 'SET_CURRENT_AREA', payload: { areaId } })
@@ -412,14 +429,13 @@ export default function OverworldScreen({ onStartBattle, onOpenPokedex, onOpenPa
     !trainer.unlockedAreaIds.includes(selectedAreaId) &&
     !selectedIsAdjacent &&
     !selectedIsCurrent
-  const meetsLevelReq = trainer.level >= selectedArea.requiredTrainerLevel
   const meetsBadgeReq = meetsBadgeRequirement(selectedArea, trainer.badges, trainer.unlockedAreaIds)
-  const canTravelToSelected =
-    !selectedIsCurrent &&
-    selectedIsAdjacent &&
-    meetsLevelReq &&
-    meetsBadgeReq
-  const selectedIsLocked = !selectedIsUnknown && (!meetsLevelReq || !meetsBadgeReq)
+  const blocker = selectedIsAdjacent ? travelBlocker(currentArea, selectedArea, trainer) : null
+  const needsExploring = blocker === 'explore'
+  const canTravelToSelected = !selectedIsCurrent && selectedIsAdjacent && blocker === null
+  const selectedIsLocked = !selectedIsUnknown && (!meetsBadgeReq || needsExploring)
+  const selectedExploresDone = exploresDone(selectedArea, trainer.exploreProgress)
+  const selectedExplored = isAreaExplored(selectedArea, trainer.exploreProgress)
 
   return (
     <div className="overworld">
@@ -430,7 +446,7 @@ export default function OverworldScreen({ onStartBattle, onOpenPokedex, onOpenPa
           🏠
         </button>
         <button className="trainer-bar__name" onClick={onOpenProfile} title="View profile">{trainer.name}</button>
-        <div className="trainer-bar__level">Lv.{trainer.level} Trainer</div>
+        <div className="trainer-bar__level" title="Gym Badges earned">🏅 {trainer.badges.length}/{KANTO_GYMS.length} Badges</div>
         <button className="btn btn-secondary pokedex-btn" onClick={onOpenPokedex}>
           <PokedexIcon /> Pokédex
         </button>
@@ -441,12 +457,6 @@ export default function OverworldScreen({ onStartBattle, onOpenPokedex, onOpenPa
         <button className="btn btn-secondary mute-toggle-btn" onClick={handleMuteToggle} title={muted ? 'Unmute' : 'Mute'}>
           {muted ? '🔇' : '🔊'}
         </button>
-        <div className="trainer-bar__xp">
-          <XpBar xp={trainer.xp} xpToNextLevel={trainer.xpToNextLevel} />
-          <span className="trainer-bar__xp-label">
-            {trainer.xp} / {trainer.xpToNextLevel} XP
-          </span>
-        </div>
       </header>
 
       {/* ── Main content ── */}
@@ -458,8 +468,8 @@ export default function OverworldScreen({ onStartBattle, onOpenPokedex, onOpenPa
             areas={KANTO_AREAS}
             currentAreaId={trainer.currentAreaId}
             unlockedAreaIds={trainer.unlockedAreaIds}
-            trainerLevel={trainer.level}
             badges={trainer.badges}
+            exploreProgress={trainer.exploreProgress}
             selectedAreaId={selectedAreaId}
             onSelectArea={handleSelectArea}
             onTravel={handleTravel}
@@ -478,13 +488,28 @@ export default function OverworldScreen({ onStartBattle, onOpenPokedex, onOpenPa
                 : selectedArea.description}
             </p>
 
+            {!selectedIsUnknown && selectedArea.exploresToComplete > 0 && (
+              <div className={`explore-progress${selectedExplored ? ' explore-progress--done' : ''}`}>
+                <div className="explore-progress__label">
+                  <span>{selectedExplored ? '✓ Area explored' : 'Explored'}</span>
+                  <span>{selectedExploresDone} / {selectedArea.exploresToComplete}</span>
+                </div>
+                <div className="explore-progress__bar">
+                  <div
+                    className="explore-progress__fill"
+                    style={{ width: `${Math.round((selectedExploresDone / selectedArea.exploresToComplete) * 100)}%` }}
+                  />
+                </div>
+              </div>
+            )}
+
             {selectedIsLocked && (
               <div className="area-detail__locked-hint">
-                {!meetsLevelReq && (
-                  <p>🔒 Reach Lv.{selectedArea.requiredTrainerLevel} to travel here</p>
-                )}
-                {meetsLevelReq && selectedArea.requiredBadge && !meetsBadgeReq && (
+                {selectedArea.requiredBadge && !meetsBadgeReq && (
                   <p>🏅 Earn the {BADGE_NAMES[selectedArea.requiredBadge] ?? selectedArea.requiredBadge} to travel here</p>
+                )}
+                {meetsBadgeReq && needsExploring && (
+                  <p>🧭 Finish exploring {currentArea.name} to travel here ({exploresDone(currentArea, trainer.exploreProgress)}/{currentArea.exploresToComplete})</p>
                 )}
               </div>
             )}

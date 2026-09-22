@@ -78,7 +78,7 @@ function SlotCard({
         <>
           <div className="slot-card__name">{trainer.name}</div>
           <div className="slot-card__meta">
-            <span className="slot-card__level">Lv.{trainer.level}</span>
+            <span className="slot-card__level">🏅 {trainer.badges.length}</span>
             <span className="slot-card__area">{areaName}</span>
           </div>
           {trainer.savedAt && (

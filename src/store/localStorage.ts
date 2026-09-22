@@ -1,4 +1,6 @@
 import type { Trainer, OwnedPokemon, MathStats } from '../types'
+import { AREA_MAP } from '../data/areas'
+import { pokemonXpToNextLevel } from '../utils/formulas'
 
 const SLOT_COUNT = 3
 const LEGACY_KEY = 'pmg_trainer_v1'
@@ -20,11 +22,28 @@ const DEFAULT_MATH_STATS: MathStats = {
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function migratePokemon(p: any): OwnedPokemon {
-  return { moves: [], ...p }
+  // Keep old saves on the current XP curve, clamped to one full bar so a curve
+  // change can't trigger a multi-level jump (a full bar is also what the level
+  // cap banks for the next badge)
+  const xpToNextLevel = pokemonXpToNextLevel(p.level)
+  return { moves: [], ...p, xpToNextLevel, xp: Math.min(p.xp ?? 0, xpToNextLevel) }
+}
+
+/** Saves from before explore-gating count every visited wild area as explored */
+function migrateExploreProgress(unlockedAreaIds: string[] = []): Record<string, number> {
+  return Object.fromEntries(
+    unlockedAreaIds
+      .map(id => AREA_MAP[id])
+      .filter(area => area && area.exploresToComplete > 0)
+      .map(area => [area.id, area.exploresToComplete]),
+  )
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function migrateTrainer(raw: any): Trainer {
+  // Trainer level/XP were removed; drop them from older saves
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { level, xp, xpToNextLevel, ...rest } = raw
   const mathStats: MathStats = {
     ...DEFAULT_MATH_STATS,
     ...(raw.mathStats ?? {}),
@@ -40,7 +59,8 @@ function migrateTrainer(raw: any): Trainer {
     keyItems: [],
     badges: [],
     gymProgress: {},
-    ...raw,
+    ...rest,
+    exploreProgress: raw.exploreProgress ?? migrateExploreProgress(raw.unlockedAreaIds),
     party: (raw.party ?? []).map(migratePokemon),
     pc:    (raw.pc    ?? []).map(migratePokemon),
     mathStats,

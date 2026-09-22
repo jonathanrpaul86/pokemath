@@ -15,12 +15,16 @@ import './index.css'
 type GameScreen = 'overworld' | 'battle' | 'pokedex' | 'party' | 'profile' | 'bag'
 
 function App() {
-  const { trainer, currentSlot, saves, loadSlot, deleteSlot, goToTitle } = useGameStore()
+  const { trainer, currentSlot, saves, dispatch, loadSlot, deleteSlot, goToTitle } = useGameStore()
   const [starterSlot, setStarterSlot] = useState<number | null>(null)
   const [gameScreen, setGameScreen] = useState<GameScreen>('overworld')
   const [routeTrainer, setRouteTrainer] = useState<RouteTrainer | null>(null)
 
-  function returnToOverworld() {
+  /** Explore battles count toward area progress unless the player blacked out */
+  function endExploreBattle(counted: boolean) {
+    if (counted && trainer) {
+      dispatch({ type: 'RECORD_EXPLORE', payload: { areaId: trainer.currentAreaId } })
+    }
     setRouteTrainer(null)
     setGameScreen('overworld')
   }
@@ -52,13 +56,13 @@ function App() {
     return (
       <BattleScreen
         area={AREA_MAP[trainer.currentAreaId]}
-        onBattleEnd={returnToOverworld}
+        onBattleEnd={outcome => endExploreBattle(outcome !== 'blacked-out')}
         trainerBattle={routeTrainer ? {
           trainerName: routeTrainer.name,
           isLeader: false,
           team: routeTrainer.team,
           quote: routeTrainer.quote,
-          onComplete: returnToOverworld,
+          onComplete: won => endExploreBattle(won),
         } : undefined}
       />
     )

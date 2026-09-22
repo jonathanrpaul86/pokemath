@@ -1,20 +1,18 @@
 import type { Trainer, OwnedPokemon, MathStats, ItemPocket } from '../types'
 import type { GameAction } from './actions'
-import { createOwnedPokemon, trainerXpToNextLevel, pokemonXpToNextLevel, pokemonLevelCap, calcStats } from '../utils/formulas'
-import { KANTO_AREAS } from '../data/areas'
+import { createOwnedPokemon, pokemonXpToNextLevel, pokemonLevelCap, calcStats } from '../utils/formulas'
+import { KANTO_AREAS, AREA_MAP } from '../data/areas'
 import { ITEM_MAP } from '../data/items'
 
 const PARTY_MAX = 6
 const DEV_TRAINER_NAME = 'DEBUG'
-const DEV_TRAINER_LEVEL = 40
+const DEV_STARTER_LEVEL = 40
 
 // ---- Trainer factory --------------------------------------------------------
 
 export function createNewTrainer(name: string, starterSpecies: Parameters<typeof createOwnedPokemon>[0]): Trainer {
   const isDev = name.trim().toUpperCase() === DEV_TRAINER_NAME
-  const starterLevel = isDev ? DEV_TRAINER_LEVEL : 5
-  const trainerLevel = isDev ? DEV_TRAINER_LEVEL : 1
-  const starter = createOwnedPokemon(starterSpecies, starterLevel)
+  const starter = createOwnedPokemon(starterSpecies, isDev ? DEV_STARTER_LEVEL : 5)
   const mathStats: MathStats = {
     operators: {
       '+': { totalAttempts: 0, correctAnswers: 0 },
@@ -28,9 +26,6 @@ export function createNewTrainer(name: string, starterSpecies: Parameters<typeof
 
   return {
     name: isDev ? 'Trainer' : name,
-    level: trainerLevel,
-    xp: 0,
-    xpToNextLevel: trainerXpToNextLevel(trainerLevel),
     party: [starter],
     pc: [],
     pokedex: {
@@ -38,6 +33,9 @@ export function createNewTrainer(name: string, starterSpecies: Parameters<typeof
     },
     currentAreaId: 'route-1',
     unlockedAreaIds: isDev ? KANTO_AREAS.map(a => a.id) : ['route-1'],
+    exploreProgress: isDev
+      ? Object.fromEntries(KANTO_AREAS.map(a => [a.id, a.exploresToComplete]))
+      : {},
     mathStats,
     money: 3000,
     items: [],
@@ -49,14 +47,16 @@ export function createNewTrainer(name: string, starterSpecies: Parameters<typeof
 
 // ---- Level-up helpers -------------------------------------------------------
 
-function applyTrainerLevelUps(trainer: Trainer): Trainer {
-  let { level, xp, xpToNextLevel } = trainer
-  while (xp >= xpToNextLevel) {
-    xp -= xpToNextLevel
-    level += 1
-    xpToNextLevel = trainerXpToNextLevel(level)
+/** Recalculate stats for the Pokémon's level, keeping its HP ratio */
+function withStatsForLevel(pokemon: OwnedPokemon, level: number): OwnedPokemon {
+  const hpRatio = pokemon.maxHp > 0 ? pokemon.currentHp / pokemon.maxHp : 1
+  if (pokemon.baseStats) {
+    const stats = calcStats(pokemon.baseStats, level)
+    return { ...pokemon, stats, maxHp: stats.hp, currentHp: Math.max(1, Math.floor(stats.hp * hpRatio)) }
   }
-  return { ...trainer, level, xp, xpToNextLevel }
+  // Legacy Pokémon without base stats yet: grow HP only until backfilled
+  const maxHp = Math.floor(pokemon.stats.hp * 0.5 + level * 3 + 10)
+  return { ...pokemon, maxHp, currentHp: Math.max(1, Math.floor(maxHp * hpRatio)) }
 }
 
 function applyPokemonLevelUp(pokemon: OwnedPokemon, levelCap: number): OwnedPokemon {
@@ -70,11 +70,8 @@ function applyPokemonLevelUp(pokemon: OwnedPokemon, levelCap: number): OwnedPoke
   // immediate level-up instead of a multi-level surge
   if (level >= levelCap) xp = Math.min(xp, xpToNextLevel)
   if (level === pokemon.level && xp === pokemon.xp) return pokemon
-  // Recalculate HP ceiling on level up (keep current HP ratio)
-  const hpRatio = pokemon.currentHp / pokemon.maxHp
-  const newMaxHp = Math.floor(pokemon.stats.hp * 0.5 + level * 3 + 10)
-  const newCurrentHp = Math.max(1, Math.floor(newMaxHp * hpRatio))
-  return { ...pokemon, level, xp, xpToNextLevel, maxHp: newMaxHp, currentHp: newCurrentHp }
+  if (level === pokemon.level) return { ...pokemon, xp }
+  return { ...withStatsForLevel(pokemon, level), level, xp, xpToNextLevel }
 }
 
 // ---- Inventory helper -------------------------------------------------------
@@ -91,11 +88,26 @@ export function gameReducer(trainer: Trainer, action: GameAction): Trainer {
   let next: Trainer
 
   switch (action.type) {
-    case 'GAIN_TRAINER_XP': {
-      next = applyTrainerLevelUps({
+    case 'RECORD_EXPLORE': {
+      const { areaId } = action.payload
+      const area = AREA_MAP[areaId]
+      if (!area || area.exploresToComplete === 0) return trainer
+      next = {
         ...trainer,
-        xp: trainer.xp + action.payload.amount,
-      })
+        exploreProgress: {
+          ...trainer.exploreProgress,
+          [areaId]: (trainer.exploreProgress[areaId] ?? 0) + 1,
+        },
+      }
+      break
+    }
+
+    case 'SET_BASE_STATS': {
+      const { uid, baseStats } = action.payload
+      const backfill = (list: OwnedPokemon[]) => list.map(p =>
+        p.uid === uid && !p.baseStats ? withStatsForLevel({ ...p, baseStats }, p.level) : p
+      )
+      next = { ...trainer, party: backfill(trainer.party), pc: backfill(trainer.pc) }
       break
     }
 
@@ -195,6 +207,7 @@ export function gameReducer(trainer: Trainer, action: GameAction): Trainer {
             speciesId: newSpeciesId,
             name: newName,
             stats: newStats,
+            baseStats: newBaseStats,
             maxHp: newStats.hp,
             currentHp: Math.max(1, Math.floor(newStats.hp * hpRatio)),
           }

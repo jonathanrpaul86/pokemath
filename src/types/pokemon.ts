@@ -48,6 +48,11 @@ export interface OwnedPokemon {
   currentHp: number
   maxHp: number
   stats: BaseStats
+  /**
+   * Species base stats, used to recalculate `stats` on level-up. Missing on
+   * Pokémon from older saves until the overworld backfills it.
+   */
+  baseStats?: BaseStats
   /** Moves currently known (up to 4) */
   moves: Move[]
   caughtAt: number
@@ -61,6 +66,7 @@ export interface WildPokemon {
   currentHp: number
   maxHp: number
   stats: BaseStats
+  baseStats: BaseStats
   /** Moves available at this level */
   moves: Move[]
 }

@@ -47,14 +47,6 @@
   white-space: nowrap;
 }
 
-.trainer-bar__xp {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-  flex: 1;
-  min-width: 180px;
-}
-
 .mute-toggle-btn {
   font-size: 0.9rem;
   padding: 0.35rem 0.6rem;
@@ -77,12 +69,6 @@
   font-size: 0.82rem;
   font-weight: 700;
   color: #ffd700;
-  white-space: nowrap;
-}
-
-.trainer-bar__xp-label {
-  font-size: 0.75rem;
-  color: #7a9cc0;
   white-space: nowrap;
 }
 
@@ -177,6 +163,48 @@
   font-size: 0.82rem;
   color: #e63946;
   margin: 0;
+}
+
+.area-detail__locked-hint p {
+  margin: 0;
+}
+
+/* ── Explore progress ── */
+
+.explore-progress {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.explore-progress__label {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #aac4e0;
+}
+
+.explore-progress__bar {
+  height: 10px;
+  background: #ffffff18;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.explore-progress__fill {
+  height: 100%;
+  background: #d69e2e;
+  border-radius: 999px;
+  transition: width 0.4s ease;
+}
+
+.explore-progress--done .explore-progress__label {
+  color: #48bb78;
+}
+
+.explore-progress--done .explore-progress__fill {
+  background: #48bb78;
 }
 
 .area-detail__actions {

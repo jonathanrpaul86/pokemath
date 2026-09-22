@@ -1,4 +1,4 @@
-import type { Area, BadgeId } from '../types'
+import type { Area, BadgeId, Trainer } from '../types'
 
 export const KANTO_AREAS: Area[] = [
   {
@@ -6,7 +6,7 @@ export const KANTO_AREAS: Area[] = [
     name: 'Route 1',
     description: 'A grassy path outside Pallet Town. Weak wild Pokémon roam here.',
     areaType: 'route',
-    requiredTrainerLevel: 1,
+    exploresToComplete: 8,
     connectedAreaIds: ['viridian-city'],
     mapX: 200, mapY: 320,
     mathDifficulty: 5,
@@ -22,7 +22,7 @@ export const KANTO_AREAS: Area[] = [
     name: 'Viridian City',
     description: "The first city on your journey. Heal up before pushing north through Viridian Forest. The city's Gym stays locked until a trainer has earned seven badges.",
     areaType: 'city',
-    requiredTrainerLevel: 0,
+    exploresToComplete: 0,
     connectedAreaIds: ['route-1', 'viridian-forest', 'victory-road'],
     mapX: 200, mapY: 260,
     mathDifficulty: 13,
@@ -34,7 +34,7 @@ export const KANTO_AREAS: Area[] = [
     name: 'Viridian Forest',
     description: 'A dense forest full of Bug-type Pokémon — and a rare Pikachu!',
     areaType: 'forest',
-    requiredTrainerLevel: 5,
+    exploresToComplete: 14,
     connectedAreaIds: ['viridian-city', 'pewter-city'],
     mapX: 200, mapY: 196,
     mathDifficulty: 22,
@@ -51,7 +51,7 @@ export const KANTO_AREAS: Area[] = [
     name: 'Pewter City',
     description: "A boulder-grey city home to Brock's Rock-type Gym. Rest before the mountain paths ahead.",
     areaType: 'city',
-    requiredTrainerLevel: 8,
+    exploresToComplete: 0,
     connectedAreaIds: ['viridian-forest', 'route-3'],
     mapX: 200, mapY: 136,
     mathDifficulty: 30,
@@ -63,7 +63,7 @@ export const KANTO_AREAS: Area[] = [
     name: 'Route 3',
     description: 'Rugged terrain east of Pewter City. Bird and ground-type Pokémon nest among the rocky outcrops.',
     areaType: 'route',
-    requiredTrainerLevel: 9,
+    exploresToComplete: 10,
     requiredBadge: 'boulder-badge',
     connectedAreaIds: ['pewter-city', 'mt-moon'],
     mapX: 253, mapY: 121,
@@ -81,7 +81,7 @@ export const KANTO_AREAS: Area[] = [
     name: 'Mt. Moon',
     description: 'A deep cave system. Clefairy are said to dance here under the moon.',
     areaType: 'cave',
-    requiredTrainerLevel: 11,
+    exploresToComplete: 12,
     connectedAreaIds: ['route-3', 'route-4'],
     mapX: 306, mapY: 106,
     mathDifficulty: 39,
@@ -97,7 +97,7 @@ export const KANTO_AREAS: Area[] = [
     name: 'Route 4',
     description: 'A winding path descending from Mt. Moon toward Cerulean City. Water-type Pokémon splash in the streams.',
     areaType: 'route',
-    requiredTrainerLevel: 12,
+    exploresToComplete: 10,
     connectedAreaIds: ['mt-moon', 'cerulean-city'],
     mapX: 358, mapY: 113,
     mathDifficulty: 44,
@@ -114,7 +114,7 @@ export const KANTO_AREAS: Area[] = [
     name: 'Cerulean City',
     description: "A pretty waterside city with Misty's Water Gym. Pokémon Center is open to all trainers.",
     areaType: 'city',
-    requiredTrainerLevel: 14,
+    exploresToComplete: 0,
     connectedAreaIds: ['route-4', 'route-9'],
     mapX: 410, mapY: 120,
     mathDifficulty: 47,
@@ -126,7 +126,7 @@ export const KANTO_AREAS: Area[] = [
     name: 'Route 9',
     description: 'A rough, hilly path connecting Cerulean City to Rock Tunnel. Scrappy Pokémon patrol these dusty trails.',
     areaType: 'route',
-    requiredTrainerLevel: 16,
+    exploresToComplete: 10,
     requiredBadge: 'cascade-badge',
     connectedAreaIds: ['cerulean-city', 'rock-tunnel'],
     mapX: 438, mapY: 156,
@@ -143,7 +143,7 @@ export const KANTO_AREAS: Area[] = [
     name: 'Rock Tunnel',
     description: 'A pitch-black tunnel carved through solid rock.',
     areaType: 'cave',
-    requiredTrainerLevel: 18,
+    exploresToComplete: 12,
     connectedAreaIds: ['route-9', 'lavender-town'],
     mapX: 466, mapY: 192,
     mathDifficulty: 55,
@@ -160,7 +160,7 @@ export const KANTO_AREAS: Area[] = [
     name: 'Lavender Town',
     description: 'A quiet, eerie town. The Pokémon Tower looms to the east, and the harbor city of Vermilion lies to the south.',
     areaType: 'town',
-    requiredTrainerLevel: 22,
+    exploresToComplete: 0,
     connectedAreaIds: ['rock-tunnel', 'route-7', 'pokemon-tower', 'vermilion-city'],
     mapX: 466, mapY: 262,
     mathDifficulty: 63,
@@ -172,7 +172,7 @@ export const KANTO_AREAS: Area[] = [
     name: 'Vermilion City',
     description: "A busy harbor city where ships come and go. Lt. Surge's Electric-type Gym crackles with energy.",
     areaType: 'city',
-    requiredTrainerLevel: 22,
+    exploresToComplete: 0,
     connectedAreaIds: ['lavender-town'],
     mapX: 430, mapY: 316,
     mathDifficulty: 64,
@@ -184,7 +184,7 @@ export const KANTO_AREAS: Area[] = [
     name: 'Pokémon Tower',
     description: 'A haunted tower in Lavender Town. Ghost-type Pokémon stir among the graves on every floor.',
     areaType: 'special',
-    requiredTrainerLevel: 23,
+    exploresToComplete: 10,
     connectedAreaIds: ['lavender-town'],
     mapX: 534, mapY: 262,
     mathDifficulty: 67,
@@ -200,7 +200,7 @@ export const KANTO_AREAS: Area[] = [
     name: 'Route 7',
     description: 'A winding road linking Lavender Town to Celadon City. Electric and Fire types wander through tall grass.',
     areaType: 'route',
-    requiredTrainerLevel: 23,
+    exploresToComplete: 14,
     requiredBadge: 'thunder-badge',
     connectedAreaIds: ['lavender-town', 'celadon-city', 'saffron-city'],
     mapX: 400, mapY: 250,
@@ -218,7 +218,7 @@ export const KANTO_AREAS: Area[] = [
     name: 'Celadon City',
     description: "A lush city with a famous Department Store and Erika's Grass-type Gym.",
     areaType: 'city',
-    requiredTrainerLevel: 26,
+    exploresToComplete: 0,
     connectedAreaIds: ['route-7', 'cycling-road'],
     mapX: 340, mapY: 238,
     mathDifficulty: 70,
@@ -230,7 +230,7 @@ export const KANTO_AREAS: Area[] = [
     name: 'Saffron City',
     description: "A shining city at the heart of Kanto. Sabrina's Psychic-type Gym sits behind its golden gates.",
     areaType: 'city',
-    requiredTrainerLevel: 27,
+    exploresToComplete: 0,
     requiredBadge: 'rainbow-badge',
     connectedAreaIds: ['route-7'],
     mapX: 398, mapY: 190,
@@ -243,7 +243,7 @@ export const KANTO_AREAS: Area[] = [
     name: 'Cycling Road',
     description: 'A long downhill road stretching south from Celadon City. Fast Pokémon race alongside trainers here.',
     areaType: 'route',
-    requiredTrainerLevel: 27,
+    exploresToComplete: 14,
     requiredBadge: 'marsh-badge',
     connectedAreaIds: ['celadon-city', 'fuchsia-city'],
     mapX: 323, mapY: 283,
@@ -260,7 +260,7 @@ export const KANTO_AREAS: Area[] = [
     name: 'Fuchsia City',
     description: "Home of the Safari Zone and Koga's Poison-type Gym. The Safari Zone is open to explorers.",
     areaType: 'city',
-    requiredTrainerLevel: 30,
+    exploresToComplete: 0,
     connectedAreaIds: ['cycling-road', 'safari-zone', 'seafoam-islands'],
     mapX: 306, mapY: 328,
     mathDifficulty: 78,
@@ -272,7 +272,7 @@ export const KANTO_AREAS: Area[] = [
     name: 'Safari Zone',
     description: 'A vast preserve inside Fuchsia City. Exotic and powerful Pokémon roam freely here.',
     areaType: 'special',
-    requiredTrainerLevel: 31,
+    exploresToComplete: 10,
     connectedAreaIds: ['fuchsia-city'],
     mapX: 362, mapY: 345,
     mathDifficulty: 80,
@@ -290,7 +290,7 @@ export const KANTO_AREAS: Area[] = [
     name: 'Seafoam Islands',
     description: 'Frozen sea caves west of Fuchsia City. Ice and Water types thrive in the frigid waters.',
     areaType: 'cave',
-    requiredTrainerLevel: 34,
+    exploresToComplete: 12,
     requiredBadge: 'soul-badge',
     connectedAreaIds: ['fuchsia-city', 'cinnabar-island'],
     mapX: 227, mapY: 343,
@@ -308,7 +308,7 @@ export const KANTO_AREAS: Area[] = [
     name: 'Cinnabar Island',
     description: 'A volcanic island. Fire-type Pokémon thrive in the scorching heat.',
     areaType: 'special',
-    requiredTrainerLevel: 35,
+    exploresToComplete: 10,
     connectedAreaIds: ['seafoam-islands', 'victory-road'],
     mapX: 148, mapY: 358,
     mathDifficulty: 87,
@@ -326,7 +326,7 @@ export const KANTO_AREAS: Area[] = [
     name: 'Victory Road',
     description: 'A treacherous cave linking Cinnabar Island back to Viridian City. Only the strongest survive.',
     areaType: 'special',
-    requiredTrainerLevel: 40,
+    exploresToComplete: 15,
     requiredBadge: 'volcano-badge',
     connectedAreaIds: ['cinnabar-island', 'viridian-city'],
     mapX: 96, mapY: 240,
@@ -354,4 +354,31 @@ export const AREA_MAP: Record<string, Area> = Object.fromEntries(
  */
 export function meetsBadgeRequirement(area: Area, badges: BadgeId[], unlockedAreaIds: string[]): boolean {
   return !area.requiredBadge || badges.includes(area.requiredBadge) || unlockedAreaIds.includes(area.id)
+}
+
+export function exploresDone(area: Area, exploreProgress: Record<string, number>): number {
+  return Math.min(exploreProgress[area.id] ?? 0, area.exploresToComplete)
+}
+
+/** Cities and towns are always "explored"; wild areas once their explore count is met */
+export function isAreaExplored(area: Area, exploreProgress: Record<string, number>): boolean {
+  return exploresDone(area, exploreProgress) >= area.exploresToComplete
+}
+
+export type TravelBlocker = 'badge' | 'explore'
+
+/**
+ * Why the player can't step from `from` into the adjacent area `to`, or null if
+ * they can. Going back to anywhere already visited is always allowed, so a
+ * player can retreat from an unfinished area to heal.
+ */
+export function travelBlocker(
+  from: Area,
+  to: Area,
+  trainer: Pick<Trainer, 'badges' | 'unlockedAreaIds' | 'exploreProgress'>,
+): TravelBlocker | null {
+  if (trainer.unlockedAreaIds.includes(to.id)) return null
+  if (!meetsBadgeRequirement(to, trainer.badges, trainer.unlockedAreaIds)) return 'badge'
+  if (!isAreaExplored(from, trainer.exploreProgress)) return 'explore'
+  return null
 }

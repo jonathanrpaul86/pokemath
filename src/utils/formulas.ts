@@ -25,14 +25,14 @@ export function calcStats(baseStats: BaseStats, level: number): BaseStats {
 
 // ---- XP curves --------------------------------------------------------------
 
-/** XP required to reach the next trainer level */
-export function trainerXpToNextLevel(currentLevel: number): number {
-  return currentLevel * 100
-}
-
-/** XP required for a Pokemon to reach its next level */
+/**
+ * XP required for a Pokemon to reach its next level. Paired with
+ * battleXpReward so a level takes ~2.5 wins at any stage of the game, and
+ * finishing each area's explores brings a lead Pokemon to within a few levels
+ * of the next gym leader — close enough that fast math can carry the fight.
+ */
 export function pokemonXpToNextLevel(currentLevel: number): number {
-  return currentLevel * 50
+  return currentLevel * 8 + 20
 }
 
 /**
@@ -49,12 +49,7 @@ export function pokemonLevelCap(badgeCount: number): number {
 
 /** XP rewarded to the active Pokemon after winning a battle */
 export function battleXpReward(wildLevel: number): number {
-  return Math.floor(wildLevel * 1.5 + 10)
-}
-
-/** XP rewarded to the trainer after winning a battle */
-export function trainerXpReward(wildLevel: number): number {
-  return Math.floor(wildLevel * 2 + 5)
+  return wildLevel * 3 + 15
 }
 
 /** Money rewarded for defeating a trainer, based on their highest-level Pokémon */
@@ -92,6 +87,7 @@ export function createOwnedPokemon(
     xpToNextLevel: pokemonXpToNextLevel(level),
     currentHp: stats.hp,
     maxHp: stats.hp,
+    baseStats: species.baseStats,
     stats,
     moves: pickMoveset(species, level),
     caughtAt: Date.now(),

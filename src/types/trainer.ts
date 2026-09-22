@@ -10,9 +10,6 @@ export interface PokedexEntry {
 
 export interface Trainer {
   name: string
-  level: number
-  xp: number
-  xpToNextLevel: number
   /** Active party — max 6 */
   party: OwnedPokemon[]
   /** Pokemon stored in PC — no size limit */
@@ -23,6 +20,8 @@ export interface Trainer {
   currentAreaId: string
   /** IDs of areas unlocked so far */
   unlockedAreaIds: string[]
+  /** Counted explores per area — keyed by Area.id */
+  exploreProgress: Record<string, number>
   mathStats: MathStats
   money: number
   items: InventorySlot[]
