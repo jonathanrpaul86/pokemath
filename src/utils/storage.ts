@@ -12,7 +12,8 @@ const ANY_API_CACHE = /^pokeapi_v\d+_/
 /** Remove cached PokéAPI entries. Pass `keepCurrent` to drop only outdated versions. */
 export function clearApiCache({ keepCurrent = false }: { keepCurrent?: boolean } = {}): void {
   try {
-    const stale = Object.keys(localStorage).filter(key =>
+    const keys = Array.from({ length: localStorage.length }, (_, i) => localStorage.key(i) ?? '')
+    const stale = keys.filter(key =>
       ANY_API_CACHE.test(key) && !(keepCurrent && key.startsWith(API_CACHE_PREFIX))
     )
     for (const key of stale) localStorage.removeItem(key)
