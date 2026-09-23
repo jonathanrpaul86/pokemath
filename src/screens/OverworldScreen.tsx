@@ -2,20 +2,22 @@ import { useEffect, useState } from 'react'
 import { useTrainer, useGameStore } from '../store'
 import { isMuted, setMuted } from '../utils/sound'
 import { AREA_MAP, KANTO_AREAS, meetsBadgeRequirement, travelBlocker, exploresDone, isAreaExplored } from '../data/areas'
-import { ITEM_MAP, ITEM_EMOJI, BALL_EMOJI } from '../data/items'
 import { KANTO_NAMES } from '../data/pokedex'
-import { gymForCity, BADGE_NAMES, KANTO_GYMS } from '../data/gyms'
-import GymScreen from './GymScreen'
+import { BADGE_NAMES, KANTO_GYMS } from '../data/gyms'
+import { hasCityHub } from '../data/cities'
+import CityScreen from './CityScreen'
 import { preloadAreaSpecies, fetchPokemonSpecies } from '../services/pokeApi'
 import { WorldMapCanvas } from '../components/WorldMapCanvas'
 import ExploreModal from '../components/ExploreModal'
 import { canExplore } from '../utils/explore'
-import type { Area, OwnedPokemon, EncounterEntry, RouteTrainer } from '../types'
+import type { Area, OwnedPokemon, EncounterEntry, BattleRequest } from '../types'
 import './OverworldScreen.css'
 
 interface Props {
-  /** Starts a wild battle, or a trainer battle when a route trainer is given */
-  onStartBattle: (routeTrainer?: RouteTrainer) => void
+  onStartBattle: (request: BattleRequest) => void
+  /** In a city, show the city screen (true) or the world map (false) */
+  cityView: boolean
+  onCityViewChange: (showCity: boolean) => void
   onOpenPokedex: () => void
   onOpenParty: () => void
   onOpenProfile: () => void
@@ -123,241 +125,11 @@ function EncounterPreview({ encounters }: { encounters: EncounterEntry[] }) {
   )
 }
 
-// ---- Nurse Joy SVG avatar ---------------------------------------------------
-
-function NurseJoy() {
-  return (
-    <svg viewBox="0 0 80 92" width="88" height="88" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-      <ellipse cx="11" cy="55" rx="12" ry="15" fill="#f0809a"/>
-      <ellipse cx="69" cy="55" rx="12" ry="15" fill="#f0809a"/>
-      <ellipse cx="40" cy="54" rx="19" ry="21" fill="#fcd5a8"/>
-      <rect x="19" y="28" width="42" height="9" rx="2" fill="white"/>
-      <rect x="27" y="13" width="26" height="19" rx="4" fill="white"/>
-      <rect x="34.5" y="20" width="11" height="3.5" rx="1.5" fill="#e63946"/>
-      <rect x="38" y="16.5" width="4" height="10" rx="1.5" fill="#e63946"/>
-      <ellipse cx="27" cy="58" rx="5.5" ry="3" fill="#f5a0b5" opacity="0.65"/>
-      <ellipse cx="53" cy="58" rx="5.5" ry="3" fill="#f5a0b5" opacity="0.65"/>
-      <ellipse cx="32.5" cy="51" rx="3" ry="3.5" fill="#2a1818"/>
-      <ellipse cx="47.5" cy="51" rx="3" ry="3.5" fill="#2a1818"/>
-      <circle cx="33.8" cy="49.6" r="1.1" fill="white"/>
-      <circle cx="48.8" cy="49.6" r="1.1" fill="white"/>
-      <path d="M 33 62 Q 40 68 47 62" stroke="#b06050" strokeWidth="2" fill="none" strokeLinecap="round"/>
-      <rect x="13" y="72" width="54" height="20" rx="9" fill="white"/>
-      <path d="M 28 72 Q 40 80 52 72 Q 40 76 28 72Z" fill="#f0809a"/>
-    </svg>
-  )
-}
-
-// ---- Pokémon Center modal ---------------------------------------------------
-
-type CenterPhase = 'prompt' | 'healed'
-
-function PokemonCenterModal({
-  phase,
-  onHeal,
-  onClose,
-}: {
-  phase: CenterPhase
-  onHeal: () => void
-  onClose: () => void
-}) {
-  const trainer = useTrainer()
-  const allHealthy = trainer.party.every(p => p.currentHp === p.maxHp)
-
-  return (
-    <div className="pc-overlay" onClick={phase === 'healed' ? onClose : undefined}>
-      <div className="pc-modal" onClick={e => e.stopPropagation()}>
-        <div className="pc-modal__nurse">
-          <NurseJoy />
-          {phase === 'prompt' ? (
-            <>
-              <p className="pc-modal__speech">
-                {allHealthy
-                  ? 'Your Pokémon are already in great shape!'
-                  : 'Welcome to the Pokémon Center! Shall I heal your Pokémon?'}
-              </p>
-              <div className="pc-modal__party">
-                {trainer.party.map(p => {
-                  const pct = Math.round((p.currentHp / p.maxHp) * 100)
-                  const mod = pct > 50 ? 'green' : pct > 20 ? 'yellow' : 'red'
-                  const fainted = p.currentHp === 0
-                  return (
-                    <div key={p.uid} className={`pc-pkmn ${fainted ? 'pc-pkmn--fainted' : ''}`}>
-                      <span className="pc-pkmn__name">{p.name}</span>
-                      <div className="pc-pkmn__bar-wrap">
-                        <div className="pc-pkmn__bar">
-                          <div
-                            className={`pc-pkmn__bar-fill pc-pkmn__bar-fill--${mod}`}
-                            style={{ width: `${pct}%` }}
-                          />
-                        </div>
-                        <span className="pc-pkmn__hp">
-                          {fainted ? 'Fainted' : `${p.currentHp}/${p.maxHp}`}
-                        </span>
-                      </div>
-                    </div>
-                  )
-                })}
-              </div>
-              <div className="pc-modal__actions">
-                <button className="btn pc-modal__heal-btn" onClick={onHeal}>
-                  {allHealthy ? 'OK!' : '✨ Yes, heal them!'}
-                </button>
-                {!allHealthy && (
-                  <button className="btn btn-secondary pc-modal__no-btn" onClick={onClose}>
-                    No thanks
-                  </button>
-                )}
-              </div>
-            </>
-          ) : (
-            <div className="pc-modal__healed">
-              <p className="pc-modal__speech pc-modal__speech--healed">
-                ✨ Your Pokémon are fully healed! ✨
-              </p>
-              <p className="pc-modal__subtext">Come back any time!</p>
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
-  )
-}
-
-// ---- Poke Mart modal --------------------------------------------------------
-
-function itemEmoji(itemId: string): string {
-  return BALL_EMOJI[itemId] ?? ITEM_EMOJI[itemId] ?? '📦'
-}
-
-function PokeMartModal({
-  martItems,
-  onClose,
-}: {
-  martItems: string[]
-  onClose: () => void
-}) {
-  const trainer = useTrainer()
-  const { dispatch } = useGameStore()
-  const [tab, setTab] = useState<'buy' | 'sell'>('buy')
-
-  function handleBuy(itemId: string) {
-    const def = ITEM_MAP[itemId]
-    if (!def || trainer.money < def.buyPrice) return
-    dispatch({ type: 'SPEND_MONEY', payload: { amount: def.buyPrice } })
-    dispatch({ type: 'ADD_ITEM', payload: { itemId, quantity: 1 } })
-  }
-
-  function handleSell(itemId: string) {
-    const def = ITEM_MAP[itemId]
-    if (!def) return
-    const sellPrice = Math.floor(def.buyPrice / 2)
-    dispatch({ type: 'REMOVE_ITEM', payload: { itemId, quantity: 1 } })
-    dispatch({ type: 'GAIN_MONEY', payload: { amount: sellPrice } })
-  }
-
-  const allOwnedItems = [
-    ...trainer.items,
-    ...trainer.balls,
-  ].filter(slot => {
-    const def = ITEM_MAP[slot.itemId]
-    return def && def.buyPrice > 0 && slot.quantity > 0
-  })
-
-  return (
-    <div className="pc-overlay" onClick={onClose}>
-      <div className="pc-modal mart-modal" onClick={e => e.stopPropagation()}>
-        <div className="mart-modal__header">
-          <span className="mart-modal__title">🛒 Poké Mart</span>
-          <span className="mart-modal__money">💰 ¥{trainer.money.toLocaleString()}</span>
-          <button className="mart-modal__close" onClick={onClose} aria-label="Close">✕</button>
-        </div>
-
-        <div className="mart-modal__tabs">
-          <button
-            className={`mart-tab${tab === 'buy' ? ' mart-tab--active' : ''}`}
-            onClick={() => setTab('buy')}
-          >
-            Buy
-          </button>
-          <button
-            className={`mart-tab${tab === 'sell' ? ' mart-tab--active' : ''}`}
-            onClick={() => setTab('sell')}
-          >
-            Sell
-          </button>
-        </div>
-
-        <div className="mart-modal__list">
-          {tab === 'buy' ? (
-            martItems.map(itemId => {
-              const def = ITEM_MAP[itemId]
-              if (!def) return null
-              const owned = [
-                ...(trainer.items),
-                ...(trainer.balls),
-              ].find(s => s.itemId === itemId)?.quantity ?? 0
-              const canAfford = trainer.money >= def.buyPrice
-              return (
-                <div key={itemId} className="mart-row">
-                  <span className="mart-row__icon">{itemEmoji(itemId)}</span>
-                  <div className="mart-row__info">
-                    <span className="mart-row__name">{def.name}</span>
-                    <span className="mart-row__desc">{def.description}</span>
-                  </div>
-                  <span className="mart-row__owned">×{owned}</span>
-                  <span className="mart-row__price">¥{def.buyPrice.toLocaleString()}</span>
-                  <button
-                    className="btn mart-row__buy"
-                    onClick={() => handleBuy(itemId)}
-                    disabled={!canAfford}
-                    title={!canAfford ? "Not enough money" : undefined}
-                  >
-                    Buy
-                  </button>
-                </div>
-              )
-            })
-          ) : allOwnedItems.length === 0 ? (
-            <p className="mart-empty">No items to sell.</p>
-          ) : (
-            allOwnedItems.map(slot => {
-              const def = ITEM_MAP[slot.itemId]
-              if (!def) return null
-              const sellPrice = Math.floor(def.buyPrice / 2)
-              return (
-                <div key={slot.itemId} className="mart-row">
-                  <span className="mart-row__icon">{itemEmoji(slot.itemId)}</span>
-                  <div className="mart-row__info">
-                    <span className="mart-row__name">{def.name}</span>
-                    <span className="mart-row__desc">Sell value: ¥{sellPrice.toLocaleString()}</span>
-                  </div>
-                  <span className="mart-row__owned">×{slot.quantity}</span>
-                  <span className="mart-row__price">¥{sellPrice.toLocaleString()}</span>
-                  <button
-                    className="btn mart-row__sell"
-                    onClick={() => handleSell(slot.itemId)}
-                  >
-                    Sell
-                  </button>
-                </div>
-              )
-            })
-          )}
-        </div>
-      </div>
-    </div>
-  )
-}
-
 // ---- Main screen ------------------------------------------------------------
 
-export default function OverworldScreen({ onStartBattle, onOpenPokedex, onOpenParty, onOpenProfile, onOpenBag, onGoToTitle }: Props) {
+export default function OverworldScreen({ onStartBattle, cityView, onCityViewChange, onOpenPokedex, onOpenParty, onOpenProfile, onOpenBag, onGoToTitle }: Props) {
   const trainer = useTrainer()
   const { dispatch } = useGameStore()
-  const [centerPhase, setCenterPhase] = useState<CenterPhase | null>(null)
-  const [showMart, setShowMart] = useState(false)
-  const [activeGymId, setActiveGymId] = useState<string | null>(null)
   const [exploring, setExploring] = useState(false)
   const [muted, setMutedState] = useState(isMuted())
   // Which area is shown in the side panel (defaults to current, updates on hover/click)
@@ -403,26 +175,17 @@ export default function OverworldScreen({ onStartBattle, onOpenPokedex, onOpenPa
   function handleTravel(areaId: string) {
     dispatch({ type: 'UNLOCK_AREA', payload: { areaId } })
     dispatch({ type: 'SET_CURRENT_AREA', payload: { areaId } })
+    // Arriving in a city opens its hub
+    if (hasCityHub(AREA_MAP[areaId])) onCityViewChange(true)
   }
 
   function handleSelectArea(areaId: string | null) {
     setSelectedAreaId(areaId ?? trainer.currentAreaId)
   }
 
-  function handleHeal() {
-    dispatch({ type: 'HEAL_PARTY' })
-    setCenterPhase('healed')
-    setTimeout(() => setCenterPhase(null), 2200)
-  }
-
   const partyHasLiveMember = trainer.party.some(p => p.currentHp > 0)
   const selectedIsCurrent = selectedAreaId === trainer.currentAreaId
-  const selectedAreaGym = gymForCity(selectedAreaId)
-  const selectedAreaGymCleared = selectedAreaGym
-    ? trainer.badges.includes(selectedAreaGym.leader.badge)
-    : false
-  const selectedAreaGymClosed = !!selectedAreaGym && !selectedAreaGymCleared &&
-    trainer.badges.length < (selectedAreaGym.requiredBadgeCount ?? 0)
+  const showCity = cityView && hasCityHub(currentArea)
   const selectedIsAdjacent = currentArea.connectedAreaIds.includes(selectedAreaId)
   // Undiscovered areas more than 1 hop away are masked as unknown
   const selectedIsUnknown =
@@ -462,7 +225,13 @@ export default function OverworldScreen({ onStartBattle, onOpenPokedex, onOpenPa
       {/* ── Main content ── */}
       <main className="overworld__main">
 
-        {/* Map column */}
+        {showCity ? (
+          <CityScreen
+            area={currentArea}
+            onOpenMap={() => onCityViewChange(false)}
+            onStartBattle={onStartBattle}
+          />
+        ) : (
         <section className="map-section">
           <WorldMapCanvas
             areas={KANTO_AREAS}
@@ -475,11 +244,13 @@ export default function OverworldScreen({ onStartBattle, onOpenPokedex, onOpenPa
             onTravel={handleTravel}
           />
         </section>
+        )}
 
         {/* Side panel */}
         <aside className="side-panel">
 
-          {/* Area detail */}
+          {/* Area detail (the city screen already covers this when it's open) */}
+          {!showCity && (
           <div className="area-detail">
             <h2 className="area-detail__name">{selectedIsUnknown ? '???' : selectedArea.name}</h2>
             <p className="area-detail__desc">
@@ -527,26 +298,12 @@ export default function OverworldScreen({ onStartBattle, onOpenPokedex, onOpenPa
                       🔍 Explore
                     </button>
                   )}
-                  {(selectedArea.areaType === 'city' || selectedArea.areaType === 'town') && (
-                    <button className="btn btn-pokecenter" onClick={() => setCenterPhase('prompt')}>
-                      🏥 Pokémon Center
+                  {hasCityHub(selectedArea) && (
+                    <button className="btn btn-pokecenter" onClick={() => onCityViewChange(true)}>
+                      🏙 Enter {selectedArea.name}
                     </button>
                   )}
-                  {selectedArea.martItems?.length && (
-                    <button className="btn btn-mart" onClick={() => setShowMart(true)}>
-                      🛒 Poké Mart
-                    </button>
-                  )}
-                  {selectedAreaGym && (
-                    <button
-                      className={`btn btn-gym${selectedAreaGymCleared ? ' btn-gym--cleared' : ''}`}
-                      onClick={() => setActiveGymId(selectedAreaGym.id)}
-                    >
-                      {selectedAreaGymClosed ? '🔒' : '🏆'} {selectedAreaGym.leader.name}'s Gym
-                      {selectedAreaGymCleared ? ' (Cleared)' : selectedAreaGymClosed ? ' (Locked)' : ''}
-                    </button>
-                  )}
-                  {!partyHasLiveMember && selectedArea.areaType !== 'city' && selectedArea.areaType !== 'town' && (
+                  {!partyHasLiveMember && !hasCityHub(selectedArea) && (
                     <p className="area-detail__blackout-warning">
                       All Pokémon fainted — visit the Pokémon Center!
                     </p>
@@ -564,6 +321,7 @@ export default function OverworldScreen({ onStartBattle, onOpenPokedex, onOpenPa
               <EncounterPreview encounters={selectedArea.encounters} />
             )}
           </div>
+          )}
 
           {/* Party panel */}
           <section className="party-panel">
@@ -582,36 +340,14 @@ export default function OverworldScreen({ onStartBattle, onOpenPokedex, onOpenPa
         </aside>
       </main>
 
-      {/* ── Pokémon Center modal ── */}
-      {centerPhase && (
-        <PokemonCenterModal
-          phase={centerPhase}
-          onHeal={handleHeal}
-          onClose={() => setCenterPhase(null)}
-        />
-      )}
-
-      {/* ── Poké Mart modal ── */}
-      {showMart && currentArea.martItems && (
-        <PokeMartModal
-          martItems={currentArea.martItems}
-          onClose={() => setShowMart(false)}
-        />
-      )}
-
       {/* ── Explore modal ── */}
       {exploring && (
         <ExploreModal
           area={currentArea}
-          onWildEncounter={() => onStartBattle()}
-          onTrainerBattle={routeTrainer => onStartBattle(routeTrainer)}
+          onWildEncounter={() => onStartBattle({ kind: 'wild' })}
+          onTrainerBattle={routeTrainer => onStartBattle({ kind: 'route-trainer', trainer: routeTrainer })}
           onClose={() => setExploring(false)}
         />
-      )}
-
-      {/* ── Gym modal ── */}
-      {activeGymId && (
-        <GymScreen gymId={activeGymId} onExit={() => setActiveGymId(null)} />
       )}
     </div>
   )

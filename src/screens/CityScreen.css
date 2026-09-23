@@ -1,0 +1,269 @@
+/* ── City screen ── */
+
+.city-screen {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  background: #ffffff08;
+  border: 2px solid #1a3c8c;
+  border-radius: 16px;
+  padding: 1.25rem;
+  align-self: start;
+}
+
+.city-screen__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.city-screen__name {
+  margin: 0 0 0.35rem;
+  font-size: 1.6rem;
+  font-weight: 900;
+  color: #ffd700;
+}
+
+.city-screen__desc {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #aac4e0;
+  line-height: 1.5;
+}
+
+.city-screen__map-btn {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.city-screen__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 0.85rem;
+}
+
+.city-building {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 1.1rem 0.75rem 0.9rem;
+  background: #0f3460;
+  border: 2px solid #1a3c8c;
+  border-radius: 14px;
+  color: #eee;
+  font-family: inherit;
+  cursor: pointer;
+  box-shadow: 0 4px 0 #0a1f40;
+  transition: transform 0.1s ease, border-color 0.15s ease, box-shadow 0.1s ease;
+}
+
+.city-building:hover:not(:disabled) {
+  transform: translateY(-3px);
+  border-color: #ffd700;
+  box-shadow: 0 7px 0 #0a1f40;
+}
+
+.city-building:active:not(:disabled) {
+  transform: translateY(2px);
+  box-shadow: 0 2px 0 #0a1f40;
+}
+
+.city-building:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.city-building__key {
+  position: absolute;
+  top: 0.4rem;
+  left: 0.55rem;
+  font-size: 0.7rem;
+  font-weight: 800;
+  color: #7a9cc0;
+}
+
+.city-building__icon {
+  font-size: 2.4rem;
+  line-height: 1;
+}
+
+.city-building__name {
+  font-size: 0.95rem;
+  font-weight: 800;
+  text-align: center;
+}
+
+.city-building__status {
+  font-size: 0.75rem;
+  color: #aac4e0;
+  text-align: center;
+}
+
+.city-building--good .city-building__status { color: #48bb78; font-weight: 700; }
+.city-building--locked .city-building__status { color: #e63946; }
+.city-building--new { border-color: #d69e2e; }
+.city-building--new .city-building__status { color: #f6c453; font-weight: 800; }
+
+/* ── NPC + Storyteller dialogs ── */
+
+.city-overlay {
+  position: fixed;
+  inset: 0;
+  background: #00000088;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  animation: pc-fade-in 0.15s ease;
+}
+
+.city-dialog {
+  background: #0f3460;
+  border: 3px solid #d69e2e;
+  border-radius: 20px;
+  padding: 1.4rem 1.6rem 1.5rem;
+  max-width: 480px;
+  width: 90%;
+  max-height: 88vh;
+  overflow-y: auto;
+  box-shadow: 0 8px 32px #00000066;
+  animation: pc-slide-up 0.18s ease;
+}
+
+.city-dialog__place {
+  margin: 0;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #7a9cc0;
+}
+
+.city-dialog__speaker {
+  margin: 0.2rem 0 0.75rem;
+  font-size: 1.15rem;
+  font-weight: 900;
+  color: #ffd700;
+}
+
+.city-dialog__line {
+  margin: 0;
+  font-size: 1.05rem;
+  line-height: 1.6;
+  color: #eee;
+}
+
+.city-dialog__actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-top: 1.25rem;
+}
+
+.city-dialog__count {
+  margin-right: auto;
+  font-size: 0.8rem;
+  color: #7a9cc0;
+}
+
+/* Storyteller */
+
+.storyteller__passage {
+  background: #fdf6e3;
+  color: #2a2a3a;
+  border-radius: 12px;
+  padding: 1rem 1.2rem;
+  font-size: 1.15rem;
+  line-height: 1.7;
+}
+
+.storyteller__passage p {
+  margin: 0 0 0.6rem;
+}
+
+.storyteller__passage p:last-child {
+  margin-bottom: 0;
+}
+
+.storyteller__title {
+  margin: 0 0 0.5rem;
+  font-size: 1.2rem;
+  color: #7a4a10;
+}
+
+.storyteller__question {
+  margin: 1rem 0 0.75rem;
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #eee;
+}
+
+.storyteller__choices {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.storyteller__choice {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  text-align: left;
+  font-family: inherit;
+  font-size: 1rem;
+  font-weight: 700;
+  padding: 0.7rem 0.9rem;
+  border-radius: 12px;
+  border: 2px solid #1a3c8c;
+  background: #16213e;
+  color: #eee;
+  cursor: pointer;
+}
+
+.storyteller__choice:hover:not(:disabled) {
+  border-color: #ffd700;
+}
+
+.storyteller__choice--wrong {
+  opacity: 0.4;
+  text-decoration: line-through;
+  cursor: not-allowed;
+}
+
+.storyteller__choice-key {
+  flex-shrink: 0;
+  width: 1.6rem;
+  height: 1.6rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: #1a3c8c;
+  font-size: 0.85rem;
+}
+
+.storyteller__hint {
+  margin: 0.75rem 0 0;
+  font-size: 0.9rem;
+  color: #f6c453;
+}
+
+.storyteller__reward {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  text-align: center;
+}
+
+.storyteller__reward-sprite {
+  width: 120px;
+  height: 120px;
+  image-rendering: pixelated;
+  animation: explore-bounce 0.5s ease-out;
+}

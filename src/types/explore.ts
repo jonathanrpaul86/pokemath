@@ -16,3 +16,17 @@ export type ExploreOutcome =
   | { kind: 'nothing' }
 
 export type ExploreOutcomeKind = ExploreOutcome['kind']
+
+/** A specific wild Pokémon to battle instead of rolling the area's table */
+export interface WildOverride {
+  speciesId: number
+  level: number
+  /** Replaces the usual "A wild X appeared!" opener */
+  intro?: string
+}
+
+/** Everything that can start a battle from the overworld or a city */
+export type BattleRequest =
+  | { kind: 'wild' }
+  | { kind: 'route-trainer'; trainer: RouteTrainer }
+  | { kind: 'rare'; encounter: WildOverride }

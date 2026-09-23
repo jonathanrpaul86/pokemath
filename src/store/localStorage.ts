@@ -59,6 +59,7 @@ function migrateTrainer(raw: any): Trainer {
     keyItems: [],
     badges: [],
     gymProgress: {},
+    storyteller: { heardStoryIds: [], nextStoryAt: {} },
     ...rest,
     exploreProgress: raw.exploreProgress ?? migrateExploreProgress(raw.unlockedAreaIds),
     party: (raw.party ?? []).map(migratePokemon),

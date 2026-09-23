@@ -9,7 +9,7 @@ import PokedexScreen from './screens/PokedexScreen'
 import PartyScreen from './screens/PartyScreen'
 import ProfileScreen from './screens/ProfileScreen'
 import BagScreen from './screens/BagScreen'
-import type { RouteTrainer } from './types'
+import type { BattleRequest } from './types'
 import './index.css'
 
 type GameScreen = 'overworld' | 'battle' | 'pokedex' | 'party' | 'profile' | 'bag'
@@ -18,14 +18,20 @@ function App() {
   const { trainer, currentSlot, saves, dispatch, loadSlot, deleteSlot, goToTitle } = useGameStore()
   const [starterSlot, setStarterSlot] = useState<number | null>(null)
   const [gameScreen, setGameScreen] = useState<GameScreen>('overworld')
-  const [routeTrainer, setRouteTrainer] = useState<RouteTrainer | null>(null)
+  const [battleRequest, setBattleRequest] = useState<BattleRequest>({ kind: 'wild' })
+  /** In a city, show the city screen (true) or the world map (false) */
+  const [cityView, setCityView] = useState(true)
 
-  /** Explore battles count toward area progress unless the player blacked out */
-  function endExploreBattle(counted: boolean) {
-    if (counted && trainer) {
+  function startBattle(request: BattleRequest) {
+    setBattleRequest(request)
+    setGameScreen('battle')
+  }
+
+  /** Explore battles count toward area progress; rare Storyteller encounters don't */
+  function endBattle(countsAsExplore: boolean) {
+    if (countsAsExplore && trainer) {
       dispatch({ type: 'RECORD_EXPLORE', payload: { areaId: trainer.currentAreaId } })
     }
-    setRouteTrainer(null)
     setGameScreen('overworld')
   }
 
@@ -43,7 +49,7 @@ function App() {
       <TitleScreen
         saves={saves}
         onNewGame={slot => setStarterSlot(slot)}
-        onPlay={slot => { loadSlot(slot); setGameScreen('overworld') }}
+        onPlay={slot => { loadSlot(slot); setCityView(true); setGameScreen('overworld') }}
         onDelete={deleteSlot}
       />
     )
@@ -56,13 +62,14 @@ function App() {
     return (
       <BattleScreen
         area={AREA_MAP[trainer.currentAreaId]}
-        onBattleEnd={outcome => endExploreBattle(outcome !== 'blacked-out')}
-        trainerBattle={routeTrainer ? {
-          trainerName: routeTrainer.name,
+        onBattleEnd={outcome => endBattle(battleRequest.kind === 'wild' && outcome !== 'blacked-out')}
+        wildOverride={battleRequest.kind === 'rare' ? battleRequest.encounter : undefined}
+        trainerBattle={battleRequest.kind === 'route-trainer' ? {
+          trainerName: battleRequest.trainer.name,
           isLeader: false,
-          team: routeTrainer.team,
-          quote: routeTrainer.quote,
-          onComplete: won => endExploreBattle(won),
+          team: battleRequest.trainer.team,
+          quote: battleRequest.trainer.quote,
+          onComplete: won => endBattle(won),
         } : undefined}
       />
     )
@@ -86,7 +93,9 @@ function App() {
 
   return (
     <OverworldScreen
-      onStartBattle={rt => { setRouteTrainer(rt ?? null); setGameScreen('battle') }}
+      onStartBattle={startBattle}
+      cityView={cityView}
+      onCityViewChange={setCityView}
       onOpenPokedex={() => setGameScreen('pokedex')}
       onOpenParty={() => setGameScreen('party')}
       onOpenProfile={() => setGameScreen('profile')}

@@ -95,6 +95,11 @@ export function createRouteTrainer(area: Area, rng: Rng = Math.random): RouteTra
 
 // ---- Public API -------------------------------------------------------------
 
+/** A random item from the loot table matching the area's progression */
+export function rollLootItem(area: Area, rng: Rng = Math.random): string {
+  return weightedPick(LOOT_TABLES[lootTier(area)], rng)
+}
+
 /** Areas without wild Pokémon (cities, towns) can't be explored */
 export function canExplore(area: Area): boolean {
   return area.encounters.length > 0
@@ -110,7 +115,7 @@ export function rollExploreOutcome(area: Area, rng: Rng = Math.random): ExploreO
     case 'trainer':
       return { kind, trainer: createRouteTrainer(area, rng) }
     case 'item':
-      return { kind, itemId: weightedPick(LOOT_TABLES[lootTier(area)], rng), quantity: 1 }
+      return { kind, itemId: rollLootItem(area, rng), quantity: 1 }
     case 'money': {
       const base = (lootTier(area) + 1) * 40
       return { kind, amount: Math.round((base + rng() * base) / 10) * 10 }

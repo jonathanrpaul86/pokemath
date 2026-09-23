@@ -8,7 +8,7 @@ import { battleXpReward, trainerMoneyReward, pokemonXpToNextLevel } from '../uti
 import { playCorrect, playWrong, playCatch, playVictory, playLevelUp, isMuted, setMuted } from '../utils/sound'
 import { EVOLUTIONS } from '../data/evolutions'
 import { ITEM_MAP, BALL_EMOJI, ITEM_EMOJI } from '../data/items'
-import type { Area, BattlePhase, BattleOutcome, MathProblem, Move, OwnedPokemon, WildPokemon, TrainerBattle } from '../types'
+import type { Area, BattlePhase, BattleOutcome, MathProblem, Move, OwnedPokemon, WildPokemon, TrainerBattle, WildOverride } from '../types'
 import './BattleScreen.css'
 
 // ---- Constants ---------------------------------------------------------------
@@ -209,9 +209,11 @@ interface Props {
   area: Area
   onBattleEnd: (outcome: BattleOutcome) => void
   trainerBattle?: TrainerBattle
+  /** Battle this Pokémon instead of rolling the area's encounter table */
+  wildOverride?: WildOverride
 }
 
-export default function BattleScreen({ area, onBattleEnd, trainerBattle }: Props) {
+export default function BattleScreen({ area, onBattleEnd, trainerBattle, wildOverride }: Props) {
   const trainer = useTrainer()
   const { dispatch } = useGameStore()
 
@@ -267,9 +269,11 @@ export default function BattleScreen({ area, onBattleEnd, trainerBattle }: Props
         return
       }
 
-      const entry = pickEncounter(area)
-      const level = pickLevel(entry)
-      const wildSpecies = await fetchPokemonSpecies(entry.speciesId)
+      const { speciesId, level } = wildOverride ?? (() => {
+        const entry = pickEncounter(area)
+        return { speciesId: entry.speciesId, level: pickLevel(entry) }
+      })()
+      const wildSpecies = await fetchPokemonSpecies(speciesId)
       if (cancelled) return
       const wild = spawnWildPokemon(wildSpecies, level)
       dispatch({ type: 'SEE_POKEMON', payload: { speciesId: wild.speciesId } })
@@ -285,7 +289,7 @@ export default function BattleScreen({ area, onBattleEnd, trainerBattle }: Props
         catchProgress: null,
         catchProblem: null,
         catchTimeRemaining: 0,
-        log: [`A wild ${capitalize(wild.name)} appeared!`],
+        log: [wildOverride?.intro ?? `A wild ${capitalize(wild.name)} appeared!`],
         wildSprite: wildSpecies.sprites.front,
         playerSprites: partySpecies.map(s => s.sprites.back),
       })

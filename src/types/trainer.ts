@@ -2,6 +2,7 @@ import type { OwnedPokemon } from './pokemon'
 import type { MathStats } from './math'
 import type { InventorySlot, BadgeId } from './items'
 import type { GymProgress } from './gym'
+import type { StorytellerProgress } from './city'
 
 export interface PokedexEntry {
   seen: boolean
@@ -34,4 +35,5 @@ export interface Trainer {
   savedAt?: number
   /** Progress per gym — keyed by GymDefinition.id */
   gymProgress?: Record<string, GymProgress>
+  storyteller: StorytellerProgress
 }

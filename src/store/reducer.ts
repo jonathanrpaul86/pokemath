@@ -3,6 +3,7 @@ import type { GameAction } from './actions'
 import { createOwnedPokemon, pokemonXpToNextLevel, pokemonLevelCap, calcStats } from '../utils/formulas'
 import { KANTO_AREAS, AREA_MAP } from '../data/areas'
 import { ITEM_MAP } from '../data/items'
+import { totalExplores, STORY_COOLDOWN_EXPLORES } from '../utils/storyteller'
 
 const PARTY_MAX = 6
 const DEV_TRAINER_NAME = 'DEBUG'
@@ -42,6 +43,7 @@ export function createNewTrainer(name: string, starterSpecies: Parameters<typeof
     balls: [{ itemId: 'poke-ball', quantity: isDev ? 99 : 5 }],
     keyItems: [],
     badges: [],
+    storyteller: { heardStoryIds: [], nextStoryAt: {} },
   }
 }
 
@@ -97,6 +99,22 @@ export function gameReducer(trainer: Trainer, action: GameAction): Trainer {
         exploreProgress: {
           ...trainer.exploreProgress,
           [areaId]: (trainer.exploreProgress[areaId] ?? 0) + 1,
+        },
+      }
+      break
+    }
+
+    case 'FINISH_STORY': {
+      const { cityId, storyId } = action.payload
+      const { heardStoryIds, nextStoryAt } = trainer.storyteller
+      next = {
+        ...trainer,
+        storyteller: {
+          heardStoryIds: heardStoryIds.includes(storyId) ? heardStoryIds : [...heardStoryIds, storyId],
+          nextStoryAt: {
+            ...nextStoryAt,
+            [cityId]: totalExplores(trainer.exploreProgress) + STORY_COOLDOWN_EXPLORES,
+          },
         },
       }
       break
