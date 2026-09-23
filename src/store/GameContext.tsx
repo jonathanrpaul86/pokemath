@@ -4,7 +4,7 @@ import {
 } from 'react'
 import type { Trainer, PokemonSpecies } from '../types'
 import { gameReducer, createNewTrainer } from './reducer'
-import { loadSave, writeSave, deleteSave, listSaves, migrateLegacySave } from './localStorage'
+import { loadSave, writeSave, deleteSave, listSaves, migrateLegacySave, purgeOutdatedApiCache } from './localStorage'
 import type { GameAction } from './actions'
 
 interface GameContextValue {
@@ -24,6 +24,8 @@ export function GameProvider({ children }: { children: ReactNode }) {
   const [currentSlot, setCurrentSlot] = useState<number | null>(null)
   const [trainer, setTrainer] = useState<Trainer | null>(null)
   const [saves, setSaves] = useState<(Trainer | null)[]>(() => {
+    // Free the space the old raw cache took before touching saves
+    purgeOutdatedApiCache()
     migrateLegacySave()
     return listSaves()
   })

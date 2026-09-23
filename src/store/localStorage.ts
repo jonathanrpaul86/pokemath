@@ -1,6 +1,7 @@
 import type { Trainer, OwnedPokemon, MathStats } from '../types'
 import { AREA_MAP } from '../data/areas'
 import { pokemonXpToNextLevel } from '../utils/formulas'
+import { clearApiCache } from '../utils/storage'
 
 const SLOT_COUNT = 3
 const LEGACY_KEY = 'pmg_trainer_v1'
@@ -77,13 +78,46 @@ export function loadSave(slot: number): Trainer | null {
   }
 }
 
-export function writeSave(slot: number, trainer: Trainer): void {
+// ---- Save status (observable, so the UI can warn when saving fails) --------
+
+let lastSaveFailed = false
+const saveStatusListeners = new Set<() => void>()
+
+function setLastSaveFailed(failed: boolean): void {
+  if (failed === lastSaveFailed) return
+  lastSaveFailed = failed
+  saveStatusListeners.forEach(listener => listener())
+}
+
+export function subscribeSaveStatus(listener: () => void): () => void {
+  saveStatusListeners.add(listener)
+  return () => { saveStatusListeners.delete(listener) }
+}
+
+export function getLastSaveFailed(): boolean {
+  return lastSaveFailed
+}
+
+function trySetItem(key: string, value: string): boolean {
   try {
-    const data: Trainer = { ...trainer, savedAt: Date.now() }
-    localStorage.setItem(slotKey(slot), JSON.stringify(data))
+    localStorage.setItem(key, value)
+    return true
   } catch {
-    console.warn('Could not save game: localStorage quota exceeded')
+    return false
   }
+}
+
+/** Writes a save. If storage is full, clears the re-fetchable PokéAPI cache and retries. */
+export function writeSave(slot: number, trainer: Trainer): boolean {
+  const data = JSON.stringify({ ...trainer, savedAt: Date.now() } satisfies Trainer)
+  let saved = trySetItem(slotKey(slot), data)
+  if (!saved) {
+    clearApiCache()
+    saved = trySetItem(slotKey(slot), data)
+  }
+  if (!saved) console.warn('Could not save game: browser storage is full or unavailable')
+  setLastSaveFailed(!saved)
+  return saved
 }
 
 export function deleteSave(slot: number): void {
@@ -92,6 +126,11 @@ export function deleteSave(slot: number): void {
 
 export function listSaves(): (Trainer | null)[] {
   return Array.from({ length: SLOT_COUNT }, (_, i) => loadSave(i))
+}
+
+/** The v1 cache stored raw PokéAPI responses (~250K chars per Pokémon) that could fill storage */
+export function purgeOutdatedApiCache(): void {
+  clearApiCache({ keepCurrent: true })
 }
 
 export function migrateLegacySave(): void {

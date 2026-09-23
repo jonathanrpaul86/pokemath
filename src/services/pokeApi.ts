@@ -7,18 +7,22 @@ import type {
   PokeApiPokemon,
   PokeApiMoveDetail,
 } from '../types'
+import { API_CACHE_PREFIX } from '../utils/storage'
 
 const BASE_URL = 'https://pokeapi.co/api/v2'
-const CACHE_PREFIX = 'pokeapi_v1_'
 
-// In-memory cache so we never re-fetch within a session
-const memCache = new Map<string, unknown>()
+// ---- Caching ----------------------------------------------------------------
+//
+// PokéAPI responses are huge (a Pokémon is ~250K characters, a move ~35K) but
+// the game only needs a sliver of each. We cache the trimmed shapes the game
+// uses — a species is a few K — so the cache never crowds out save files.
 
-// ---- Storage helpers --------------------------------------------------------
+/** In-flight and finished lookups for this session, so parallel callers share one request */
+const memCache = new Map<string, Promise<unknown>>()
 
 function storageGet<T>(key: string): T | null {
   try {
-    const raw = localStorage.getItem(CACHE_PREFIX + key)
+    const raw = localStorage.getItem(API_CACHE_PREFIX + key)
     return raw ? (JSON.parse(raw) as T) : null
   } catch {
     return null
@@ -27,30 +31,31 @@ function storageGet<T>(key: string): T | null {
 
 function storageSet(key: string, data: unknown): void {
   try {
-    localStorage.setItem(CACHE_PREFIX + key, JSON.stringify(data))
+    localStorage.setItem(API_CACHE_PREFIX + key, JSON.stringify(data))
   } catch {
-    // localStorage quota exceeded — session cache still works
+    // Storage full or blocked: the in-memory cache still covers this session
   }
 }
 
-// ---- Generic cached fetch ---------------------------------------------------
+/** Returns the stored value for `key`, or runs `load` once and caches its (trimmed) result */
+function cached<T>(key: string, load: () => Promise<T>): Promise<T> {
+  const existing = memCache.get(key)
+  if (existing) return existing as Promise<T>
 
-async function cachedFetch<T>(cacheKey: string, url: string): Promise<T> {
-  if (memCache.has(cacheKey)) return memCache.get(cacheKey) as T
+  const stored = storageGet<T>(key)
+  const promise = stored
+    ? Promise.resolve(stored)
+    : load().then(value => { storageSet(key, value); return value })
+  memCache.set(key, promise)
+  // A failed request shouldn't poison the cache for the rest of the session
+  promise.catch(() => memCache.delete(key))
+  return promise
+}
 
-  const stored = storageGet<T>(cacheKey)
-  if (stored) {
-    memCache.set(cacheKey, stored)
-    return stored
-  }
-
+async function fetchJson<T>(url: string): Promise<T> {
   const res = await fetch(url)
   if (!res.ok) throw new Error(`PokeAPI fetch failed: ${url} (${res.status})`)
-  const data = (await res.json()) as T
-
-  memCache.set(cacheKey, data)
-  storageSet(cacheKey, data)
-  return data
+  return (await res.json()) as T
 }
 
 // ---- Transformers -----------------------------------------------------------
@@ -81,19 +86,18 @@ function toMove(raw: PokeApiMoveDetail): Move {
 
 // ---- Public API -------------------------------------------------------------
 
-export async function fetchMove(name: string): Promise<Move> {
-  const raw = await cachedFetch<PokeApiMoveDetail>(
-    `move_${name}`,
-    `${BASE_URL}/move/${name}`
+export function fetchMove(name: string): Promise<Move> {
+  return cached(`move_${name}`, async () =>
+    toMove(await fetchJson<PokeApiMoveDetail>(`${BASE_URL}/move/${name}`))
   )
-  return toMove(raw)
 }
 
-export async function fetchPokemonSpecies(id: number): Promise<PokemonSpecies> {
-  const raw = await cachedFetch<PokeApiPokemon>(
-    `pokemon_${id}`,
-    `${BASE_URL}/pokemon/${id}`
-  )
+export function fetchPokemonSpecies(id: number): Promise<PokemonSpecies> {
+  return cached(`species_${id}`, () => loadSpecies(id))
+}
+
+async function loadSpecies(id: number): Promise<PokemonSpecies> {
+  const raw = await fetchJson<PokeApiPokemon>(`${BASE_URL}/pokemon/${id}`)
 
   // Collect level-up moves from the red-blue version group only
   const levelUpEntries: Array<{ level: number; moveName: string }> = []
