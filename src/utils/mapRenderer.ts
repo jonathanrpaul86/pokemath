@@ -1,7 +1,11 @@
 import type { Area } from '../types'
+import { fitView, makeTransform, type MapView } from './mapCamera'
 
 const INTERNAL_W = 600
 const INTERNAL_H = 380
+
+/** The world's size in map coordinates (Area.mapX / mapY) */
+export const WORLD_BOUNDS = { width: INTERNAL_W, height: INTERNAL_H }
 const NODE_RADIUS = 18
 
 // ---- Terrain palette --------------------------------------------------------
@@ -46,10 +50,17 @@ export interface MapRenderState {
   pulse: number
 }
 
+export interface RenderOptions {
+  /** Which part of the world to show; defaults to the whole world */
+  view?: MapView
+  /** Simplified mini-map: land, roads, and dots only */
+  mini?: boolean
+  /** World rectangle to outline (the main map's view, drawn on the mini-map) */
+  viewportRect?: { x: number; y: number; width: number; height: number }
+}
+
 export class MapRenderer {
   private ctx: CanvasRenderingContext2D
-  private cameraX = 0
-  private cameraY = 0
 
   constructor(canvas: HTMLCanvasElement) {
     const ctx = canvas.getContext('2d')
@@ -57,42 +68,48 @@ export class MapRenderer {
     this.ctx = ctx
   }
 
-  setCamera(x: number, y: number): void {
-    this.cameraX = x
-    this.cameraY = y
+  private transform(view?: MapView) {
+    const { width, height } = this.ctx.canvas
+    return makeTransform(view ?? fitView(WORLD_BOUNDS, width, height), width, height, WORLD_BOUNDS)
   }
 
-  render(state: MapRenderState): void {
+  render(state: MapRenderState, options: RenderOptions = {}): void {
     const { ctx } = this
     const { width, height } = ctx.canvas
     if (width === 0 || height === 0) return
 
-    const scaleX = width / INTERNAL_W
-    const scaleY = height / INTERNAL_H
-    const scale  = Math.min(scaleX, scaleY)
-    const tx = (x: number) => (x - this.cameraX) * scaleX
-    const ty = (y: number) => (y - this.cameraY) * scaleY
-    const ts = (s: number) => s * scale
+    const { tx, ty, ts, scale } = this.transform(options.view)
+    // Terrain (the island) scales with zoom; node art keeps its size
+    const worldSize = (s: number) => s * scale
 
     ctx.clearRect(0, 0, width, height)
 
+    if (options.mini) {
+      drawOcean(ctx, width, height, null)
+      drawLandmass(ctx, tx, ty)
+      drawCinnabarIsland(ctx, tx, ty, worldSize)
+      drawPaths(ctx, state, tx, ty, worldSize)
+      drawMiniNodes(ctx, state, tx, ty, Math.max(2.5, worldSize(NODE_RADIUS * 0.55)))
+      if (options.viewportRect) drawViewportRect(ctx, options.viewportRect, tx, ty)
+      return
+    }
+
     drawOcean(ctx, width, height, state.pulse)
     drawLandmass(ctx, tx, ty)
-    drawCinnabarIsland(ctx, tx, ty, ts)
+    drawCinnabarIsland(ctx, tx, ty, worldSize)
     drawScatter(ctx, state.areas, tx, ty, ts)
     drawPaths(ctx, state, tx, ty, ts)
     drawTerrainBlobs(ctx, state, tx, ty, ts)
     drawNodes(ctx, state, tx, ty, ts)
   }
 
-  hitTest(canvasX: number, canvasY: number, state: MapRenderState): string | null {
+  /** The area under a canvas pixel, if any, for the same view that was rendered */
+  hitTest(canvasX: number, canvasY: number, state: MapRenderState, view?: MapView): string | null {
     const { width, height } = this.ctx.canvas
     if (width === 0 || height === 0) return null
-    const scaleX = width / INTERNAL_W
-    const scaleY = height / INTERNAL_H
-    const ix = canvasX / scaleX + this.cameraX
-    const iy = canvasY / scaleY + this.cameraY
-    const hitR = NODE_RADIUS + 8
+    const { toWorld, sizeScale, scale } = this.transform(view)
+    const [ix, iy] = toWorld(canvasX, canvasY)
+    const hitR = (NODE_RADIUS + 8) * sizeScale / scale
     for (const area of state.areas) {
       const dx = ix - area.mapX
       const dy = iy - area.mapY
@@ -108,13 +125,16 @@ function drawOcean(
   ctx: CanvasRenderingContext2D,
   width: number,
   height: number,
-  pulse: number,
+  /** Animation frame for the wave ripples; null draws calm water */
+  pulse: number | null,
 ): void {
   const grad = ctx.createLinearGradient(0, 0, width, height)
   grad.addColorStop(0, '#38b8f8')
   grad.addColorStop(1, '#1070d0')
   ctx.fillStyle = grad
   ctx.fillRect(0, 0, width, height)
+
+  if (pulse === null) return
 
   // Animated wave ripples
   ctx.save()
@@ -773,6 +793,46 @@ function drawTerrainIcon(
 }
 
 // ---- Helpers ----------------------------------------------------------------
+
+// ---- Layer: mini-map ---------------------------------------------------------
+
+function drawMiniNodes(
+  ctx: CanvasRenderingContext2D,
+  state: MapRenderState,
+  tx: (x: number) => number,
+  ty: (y: number) => number,
+  r: number,
+): void {
+  const unlockedSet = new Set(state.unlockedAreaIds)
+  for (const area of state.areas) {
+    const isCurrent = area.id === state.currentAreaId
+    const unlocked = unlockedSet.has(area.id)
+    const style = TERRAIN[area.id] ?? { blob: '#4a7aa8', node: '#1a4a7a' }
+    ctx.beginPath()
+    ctx.arc(tx(area.mapX), ty(area.mapY), isCurrent ? r * 1.5 : r, 0, Math.PI * 2)
+    ctx.fillStyle = isCurrent ? '#ffe030' : unlocked ? style.node : 'rgba(120,120,160,0.7)'
+    ctx.fill()
+    if (isCurrent) {
+      ctx.strokeStyle = '#1a1a2e'
+      ctx.lineWidth = Math.max(1, r * 0.45)
+      ctx.stroke()
+    }
+  }
+}
+
+function drawViewportRect(
+  ctx: CanvasRenderingContext2D,
+  rect: { x: number; y: number; width: number; height: number },
+  tx: (x: number) => number,
+  ty: (y: number) => number,
+): void {
+  ctx.save()
+  ctx.strokeStyle = 'rgba(255,255,255,0.9)'
+  ctx.lineWidth = 1.5
+  ctx.setLineDash([4, 3])
+  ctx.strokeRect(tx(rect.x), ty(rect.y), tx(rect.x + rect.width) - tx(rect.x), ty(rect.y + rect.height) - ty(rect.y))
+  ctx.restore()
+}
 
 function drawLock(ctx: CanvasRenderingContext2D, cx: number, cy: number, size: number): void {
   const bw = size * 0.72

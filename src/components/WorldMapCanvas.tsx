@@ -1,7 +1,13 @@
 import { useEffect, useRef } from 'react'
 import type { Area, BadgeId } from '../types'
-import { MapRenderer, type MapRenderState } from '../utils/mapRenderer'
+import { MapRenderer, WORLD_BOUNDS, type MapRenderState } from '../utils/mapRenderer'
+import { followView, viewRect, easeToward, type MapView } from '../utils/mapCamera'
 import { travelBlocker } from '../data/areas'
+
+/** How much of the world the local map shows across its width (the world is 600 wide) */
+const LOCAL_VIEW_WIDTH = 360
+/** Fraction of the remaining distance the camera covers each frame */
+const CAMERA_EASE = 0.12
 
 interface Props {
   areas: Area[]
@@ -14,92 +20,100 @@ interface Props {
   onSelectArea: (areaId: string | null) => void
   /** Called when the user clicks a reachable adjacent area */
   onTravel: (areaId: string) => void
+  onOpenFullMap: () => void
 }
 
-export function WorldMapCanvas({
-  areas,
-  currentAreaId,
-  unlockedAreaIds,
-  badges,
-  exploreProgress,
-  selectedAreaId,
-  onSelectArea,
-  onTravel,
-}: Props) {
+/** Keep a canvas's backing store matched to its on-screen size */
+function syncCanvasSize(canvas: HTMLCanvasElement) {
+  const rect = canvas.getBoundingClientRect()
+  if (rect.width > 0 && rect.height > 0) {
+    const dpr = window.devicePixelRatio || 1
+    canvas.width = Math.round(rect.width * dpr)
+    canvas.height = Math.round(rect.height * dpr)
+  }
+}
+
+export function WorldMapCanvas(props: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
+  const miniRef = useRef<HTMLCanvasElement>(null)
   const rendererRef = useRef<MapRenderer | null>(null)
-  const rafRef = useRef<number | undefined>(undefined)
+  // The animation loop and event handlers read the latest props through this
+  const latest = useRef(props)
+  useEffect(() => { latest.current = props })
+  // The view last drawn, so clicks hit-test against what's on screen
+  const viewRef = useRef<MapView | undefined>(undefined)
 
-  // Keep a mutable ref so the RAF closure always reads the latest props
-  const stateRef = useRef<MapRenderState>({
-    areas,
-    currentAreaId,
-    unlockedAreaIds,
-    selectedAreaId,
-    pulse: 0,
-  })
-  stateRef.current.areas = areas
-  stateRef.current.currentAreaId = currentAreaId
-  stateRef.current.unlockedAreaIds = unlockedAreaIds
-  stateRef.current.selectedAreaId = selectedAreaId
+  function renderState(pulse: number): MapRenderState {
+    const { areas, currentAreaId, unlockedAreaIds, selectedAreaId } = latest.current
+    return { areas, currentAreaId, unlockedAreaIds, selectedAreaId, pulse }
+  }
 
-  // Also keep a mutable ref for values needed in event handlers
-  const propsRef = useRef({ areas, currentAreaId, unlockedAreaIds, badges, exploreProgress, onTravel, onSelectArea })
-  propsRef.current = { areas, currentAreaId, unlockedAreaIds, badges, exploreProgress, onTravel, onSelectArea }
-
-  // Create renderer + ResizeObserver once on mount
   useEffect(() => {
     const canvas = canvasRef.current
-    if (!canvas) return
+    const mini = miniRef.current
+    if (!canvas || !mini) return
 
-    const setSize = () => {
-      const rect = canvas.getBoundingClientRect()
-      if (rect.width > 0 && rect.height > 0) {
-        const dpr = window.devicePixelRatio || 1
-        canvas.width = Math.round(rect.width * dpr)
-        canvas.height = Math.round(rect.height * dpr)
-      }
-    }
+    syncCanvasSize(canvas)
+    syncCanvasSize(mini)
+    const main = new MapRenderer(canvas)
+    const miniRenderer = new MapRenderer(mini)
+    rendererRef.current = main
 
-    setSize()
-    rendererRef.current = new MapRenderer(canvas)
-
-    const observer = new ResizeObserver(setSize)
+    const observer = new ResizeObserver(() => { syncCanvasSize(canvas); syncCanvasSize(mini) })
     observer.observe(canvas)
+    observer.observe(mini)
+
+    let camera: { x: number; y: number } | null = null
+    let pulse = 0
+    let raf = 0
+    const loop = () => {
+      pulse += 1
+      const { areas, currentAreaId } = latest.current
+      const here = areas.find(a => a.id === currentAreaId)
+      if (here) {
+        const target = { x: here.mapX, y: here.mapY }
+        // Snap on the first frame, then glide when the player travels
+        camera = camera ? easeToward(camera, target, CAMERA_EASE) : target
+      }
+      const state = renderState(pulse)
+      const view = camera
+        ? followView(WORLD_BOUNDS, camera, LOCAL_VIEW_WIDTH, canvas.width, canvas.height)
+        : undefined
+      viewRef.current = view
+      main.render(state, { view })
+      miniRenderer.render(state, {
+        mini: true,
+        viewportRect: view ? viewRect(view, canvas.width, canvas.height) : undefined,
+      })
+      raf = requestAnimationFrame(loop)
+    }
+    raf = requestAnimationFrame(loop)
 
     return () => {
+      cancelAnimationFrame(raf)
       observer.disconnect()
       rendererRef.current = null
     }
   }, [])
 
-  // Animation loop — runs for the lifetime of the component
-  useEffect(() => {
-    const loop = () => {
-      stateRef.current.pulse += 1
-      rendererRef.current?.render(stateRef.current)
-      rafRef.current = requestAnimationFrame(loop)
-    }
-    rafRef.current = requestAnimationFrame(loop)
-    return () => {
-      if (rafRef.current !== undefined) cancelAnimationFrame(rafRef.current)
-    }
-  }, [])
-
   // ---- Event helpers -------------------------------------------------------
 
-  function getCanvasCoords(e: React.MouseEvent<HTMLCanvasElement>) {
-    const canvas = canvasRef.current!
+  function hitAt(e: React.MouseEvent<HTMLCanvasElement>): string | null {
+    const canvas = canvasRef.current
+    const renderer = rendererRef.current
+    if (!canvas || !renderer) return null
     const rect = canvas.getBoundingClientRect()
     const dpr = window.devicePixelRatio || 1
-    return {
-      x: (e.clientX - rect.left) * dpr,
-      y: (e.clientY - rect.top) * dpr,
-    }
+    return renderer.hitTest(
+      (e.clientX - rect.left) * dpr,
+      (e.clientY - rect.top) * dpr,
+      renderState(0),
+      viewRef.current,
+    )
   }
 
   function isReachable(targetId: string): boolean {
-    const { currentAreaId, areas, badges, unlockedAreaIds, exploreProgress } = propsRef.current
+    const { currentAreaId, areas, badges, unlockedAreaIds, exploreProgress } = latest.current
     const currentArea = areas.find(a => a.id === currentAreaId)
     const targetArea = areas.find(a => a.id === targetId)
     if (!currentArea || !targetArea) return false
@@ -110,48 +124,44 @@ export function WorldMapCanvas({
   }
 
   function handleClick(e: React.MouseEvent<HTMLCanvasElement>) {
-    const renderer = rendererRef.current
-    if (!renderer) return
-    const { x, y } = getCanvasCoords(e)
-    const hitId = renderer.hitTest(x, y, stateRef.current)
+    const hitId = hitAt(e)
     if (!hitId) return
-
-    // Always select in side panel
-    propsRef.current.onSelectArea(hitId)
-
-    // Travel if it's an adjacent reachable area
-    if (hitId !== propsRef.current.currentAreaId && isReachable(hitId)) {
-      propsRef.current.onTravel(hitId)
+    latest.current.onSelectArea(hitId)
+    if (hitId !== latest.current.currentAreaId && isReachable(hitId)) {
+      latest.current.onTravel(hitId)
     }
   }
 
   function handleMouseMove(e: React.MouseEvent<HTMLCanvasElement>) {
-    const renderer = rendererRef.current
-    if (!renderer) return
-    const { x, y } = getCanvasCoords(e)
-    const hitId = renderer.hitTest(x, y, stateRef.current)
-    propsRef.current.onSelectArea(hitId)
-
-    // Pointer cursor when hovering a reachable area
-    const canvas = canvasRef.current
-    if (canvas) {
-      const reachable = hitId && hitId !== propsRef.current.currentAreaId && isReachable(hitId)
-      canvas.style.cursor = reachable ? 'pointer' : hitId ? 'default' : 'default'
-    }
+    const hitId = hitAt(e)
+    latest.current.onSelectArea(hitId)
+    const reachable = hitId && hitId !== latest.current.currentAreaId && isReachable(hitId)
+    e.currentTarget.style.cursor = reachable ? 'pointer' : 'default'
   }
 
-  function handleMouseLeave() {
-    propsRef.current.onSelectArea(null)
-    if (canvasRef.current) canvasRef.current.style.cursor = 'default'
+  function handleMouseLeave(e: React.MouseEvent<HTMLCanvasElement>) {
+    latest.current.onSelectArea(null)
+    e.currentTarget.style.cursor = 'default'
   }
 
   return (
-    <canvas
-      ref={canvasRef}
-      className="world-map-canvas"
-      onClick={handleClick}
-      onMouseMove={handleMouseMove}
-      onMouseLeave={handleMouseLeave}
-    />
+    <>
+      <canvas
+        ref={canvasRef}
+        className="world-map-canvas"
+        onClick={handleClick}
+        onMouseMove={handleMouseMove}
+        onMouseLeave={handleMouseLeave}
+      />
+      <button
+        className="world-minimap"
+        onClick={() => latest.current.onOpenFullMap()}
+        title="Full map"
+        aria-label="Open the full map of Kanto"
+      >
+        <canvas ref={miniRef} className="world-minimap__canvas" />
+        <span className="world-minimap__label">⤢ Full map</span>
+      </button>
+    </>
   )
 }

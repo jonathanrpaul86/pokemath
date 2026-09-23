@@ -9,6 +9,7 @@ import CityScreen from './CityScreen'
 import { preloadAreaSpecies, fetchPokemonSpecies } from '../services/pokeApi'
 import { WorldMapCanvas } from '../components/WorldMapCanvas'
 import ExploreModal from '../components/ExploreModal'
+import FullMapModal from '../components/FullMapModal'
 import { canExplore } from '../utils/explore'
 import type { Area, OwnedPokemon, EncounterEntry, BattleRequest } from '../types'
 import './OverworldScreen.css'
@@ -131,6 +132,7 @@ export default function OverworldScreen({ onStartBattle, cityView, onCityViewCha
   const trainer = useTrainer()
   const { dispatch } = useGameStore()
   const [exploring, setExploring] = useState(false)
+  const [fullMapOpen, setFullMapOpen] = useState(false)
   const [muted, setMutedState] = useState(isMuted())
   // Which area is shown in the side panel (defaults to current, updates on hover/click)
   const [selectedAreaId, setSelectedAreaId] = useState(trainer.currentAreaId)
@@ -242,6 +244,7 @@ export default function OverworldScreen({ onStartBattle, cityView, onCityViewCha
             selectedAreaId={selectedAreaId}
             onSelectArea={handleSelectArea}
             onTravel={handleTravel}
+            onOpenFullMap={() => setFullMapOpen(true)}
           />
         </section>
         )}
@@ -339,6 +342,9 @@ export default function OverworldScreen({ onStartBattle, cityView, onCityViewCha
           </section>
         </aside>
       </main>
+
+      {/* ── Full Kanto map ── */}
+      {fullMapOpen && <FullMapModal onClose={() => setFullMapOpen(false)} />}
 
       {/* ── Explore modal ── */}
       {exploring && (
