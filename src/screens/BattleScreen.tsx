@@ -9,6 +9,7 @@ import { hasKeyItem } from '../data/areas'
 import { playCorrect, playWrong, playCatch, playVictory, playLevelUp, isMuted, setMuted } from '../utils/sound'
 import { EVOLUTIONS } from '../data/evolutions'
 import { KANTO_NAMES } from '../data/pokedex'
+import { BattleActionIcon } from '../components/BattleIcons'
 import { ITEM_MAP, BALL_EMOJI, ITEM_EMOJI } from '../data/items'
 import type { Area, BattlePhase, BattleOutcome, MathProblem, Move, OwnedPokemon, WildPokemon, TrainerBattle, WildOverride } from '../types'
 import './BattleScreen.css'
@@ -168,11 +169,11 @@ function TimerRing({ remaining, total, overlay, flash }: {
 const MATH_TIER_NAMES = ['', 'Harder math', 'Hardest math'] as const
 
 const ACTION_BUTTONS = [
-  ['fight',  '⚔',  'Fight'],
-  ['catch',  '🎣', 'Catch'],
-  ['items',  '💊', 'Items'],
-  ['switch', '🔄', 'Switch'],
-  ['run',    '🏃', 'Run'],
+  ['fight',  'Fight'],
+  ['catch',  'Catch'],
+  ['items',  'Items'],
+  ['switch', 'Switch'],
+  ['run',    'Run'],
 ] as const
 
 function NumberPad({ mode = 'digits', onDigit, onDelete, onSubmit, onAction, switchableCount, disabled }: {
@@ -187,14 +188,14 @@ function NumberPad({ mode = 'digits', onDigit, onDelete, onSubmit, onAction, swi
   if (mode === 'actions') {
     return (
       <div className="numpad numpad--actions">
-        {ACTION_BUTTONS.map(([action, icon, label]) => (
+        {ACTION_BUTTONS.map(([action, label]) => (
           <button
             key={action}
             className={`numpad-btn numpad-btn--${action}`}
             disabled={action === 'switch' && (switchableCount ?? 0) === 0}
             onClick={() => onAction?.(action)}
           >
-            <span className="numpad-btn__bg-icon" aria-hidden="true">{icon}</span>
+            <span className="numpad-btn__bg-icon"><BattleActionIcon action={action} /></span>
             <span className="numpad-btn__label">({label[0]}){' '}{label.slice(1)}</span>
           </button>
         ))}
@@ -1319,7 +1320,7 @@ export default function BattleScreen({ area, onBattleEnd, trainerBattle, wildOve
               </div>
               {!isTerminal && !showSwitch && !showMoveMenu && !pendingTrainerSend && phase !== 'catch-attempt' && phase !== 'run-attempt' && phase !== 'switch-attempt' && !showBallMenu && !showItemMenu && !usingItemInBattle && (
                 <div className="battle-action-strip">
-                  {ACTION_BUTTONS.map(([action, icon, label]) => {
+                  {ACTION_BUTTONS.map(([action, label]) => {
                     const isResolving = phase === 'resolving-correct' || phase === 'resolving-wrong'
                     // Mid-problem, Fight reopens the move menu to change moves
                     const canChangeMove = phase === 'player-turn' && moveOptions.length > 0
@@ -1333,7 +1334,7 @@ export default function BattleScreen({ area, onBattleEnd, trainerBattle, wildOve
                         disabled={isResolving || isFighting || noSwitchable || notAllowed}
                         onClick={() => handleAction(action)}
                       >
-                        <span className="numpad-btn__bg-icon" aria-hidden="true">{icon}</span>
+                        <span className="numpad-btn__bg-icon"><BattleActionIcon action={action} /></span>
                         <span className="numpad-btn__label">({label[0]}){' '}{label.slice(1)}</span>
                       </button>
                     )
