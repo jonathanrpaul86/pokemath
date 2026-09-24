@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { moveMenuOptions } from './battle'
+import { battleProblem, moveMathTier, moveMenuOptions } from './battle'
 import type { Move } from '../types'
 
 const SCRATCH: Move = { id: 10, name: 'scratch', type: 'normal', power: 40, accuracy: 100, damageClass: 'physical' }
@@ -20,5 +20,36 @@ describe('moveMenuOptions', () => {
     expect(moveMenuOptions([SCRATCH, GROWL], true)).toEqual([])
     expect(moveMenuOptions([], true)).toEqual([])
     expect(moveMenuOptions(undefined, true)).toEqual([])
+  })
+})
+
+const SLASH: Move = { id: 163, name: 'slash', type: 'normal', power: 70, accuracy: 100, damageClass: 'physical' }
+const FLAMETHROWER: Move = { id: 53, name: 'flamethrower', type: 'fire', power: 90, accuracy: 100, damageClass: 'special' }
+
+describe('moveMathTier', () => {
+  it('asks for harder math as moves get stronger', () => {
+    expect([GROWL, EMBER, { ...EMBER, power: 59 }].map(moveMathTier)).toEqual([0, 0, 0])
+    expect([{ ...EMBER, power: 60 }, SLASH, { ...EMBER, power: 89 }].map(moveMathTier)).toEqual([1, 1, 1])
+    expect([FLAMETHROWER, { ...EMBER, power: 150 }].map(moveMathTier)).toEqual([2, 2])
+  })
+})
+
+describe('battleProblem', () => {
+  const sample = (difficulty: number, move?: Move) => Array.from({ length: 300 }, () => battleProblem(difficulty, move))
+  const answers = (difficulty: number, move?: Move) => sample(difficulty, move).map(p => p.answer)
+
+  it('uses bigger numbers for stronger moves (Route 1: sums up to 9, 18, 28)', () => {
+    expect(Math.max(...answers(5))).toBeLessThanOrEqual(9)
+    expect(Math.max(...answers(5, EMBER))).toBeLessThanOrEqual(9)
+    expect(answers(5, SLASH).every(a => a >= 6 && a <= 18)).toBe(true)
+    expect(answers(5, FLAMETHROWER).every(a => a >= 10 && a <= 28)).toBe(true)
+  })
+
+  it('keeps the kind of problem the area uses, and its time to answer', () => {
+    // Difficulty 60 mixes +, − and ×; the 80 a strong move reaches would add ÷
+    const hard = sample(60, FLAMETHROWER)
+    expect(hard.some(p => p.operator === '÷')).toBe(false)
+    expect(sample(5, FLAMETHROWER).every(p => p.operator === '+')).toBe(true)
+    expect(new Set(hard.map(p => p.timeLimit))).toEqual(new Set([battleProblem(60).timeLimit]))
   })
 })

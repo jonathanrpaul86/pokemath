@@ -4,6 +4,7 @@ import { calcStats, pokemonLevelCap, pokemonXpToNextLevel } from '../utils/formu
 import { KANTO_AREAS } from '../data/areas'
 import { STORY_COOLDOWN_EXPLORES } from '../utils/storyteller'
 import { CHARMANDER_BASE, CHARMELEON_BASE, makePokemon, makeSpecies, makeTrainer } from '../test/fixtures'
+import type { Move } from '../types'
 
 const gainXp = (trainer = makeTrainer(), amount: number) =>
   gameReducer(trainer, { type: 'GAIN_POKEMON_XP', payload: { uid: 'pkmn-1', amount } })
@@ -45,6 +46,16 @@ describe('GAIN_POKEMON_XP', () => {
     expect(after.level).toBe(6)
     expect(after.stats).toEqual(legacy.stats)
     expect(after.maxHp).toBeGreaterThan(legacy.maxHp)
+  })
+})
+
+describe('SET_MOVES', () => {
+  it('replaces the moves of that Pokémon only, in the party or the PC', () => {
+    const ember: Move = { id: 52, name: 'ember', type: 'fire', power: 40, accuracy: 100, damageClass: 'special' }
+    const t = makeTrainer({ party: [makePokemon()], pc: [makePokemon({ uid: 'pkmn-2' })] })
+    const next = gameReducer(t, { type: 'SET_MOVES', payload: { uid: 'pkmn-2', moves: [ember] } })
+    expect(next.pc[0].moves).toEqual([ember])
+    expect(next.party[0]).toBe(t.party[0])
   })
 })
 

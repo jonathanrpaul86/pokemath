@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback, type CSSProperties } from 'react'
 import { useTrainer, useGameStore } from '../store'
 import { fetchPokemonSpecies } from '../services/pokeApi'
-import { spawnWildPokemon, calcDamage, calcCatchDifficulty, isBattleOutcome, damagingMoves, moveMenuOptions } from '../utils/battle'
+import { spawnWildPokemon, calcDamage, calcCatchDifficulty, isBattleOutcome, damagingMoves, moveMenuOptions, battleProblem, moveMathTier } from '../utils/battle'
 import { pickEncounter, pickLevel } from '../utils/encounter'
 import { generateProblem, checkAnswer } from '../utils/math'
 import { battleXpReward, trainerMoneyReward, pokemonXpToNextLevel } from '../utils/formulas'
@@ -150,6 +150,9 @@ function TimerRing({ remaining, total, overlay, flash }: {
     </div>
   )
 }
+
+/** What a move's strength does to the math, shown in the move menu and log */
+const MATH_TIER_NAMES = ['', 'Harder math', 'Hardest math'] as const
 
 const ACTION_BUTTONS = [
   ['fight',  '⚔',  'Fight'],
@@ -306,8 +309,8 @@ export default function BattleScreen({ area, onBattleEnd, trainerBattle, wildOve
 
   // ---- Helpers ---------------------------------------------------------------
 
-  const nextProblem = useCallback((overrideIdx?: number) => {
-    const base = generateProblem(area.mathDifficulty)
+  const nextProblem = useCallback((overrideIdx?: number, move?: Move) => {
+    const base = battleProblem(area.mathDifficulty, move)
     const b = battleRef.current
     const idx = overrideIdx ?? b?.activeIdx ?? 0
     const playerLevel = trainer.party[idx]?.level ?? 1
@@ -420,7 +423,7 @@ export default function BattleScreen({ area, onBattleEnd, trainerBattle, wildOve
 
       if (b.phase === 'resolving-correct') {
         if (b.wildHp <= 0) { handleVictory(b); return }
-        const p = nextProblem()
+        const p = nextProblem(undefined, chosenMoveFor(b))
         setBattle(prev => prev ? { ...prev, phase: 'player-turn', problem: p, timeRemaining: p.timeLimit } : prev)
         setAnswer('')
         return
@@ -437,7 +440,7 @@ export default function BattleScreen({ area, onBattleEnd, trainerBattle, wildOve
           } : prev)
           return
         }
-        const p = nextProblem()
+        const p = nextProblem(undefined, chosenMoveFor(b))
         setBattle(prev => prev ? { ...prev, phase: 'player-turn', problem: p, timeRemaining: p.timeLimit } : prev)
         setAnswer('')
         return
@@ -475,7 +478,7 @@ export default function BattleScreen({ area, onBattleEnd, trainerBattle, wildOve
   // Catch-attempt timer expired → fail
   useEffect(() => {
     if (!battle || battle.phase !== 'catch-attempt' || battle.catchTimeRemaining > 0) return
-    const p = nextProblem()
+    const p = nextProblem(undefined, chosenMoveFor(battle))
     setBattle(prev => prev ? {
       ...prev, phase: 'player-turn', problem: p, timeRemaining: p.timeLimit,
       catchProgress: null, catchProblem: null,
@@ -818,13 +821,24 @@ export default function BattleScreen({ area, onBattleEnd, trainerBattle, wildOve
     if (!b) return
     setShowMoveMenu(false)
     const chosenMove = { uid: trainer.party[b.activeIdx].uid, move }
-    const line = `Solve to use ${capitalize(move.name)}!`
+    const tierName = MATH_TIER_NAMES[moveMathTier(move)]
+    const line = `${tierName ? `${tierName}! ` : ''}Solve to use ${capitalize(move.name)}!`
+    if (b.phase === 'player-turn') {
+      // Changed moves mid-problem. A move with harder or easier math swaps in a
+      // new problem, but the clock keeps running, so switching can't dodge one.
+      const previous = chosenMoveFor(b)
+      const sameMath = moveMathTier(move) === (previous ? moveMathTier(previous) : 0)
+      const problem = sameMath ? b.problem : nextProblem(undefined, move)
+      setBattle(prev => prev ? { ...prev, chosenMove, problem, log: [...prev.log.slice(-3), line] } : prev)
+      if (!sameMath) setAnswer('')
+      return
+    }
     if (b.phase !== 'choose-action') {
-      // Changed moves mid-fight: keep the current problem
+      // Picked while a turn resolves: the next problem uses it
       setBattle(prev => prev ? { ...prev, chosenMove, log: [...prev.log.slice(-3), line] } : prev)
       return
     }
-    const p = nextProblem()
+    const p = nextProblem(undefined, move)
     setBattle(prev => prev ? {
       ...prev, chosenMove, phase: 'player-turn', problem: p, timeRemaining: p.timeLimit,
       log: [...prev.log.slice(-3), line],
@@ -1330,6 +1344,7 @@ export default function BattleScreen({ area, onBattleEnd, trainerBattle, wildOve
                         {capitalize(m.name)}
                       </span>
                       <span className="switch-btn__hp">Power {m.power}</span>
+                      {moveMathTier(m) > 0 && <span className="switch-btn__math">{MATH_TIER_NAMES[moveMathTier(m)]}</span>}
                     </button>
                   ))}
                   <button className="switch-btn switch-btn--cancel" onClick={() => setShowMoveMenu(false)}>

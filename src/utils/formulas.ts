@@ -72,6 +72,19 @@ export function pickMoveset(species: PokemonSpecies, level: number): Move[] {
   return entries.slice(0, 4).map(e => e.move)
 }
 
+/**
+ * Pokémon learn moves as they level up and evolve, keeping the four newest
+ * (the same rule as wild Pokémon). Returns the moves a Pokémon should know
+ * now, or null when its moves are already current.
+ */
+export function updatedMoveset(pokemon: OwnedPokemon, species: PokemonSpecies): Move[] | null {
+  const moves = pickMoveset(species, pokemon.level)
+  const known = pokemon.moves ?? []
+  const current = moves.length === known.length && moves.every((m, i) => m.id === known[i].id)
+  // An empty learnset (missing data) shouldn't wipe out moves a Pokémon already knows
+  return current || moves.length === 0 ? null : moves
+}
+
 /** Create a fresh OwnedPokemon from a species at a given level */
 export function createOwnedPokemon(
   species: PokemonSpecies,
