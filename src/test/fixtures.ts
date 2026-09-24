@@ -70,6 +70,7 @@ export function makeTrainer(overrides: Partial<Trainer> = {}): Trainer {
     badges: [],
     storyteller: { heardStoryIds: [], nextStoryAt: {} },
     claimedRewardIds: [],
+    hallOfFame: [],
     ...overrides,
   }
 }

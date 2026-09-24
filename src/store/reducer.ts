@@ -45,6 +45,7 @@ export function createNewTrainer(name: string, starterSpecies: Parameters<typeof
     badges: [],
     storyteller: { heardStoryIds: [], nextStoryAt: {} },
     claimedRewardIds: [],
+    hallOfFame: [],
   }
 }
 
@@ -369,6 +370,12 @@ export function gameReducer(trainer: Trainer, action: GameAction): Trainer {
       if (keyItemId) t = gameReducer(t, { type: 'ADD_ITEM', payload: { itemId: keyItemId, quantity: 1 } })
       if (pokemon) t = gameReducer(t, { type: 'CATCH_POKEMON', payload: { pokemon } })
       next = claimId ? { ...t, claimedRewardIds: [...t.claimedRewardIds, claimId] } : t
+      break
+    }
+
+    case 'ENTER_HALL_OF_FAME': {
+      const team = trainer.party.map(p => ({ speciesId: p.speciesId, name: p.name, level: p.level }))
+      next = { ...trainer, hallOfFame: [...trainer.hallOfFame, { date: action.payload.date, team }] }
       break
     }
 

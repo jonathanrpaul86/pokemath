@@ -180,6 +180,16 @@ describe('RECEIVE_GIFT', () => {
   })
 })
 
+describe('ENTER_HALL_OF_FAME', () => {
+  it('records the party as it is now', () => {
+    const t = gameReducer(
+      makeTrainer({ party: [makePokemon({ speciesId: 6, name: 'charizard', level: 58 })] }),
+      { type: 'ENTER_HALL_OF_FAME', payload: { date: 1000 } },
+    )
+    expect(t.hallOfFame).toEqual([{ date: 1000, team: [{ speciesId: 6, name: 'charizard', level: 58 }] }])
+  })
+})
+
 describe('createNewTrainer', () => {
   it('starts a normal game on Route 1 with nothing explored', () => {
     const t = createNewTrainer('Ash', makeSpecies())

@@ -19,13 +19,14 @@ export const CITY_HUBS: Record<string, CityHubData> = {
   'indigo-plateau': {
     houses: [{
       id: 'league-gate',
-      name: 'Pokémon League',
-      icon: '🏆',
+      name: 'League Reception',
+      icon: '🛎️',
       npcName: 'League Guard',
       lines: [
         'Welcome to the Indigo Plateau, home of the Pokémon League!',
         'Only trainers with all eight badges make it this far. Well done!',
-        'The Elite Four are still getting ready. Come back soon to challenge them!',
+        'Beat the Elite Four and the Champion one after another, and you’ll enter the Hall of Fame!',
+        'There’s no Pokémon Center inside, so stock up on Potions at the Mart first.',
       ],
     }],
   },

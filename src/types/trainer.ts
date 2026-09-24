@@ -40,4 +40,12 @@ export interface Trainer {
   storyteller: StorytellerProgress
   /** One-time gifts already handed out: area ids (completion rewards) and house ids */
   claimedRewardIds: string[]
+  /** Every time the player beat the Pokémon League, with the team that did it */
+  hallOfFame: HallOfFameEntry[]
+}
+
+export interface HallOfFameEntry {
+  /** Unix ms */
+  date: number
+  team: { speciesId: number; name: string; level: number }[]
 }

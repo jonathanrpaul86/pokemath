@@ -13,11 +13,13 @@ import { WORLD_BOUNDS } from './mapGrid'
 import { EVOLUTIONS } from './evolutions'
 import { STARTER_SPECIES_IDS } from './areas'
 import { evolutionLine } from '../utils/gifts'
+import { POKEMON_LEAGUE, CHAMPION_GIFT, LEAGUE_AREA_ID } from './league'
 import type { GiftDefinition } from '../types'
 
 /** Every gift an NPC can hand out: area rewards, house trades, and house gifts */
 const ALL_GIFTS: { source: string; gift: GiftDefinition }[] = [
   ...KANTO_AREAS.flatMap(a => a.completionReward ? [{ source: a.id, gift: a.completionReward.gift }] : []),
+  { source: 'hall-of-fame', gift: CHAMPION_GIFT.gift },
   ...Object.values(CITY_HUBS).flatMap(c => c.houses).flatMap(h => [
     ...(h.exchange ? [{ source: h.id, gift: h.exchange.gives }] : []),
     ...(h.gift ? [{ source: h.id, gift: h.gift.gift }] : []),
@@ -196,7 +198,7 @@ describe('gifts', () => {
 })
 
 describe('Pokédex', () => {
-  it('has every species except the legendaries and Mew obtainable', () => {
+  it('has every one of the 151 obtainable', () => {
     const obtainable = new Set<number>([
       ...STARTER_SPECIES_IDS,
       ...KANTO_AREAS.flatMap(a => a.encounters.map(e => e.speciesId)),
@@ -205,7 +207,7 @@ describe('Pokédex', () => {
       ...KANTO_AREAS.flatMap(a => a.legendary ? [a.legendary.speciesId] : []),
     ].flatMap(evolutionLine))
     const missing = Object.keys(KANTO_NAMES).map(Number).filter(id => !obtainable.has(id))
-    expect(missing).toEqual([151]) // Mew
+    expect(missing).toEqual([])
   })
 
   it('has each legendary in exactly one explorable area, and never in the wild', () => {
@@ -223,6 +225,27 @@ describe('Pokédex', () => {
       for (const choice of evo.choices ?? []) expect(KANTO_NAMES[choice], id).toBeDefined()
       if (evo.choices) expect(evo.choices, id).toContain(evo.evolvesIntoId)
     }
+  })
+})
+
+describe('Pokémon League', () => {
+  it('is four Elite Four members and then the Champion', () => {
+    expect(POKEMON_LEAGUE.map(m => m.title)).toEqual(['Elite Four', 'Elite Four', 'Elite Four', 'Elite Four', 'Champion'])
+    expect(new Set(POKEMON_LEAGUE.map(m => m.id)).size).toBe(POKEMON_LEAGUE.length)
+  })
+
+  it('uses real species, getting stronger with each opponent', () => {
+    const strongest = POKEMON_LEAGUE.map(m => Math.max(...m.team.map(p => p.level)))
+    for (const m of POKEMON_LEAGUE) {
+      for (const p of m.team) expect(KANTO_NAMES[p.speciesId], m.id).toBeDefined()
+    }
+    expect([...strongest].sort((a, b) => a - b)).toEqual(strongest)
+  })
+
+  it('is stronger than Giovanni, and sits in a real city', () => {
+    const giovanniAce = Math.max(...KANTO_GYMS[KANTO_GYMS.length - 1].leader.team.map(p => p.level))
+    expect(Math.min(...POKEMON_LEAGUE[0].team.map(p => p.level))).toBeGreaterThanOrEqual(giovanniAce)
+    expect(AREA_MAP[LEAGUE_AREA_ID].areaType).toBe('city')
   })
 })
 

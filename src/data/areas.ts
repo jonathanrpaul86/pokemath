@@ -854,7 +854,7 @@ export const KANTO_AREAS: Area[] = [
   {
     id: 'indigo-plateau',
     name: 'Indigo Plateau',
-    description: 'Home of the Pokémon League, where the Elite Four wait for the best trainers in Kanto. The League’s doors open soon!',
+    description: 'Home of the Pokémon League, where the Elite Four and the Champion wait for the best trainers in Kanto.',
     areaType: 'city',
     exploresToComplete: 0,
     connectedAreaIds: ['victory-road'],

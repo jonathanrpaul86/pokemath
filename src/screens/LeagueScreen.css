@@ -1,0 +1,107 @@
+/* Pokémon League: builds on the Gym screen's layout (GymScreen.css) */
+
+.league-badge {
+  background: linear-gradient(135deg, #805ad5, #d69e2e);
+}
+
+.league-intro {
+  margin: 0 0 0.4rem;
+}
+
+.league-message {
+  padding: 0.8rem 1rem;
+  border: 2px solid #d69e2e;
+  border-radius: 12px;
+  background: #1a1a2ecc;
+}
+
+.league-message--defeat {
+  border-color: #e53e3e;
+}
+
+.league-message__quote {
+  margin: 0;
+  font-weight: 800;
+  color: #ffd700;
+}
+
+.league-message__sub {
+  margin: 0.2rem 0 0.6rem;
+  color: #aac4e0;
+  font-size: 0.85rem;
+}
+
+.league-message__hint {
+  margin: 0.5rem 0 0;
+  font-size: 0.9rem;
+  color: #cbd5e0;
+}
+
+.league-party {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+  gap: 0.4rem;
+}
+
+.league-party__pkmn {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.35rem 0.6rem;
+  border-radius: 8px;
+  background: #16213e;
+  font-size: 0.85rem;
+  color: #fff;
+}
+
+.league-party__pkmn--fainted {
+  opacity: 0.5;
+  text-decoration: line-through;
+}
+
+.league-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.6rem;
+  margin-top: 0.4rem;
+}
+
+/* Hall of Fame */
+.league-hof__crown {
+  margin: 0;
+  font-size: 3rem;
+}
+
+.league-hof__team {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.8rem;
+  margin: 0.6rem 0 1rem;
+}
+
+.league-hof__pkmn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 6rem;
+  padding: 0.4rem;
+  border-radius: 12px;
+  background: #ffffff14;
+}
+
+.league-hof__sprite {
+  width: 96px;
+  height: 96px;
+  image-rendering: pixelated;
+}
+
+.league-hof__name {
+  font-weight: 800;
+  color: #fff;
+}
+
+.league-hof__level {
+  font-size: 0.8rem;
+  color: #aac4e0;
+}

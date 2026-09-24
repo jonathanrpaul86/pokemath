@@ -13,6 +13,8 @@ import GiftDialog from '../components/GiftDialog'
 import StorytellerModal from '../components/StorytellerModal'
 import ExploreModal from '../components/ExploreModal'
 import GymScreen from './GymScreen'
+import LeagueScreen from './LeagueScreen'
+import { LEAGUE_AREA_ID, LEAGUE_BADGES_REQUIRED } from '../data/league'
 import type { Area, BattleRequest, GiftDefinition, NpcHouse } from '../types'
 import './CityScreen.css'
 
@@ -26,6 +28,7 @@ type OpenBuilding =
   | { kind: 'center' }
   | { kind: 'mart' }
   | { kind: 'gym'; gymId: string }
+  | { kind: 'league' }
   | { kind: 'house'; house: NpcHouse }
   | { kind: 'gift'; house: NpcHouse; lines: string[]; gift: GiftDefinition; claimId?: string; takesKeyItemId?: string }
   | { kind: 'storyteller' }
@@ -53,6 +56,18 @@ export default function CityScreen({ area, onOpenMap, onStartBattle }: Props) {
   ]
   if (area.martItems?.length) {
     cards.push({ key: 'mart', icon: '🛒', name: 'Poké Mart', status: 'Buy & sell items', open: { kind: 'mart' } })
+  }
+  if (area.id === LEAGUE_AREA_ID) {
+    const champion = trainer.hallOfFame.length > 0
+    const closed = trainer.badges.length < LEAGUE_BADGES_REQUIRED
+    cards.push({
+      key: 'league',
+      icon: closed ? '🔒' : '🏆',
+      name: 'Pokémon League',
+      status: champion ? `✓ Champion ×${trainer.hallOfFame.length}` : closed ? `Needs ${LEAGUE_BADGES_REQUIRED} badges` : 'Elite Four',
+      tone: champion ? 'good' : closed ? 'locked' : 'new',
+      open: { kind: 'league' },
+    })
   }
   if (gym) {
     const cleared = trainer.badges.includes(gym.leader.badge)
@@ -157,6 +172,7 @@ export default function CityScreen({ area, onOpenMap, onStartBattle }: Props) {
       {open?.kind === 'center' && <PokemonCenterModal onClose={close} />}
       {open?.kind === 'mart' && area.martItems && <PokeMartModal martItems={area.martItems} onClose={close} />}
       {open?.kind === 'gym' && <GymScreen gymId={open.gymId} onExit={close} />}
+      {open?.kind === 'league' && <LeagueScreen onExit={close} />}
       {open?.kind === 'house' && <NpcDialog house={open.house} onClose={close} />}
       {open?.kind === 'gift' && (
         <GiftDialog

@@ -26,6 +26,8 @@ export type GameAction =
   | { type: 'ADD_ITEM';    payload: { itemId: string; quantity: number } }
   | { type: 'REMOVE_ITEM'; payload: { itemId: string; quantity: number } }
   /** A one-time NPC gift. `claimId` stops it being given twice; `takesKeyItemId` is traded away for it */
+  /** Records the current party as a new Hall of Fame entry */
+  | { type: 'ENTER_HALL_OF_FAME'; payload: { date: number } }
   | { type: 'RECEIVE_GIFT'; payload: { claimId?: string; takesKeyItemId?: string; keyItemId?: string; pokemon?: OwnedPokemon } }
   | { type: 'EARN_BADGE';  payload: { badgeId: BadgeId } }
   | { type: 'RECORD_GYM_TRAINER_DEFEAT'; payload: { gymId: string; trainerId: string } }

@@ -90,6 +90,9 @@ export default function ProfileScreen({ onBack }: Props) {
             <div className="profile-trainer-row">
               <span className="profile-trainer-name">{trainer.name}</span>
               <span className="profile-trainer-level">🏅 {trainer.badges.length} {trainer.badges.length === 1 ? 'Badge' : 'Badges'}</span>
+              {trainer.hallOfFame.length > 0 && (
+                <span className="profile-trainer-level" title="Times you beat the Pokémon League">🏆 Champion ×{trainer.hallOfFame.length}</span>
+              )}
               <button className="btn btn-secondary profile-rename__trigger" onClick={() => { setDraftName(trainer.name); setRenaming(true) }}>
                 Rename
               </button>
