@@ -1,5 +1,6 @@
-import type { BattleOutcome, BattlePhase, Move, PokemonSpecies, WildPokemon } from '../types'
+import type { BattleOutcome, BattlePhase, MathProblem, Move, PokemonSpecies, WildPokemon } from '../types'
 import { calcStats, pickMoveset } from './formulas'
+import { generateProblem } from './math'
 import { ITEM_MAP } from '../data/items'
 
 export function isBattleOutcome(phase: BattlePhase): phase is BattleOutcome {
@@ -54,6 +55,30 @@ export function moveMenuOptions(moves: Move[] | undefined, chooseMoves: boolean 
   if (!chooseMoves) return []
   const options = damagingMoves(moves)
   return options.length > 1 ? options : []
+}
+
+// ---- Stronger moves, harder math --------------------------------------------
+
+/** Difficulty points each step of move strength adds to a problem */
+const MATH_BOOST_PER_TIER = 10
+
+/** How much harder the math is when attacking with a move: 0 normal, 1 harder (power 60+), 2 hardest (power 90+) */
+export function moveMathTier(move: Move): 0 | 1 | 2 {
+  const power = move.power ?? 0
+  return power >= 90 ? 2 : power >= 60 ? 1 : 0
+}
+
+/**
+ * A battle problem at the area's difficulty. Attacking with a stronger chosen
+ * move asks for harder math: bigger numbers of the kind the area already uses,
+ * with the same time to answer.
+ */
+export function battleProblem(areaDifficulty: number, move?: Move): MathProblem {
+  const base = generateProblem(areaDifficulty)
+  const tier = move ? moveMathTier(move) : 0
+  if (tier === 0) return base
+  const harder = generateProblem(Math.min(100, areaDifficulty + tier * MATH_BOOST_PER_TIER), base.operator)
+  return { ...harder, timeLimit: base.timeLimit }
 }
 
 // ---- Catch difficulty -------------------------------------------------------

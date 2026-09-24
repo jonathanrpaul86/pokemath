@@ -539,6 +539,12 @@
   color: #7a9cc0;
 }
 
+.switch-btn__math {
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: #f6ad55;
+}
+
 .switch-btn--cancel {
   border-color: #78350f;
   color: #fba96a;
