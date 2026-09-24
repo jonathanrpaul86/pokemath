@@ -145,6 +145,21 @@ describe('migrating older saves', () => {
     expect(loaded.mathStats.operators['+']).toEqual({ totalAttempts: 0, correctAnswers: 0 })
   })
 
+  it('works out the starter for saves from before it was recorded', () => {
+    const party = [
+      makePokemon({ uid: 'later', speciesId: 16, caughtAt: 2000 }), // Pidgey, caught later
+      makePokemon({ uid: 'first', speciesId: 5, caughtAt: 1000 }),  // Charmeleon: evolved from the starter
+    ]
+    storeRaw(0, { ...makeTrainer({ party }), starterSpeciesId: undefined })
+    expect(loadSave(0)!.starterSpeciesId).toBe(4)
+  })
+
+  it('leaves the starter unknown when the first Pokémon is not a starter', () => {
+    const party = [makePokemon({ uid: 'first', speciesId: 16, caughtAt: 1000 })]
+    storeRaw(0, { ...makeTrainer({ party }), starterSpeciesId: undefined })
+    expect(loadSave(0)!.starterSpeciesId).toBeUndefined()
+  })
+
   it('keeps gifts claimed under the old field name', () => {
     storeRaw(0, { ...makeTrainer(), claimedRewardIds: undefined, claimedRewardAreaIds: ['route-11'] })
     const loaded = loadSave(0) as unknown as Record<string, unknown>

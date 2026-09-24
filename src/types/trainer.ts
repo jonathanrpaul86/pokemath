@@ -40,6 +40,8 @@ export interface Trainer {
   storyteller: StorytellerProgress
   /** One-time gifts already handed out: area ids (completion rewards) and house ids */
   claimedRewardIds: string[]
+  /** The starter picked at the start (its first stage); unknown for some very old saves */
+  starterSpeciesId?: number
   /** Every time the player beat the Pokémon League, with the team that did it */
   hallOfFame: HallOfFameEntry[]
 }

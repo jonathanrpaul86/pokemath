@@ -13,7 +13,7 @@ import { WORLD_BOUNDS } from './mapGrid'
 import { EVOLUTIONS } from './evolutions'
 import { STARTER_SPECIES_IDS } from './areas'
 import { evolutionLine } from '../utils/gifts'
-import { POKEMON_LEAGUE, CHAMPION_GIFT, LEAGUE_AREA_ID } from './league'
+import { POKEMON_LEAGUE, CHAMPION_GIFT, LEAGUE_AREA_ID, championTeam, championQuote } from './league'
 import type { GiftDefinition } from '../types'
 
 /** Every gift an NPC can hand out: area rewards, house trades, and house gifts */
@@ -233,6 +233,26 @@ describe('Pokédex', () => {
 })
 
 describe('Pokémon League', () => {
+  it('gives the Champion the starter that beats the player’s, fully evolved', () => {
+    const has = (starter: number, speciesId: number) => championTeam(starter).some(p => p.speciesId === speciesId)
+    expect(has(1, 6)).toBe(true) // Bulbasaur → Charizard
+    expect(has(4, 9)).toBe(true) // Charmander → Blastoise
+    expect(has(7, 3)).toBe(true) // Squirtle → Venusaur
+    expect(championTeam(undefined)).toEqual(POKEMON_LEAGUE[POKEMON_LEAGUE.length - 1].team)
+    expect(championQuote(4)).toContain('Squirtle')
+  })
+
+  it('keeps every Champion team as strong as his usual one (so pacing holds)', () => {
+    const usual = POKEMON_LEAGUE[POKEMON_LEAGUE.length - 1].team
+    const ace = (team: typeof usual) => Math.max(...team.map(p => p.level))
+    for (const starter of [1, 4, 7]) {
+      const team = championTeam(starter)
+      expect(team.length, String(starter)).toBe(usual.length)
+      expect(ace(team), String(starter)).toBe(ace(usual))
+      for (const p of team) expect(KANTO_NAMES[p.speciesId], String(starter)).toBeDefined()
+    }
+  })
+
   it('is four Elite Four members and then the Champion', () => {
     expect(POKEMON_LEAGUE.map(m => m.title)).toEqual(['Elite Four', 'Elite Four', 'Elite Four', 'Elite Four', 'Champion'])
     expect(new Set(POKEMON_LEAGUE.map(m => m.id)).size).toBe(POKEMON_LEAGUE.length)

@@ -1,5 +1,6 @@
 import type { Trainer, OwnedPokemon, MathStats } from '../types'
-import { AREA_MAP } from '../data/areas'
+import { AREA_MAP, STARTER_SPECIES_IDS } from '../data/areas'
+import { evolutionLine } from '../utils/gifts'
 import { pokemonXpToNextLevel } from '../utils/formulas'
 import { clearApiCache } from '../utils/storage'
 
@@ -80,6 +81,18 @@ function backfillNewAreas(
   }
 }
 
+/**
+ * Saves from before the starter was recorded: the starter is the first Pokémon
+ * the player ever got, so find the earliest one and check its evolution line
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function inferStarter(raw: any): number | undefined {
+  const all: OwnedPokemon[] = [...(raw.party ?? []), ...(raw.pc ?? [])]
+  const first = all.reduce<OwnedPokemon | undefined>((a, p) => (!a || p.caughtAt < a.caughtAt ? p : a), undefined)
+  if (!first) return undefined
+  return STARTER_SPECIES_IDS.find(id => evolutionLine(id).includes(first.speciesId))
+}
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function migrateTrainer(raw: any): Trainer {
   // Trainer level/XP were removed; drop them from older saves
@@ -109,6 +122,7 @@ function migrateTrainer(raw: any): Trainer {
     ),
     // Renamed from claimedRewardAreaIds once houses could hand out gifts too
     claimedRewardIds: raw.claimedRewardIds ?? claimedRewardAreaIds ?? [],
+    starterSpeciesId: raw.starterSpeciesId ?? inferStarter(raw),
     party: (raw.party ?? []).map(migratePokemon),
     pc:    (raw.pc    ?? []).map(migratePokemon),
     mathStats,

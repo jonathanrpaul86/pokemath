@@ -46,6 +46,7 @@ export function createNewTrainer(name: string, starterSpecies: Parameters<typeof
     storyteller: { heardStoryIds: [], nextStoryAt: {} },
     claimedRewardIds: [],
     hallOfFame: [],
+    starterSpeciesId: starterSpecies.id,
   }
 }
 

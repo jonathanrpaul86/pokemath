@@ -191,7 +191,11 @@ describe('ENTER_HALL_OF_FAME', () => {
 })
 
 describe('createNewTrainer', () => {
-  it('starts a normal game on Route 1 with nothing explored', () => {
+  it('remembers which starter the player picked', () => {
+    expect(createNewTrainer('Ash', makeSpecies()).starterSpeciesId).toBe(makeSpecies().id)
+  })
+
+  it('starts a normal game in Pallet Town with nothing explored', () => {
     const t = createNewTrainer('Ash', makeSpecies())
     expect(t.name).toBe('Ash')
     expect(t.currentAreaId).toBe('pallet-town')

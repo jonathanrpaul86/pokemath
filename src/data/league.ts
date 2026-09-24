@@ -1,4 +1,5 @@
 import type { AreaReward, TrainerPokemon } from '../types'
+import { KANTO_NAMES } from './pokedex'
 
 /** One opponent in the Pokémon League gauntlet */
 export interface LeagueMember {
@@ -91,6 +92,39 @@ export const POKEMON_LEAGUE: LeagueMember[] = [
     winQuote: 'NO! That can’t be! You beat me at my best… You’re the new Pokémon League Champion!',
   },
 ]
+
+/**
+ * Like the rival in the original games, the Champion picked the starter that
+ * beats the player's, and built the rest of his team around it
+ */
+const CHAMPION_CORE: TrainerPokemon[] = [
+  { speciesId: 18,  level: 56 }, // Pidgeot
+  { speciesId: 65,  level: 56 }, // Alakazam
+  { speciesId: 112, level: 57 }, // Rhydon
+]
+
+const RIVAL_TEAMS: Record<number, { starterId: number; team: TrainerPokemon[] }> = {
+  // Player chose Bulbasaur → the Champion has Charmander's line
+  1: { starterId: 4, team: [...CHAMPION_CORE, { speciesId: 130, level: 58 }, { speciesId: 6, level: 60 }] }, // Gyarados, Charizard
+  // Player chose Charmander → Squirtle's line
+  4: { starterId: 7, team: [...CHAMPION_CORE, { speciesId: 103, level: 58 }, { speciesId: 9, level: 60 }] }, // Exeggutor, Blastoise
+  // Player chose Squirtle → Bulbasaur's line
+  7: { starterId: 1, team: [...CHAMPION_CORE, { speciesId: 59, level: 58 }, { speciesId: 3, level: 60 }] },  // Arcanine, Venusaur
+}
+
+/** The Champion's team for this player (his usual team if their starter isn't known) */
+export function championTeam(playerStarterId?: number): TrainerPokemon[] {
+  const rival = playerStarterId !== undefined ? RIVAL_TEAMS[playerStarterId] : undefined
+  return rival?.team ?? POKEMON_LEAGUE[POKEMON_LEAGUE.length - 1].team
+}
+
+/** What the Champion says before the battle, remembering the starters they both picked */
+export function championQuote(playerStarterId?: number): string {
+  const champion = POKEMON_LEAGUE[POKEMON_LEAGUE.length - 1]
+  const rival = playerStarterId !== undefined ? RIVAL_TEAMS[playerStarterId] : undefined
+  if (!rival) return champion.quote
+  return `${champion.quote} Remember back in Pallet Town? You picked ${KANTO_NAMES[playerStarterId!]}, so I picked ${KANTO_NAMES[rival.starterId]}. Now it's all grown up!`
+}
 
 /** Handed over the first time the player enters the Hall of Fame */
 export const CHAMPION_GIFT: AreaReward = {

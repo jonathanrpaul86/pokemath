@@ -3,7 +3,7 @@ import { useTrainer, useGameStore } from '../store'
 import { AREA_MAP } from '../data/areas'
 import {
   POKEMON_LEAGUE, LEAGUE_AREA_ID, LEAGUE_BADGES_REQUIRED, CHAMPION_GIFT, CHAMPION_GIFT_ID,
-  type LeagueMember,
+  championTeam, championQuote, type LeagueMember,
 } from '../data/league'
 import { fetchPokemonSpecies } from '../services/pokeApi'
 import BattleScreen from './BattleScreen'
@@ -51,9 +51,13 @@ export default function LeagueScreen({ onExit }: Props) {
   const open = trainer.badges.length >= LEAGUE_BADGES_REQUIRED
   const partyHasLiveMember = trainer.party.some(p => p.currentHp > 0)
   const timesChampion = trainer.hallOfFame.length
+  // The Champion counters the player's starter, like the rival in the original games
+  const opponents: LeagueMember[] = POKEMON_LEAGUE.map(m => m.title === 'Champion'
+    ? { ...m, team: championTeam(trainer.starterSpeciesId), quote: championQuote(trainer.starterSpeciesId) }
+    : m)
 
   function battleFor(index: number): TrainerBattle {
-    const member = POKEMON_LEAGUE[index]
+    const member = opponents[index]
     return {
       trainerName: displayName(member),
       isLeader: true,
@@ -61,7 +65,7 @@ export default function LeagueScreen({ onExit }: Props) {
       quote: member.quote,
       onComplete: won => {
         if (!won) { setStage({ kind: 'defeated', index }); return }
-        if (index < POKEMON_LEAGUE.length - 1) { setStage({ kind: 'between', index }); return }
+        if (index < opponents.length - 1) { setStage({ kind: 'between', index }); return }
         dispatch({ type: 'ENTER_HALL_OF_FAME', payload: { date: Date.now() } })
         setStage({ kind: 'hall-of-fame' })
       },
@@ -206,7 +210,7 @@ export default function LeagueScreen({ onExit }: Props) {
               </p>
             )}
 
-            {POKEMON_LEAGUE.map((member, i) => {
+            {opponents.map((member, i) => {
               const beaten = i < beatenCount
               const isChampion = member.title === 'Champion'
               return (
