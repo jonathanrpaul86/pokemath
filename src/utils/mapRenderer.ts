@@ -597,8 +597,7 @@ function drawNodes(
       // The area's own icon, faded and without colour until it's visited
       ctx.save()
       ctx.globalAlpha = 0.6
-      ctx.filter = 'grayscale(1)'
-      drawTerrainIcon(ctx, area.id, cx, cy, ts)
+      drawTerrainIcon(ctx, area.id, cx, cy, ts, true)
       ctx.restore()
     } else {
       drawLock(ctx, cx, cy, ts(13))
@@ -629,10 +628,13 @@ function drawTerrainIcon(
   cx: number,
   cy: number,
   ts: (s: number) => number,
+  /** Draw in greys, for areas the player hasn't visited yet */
+  muted = false,
 ): void {
+  const paint = muted ? toGrey : (color: string) => color
   ctx.save()
-  ctx.fillStyle   = 'rgba(255,255,255,0.92)'
-  ctx.strokeStyle = 'rgba(255,255,255,0.92)'
+  ctx.fillStyle   = paint('rgba(255,255,255,0.92)')
+  ctx.strokeStyle = paint('rgba(255,255,255,0.92)')
   ctx.lineCap = 'round'
   ctx.lineJoin = 'round'
 
@@ -715,7 +717,7 @@ function drawTerrainIcon(
       ctx.closePath()
       ctx.fill()
       // Dark windows
-      ctx.fillStyle = 'rgba(30,0,50,0.75)'
+      ctx.fillStyle = paint('rgba(30,0,50,0.75)')
       ctx.fillRect(cx - ts(3.5), cy - ts(5), ts(2.5), ts(2.5))
       ctx.fillRect(cx + ts(1),   cy - ts(5), ts(2.5), ts(2.5))
       ctx.fillRect(cx - ts(1.5), cy,         ts(3),   ts(4))
@@ -778,7 +780,7 @@ function drawTerrainIcon(
       ctx.closePath()
       ctx.fill()
       ctx.fillRect(cx - ts(7), cy - ts(1), ts(14), ts(10))
-      ctx.fillStyle = 'rgba(40,50,70,0.75)'
+      ctx.fillStyle = paint('rgba(40,50,70,0.75)')
       ctx.fillRect(cx - ts(2), cy + ts(3), ts(4), ts(6))
       break
     }
@@ -820,7 +822,7 @@ function drawTerrainIcon(
       ctx.closePath()
       ctx.fill()
       // Trunk
-      ctx.fillStyle = 'rgba(255,220,160,0.85)'
+      ctx.fillStyle = paint('rgba(255,220,160,0.85)')
       ctx.fillRect(cx - ts(2), cy + ts(9), ts(4), ts(4))
       break
     }
@@ -864,7 +866,7 @@ function drawTerrainIcon(
       ctx.lineTo(cx + ts(9), cy + ts(9))
       ctx.lineTo(cx - ts(9), cy + ts(9))
       ctx.closePath()
-      ctx.fillStyle = 'rgba(0,0,0,0.55)'
+      ctx.fillStyle = paint('rgba(0,0,0,0.55)')
       ctx.fill()
       // Arch outline
       ctx.beginPath()
@@ -884,10 +886,10 @@ function drawTerrainIcon(
       ctx.closePath()
       ctx.fill()
       // Eyes and nose
-      ctx.fillStyle = 'rgba(60,30,10,0.9)'
+      ctx.fillStyle = paint('rgba(60,30,10,0.9)')
       ctx.fillRect(cx - ts(3.5), cy - ts(4), ts(1.8), ts(3.5))
       ctx.fillRect(cx + ts(1.7), cy - ts(4), ts(1.8), ts(3.5))
-      ctx.fillStyle = 'rgba(230,110,140,0.95)'
+      ctx.fillStyle = paint('rgba(230,110,140,0.95)')
       ctx.beginPath()
       ctx.ellipse(cx, cy + ts(1.5), ts(3), ts(2), 0, 0, Math.PI * 2)
       ctx.fill()
@@ -912,7 +914,7 @@ function drawTerrainIcon(
       ctx.closePath()
       ctx.fill()
       // Eyes
-      ctx.fillStyle = 'rgba(60,0,80,0.9)'
+      ctx.fillStyle = paint('rgba(60,0,80,0.9)')
       ctx.beginPath()
       ctx.arc(cx - ts(2.5), cy - ts(3), ts(1.8), 0, Math.PI * 2)
       ctx.fill()
@@ -929,18 +931,18 @@ function drawTerrainIcon(
       ctx.lineTo(cx + ts(11), cy + ts(8))
       ctx.lineTo(cx - ts(11), cy + ts(8))
       ctx.closePath()
-      ctx.fillStyle = 'rgba(255,255,255,0.85)'
+      ctx.fillStyle = paint('rgba(255,255,255,0.85)')
       ctx.fill()
       // Crater opening
       ctx.beginPath()
       ctx.ellipse(cx, cy - ts(9), ts(4), ts(2.5), 0, 0, Math.PI * 2)
-      ctx.fillStyle = 'rgba(255,160,0,0.9)'
+      ctx.fillStyle = paint('rgba(255,160,0,0.9)')
       ctx.fill()
       // Lava drip
       ctx.beginPath()
       ctx.moveTo(cx - ts(2), cy - ts(7))
       ctx.bezierCurveTo(cx - ts(4), cy - ts(2), cx - ts(3), cy + ts(3), cx - ts(5), cy + ts(8))
-      ctx.strokeStyle = 'rgba(255,160,0,0.9)'
+      ctx.strokeStyle = paint('rgba(255,160,0,0.9)')
       ctx.lineWidth = ts(2)
       ctx.stroke()
       break
@@ -955,7 +957,7 @@ function drawTerrainIcon(
       ctx.closePath()
       ctx.fill()
       // Snow cap
-      ctx.fillStyle = 'rgba(200,230,255,0.95)'
+      ctx.fillStyle = paint('rgba(200,230,255,0.95)')
       ctx.beginPath()
       ctx.moveTo(cx, cy - ts(10))
       ctx.lineTo(cx + ts(4.5), cy - ts(3))
@@ -1035,6 +1037,14 @@ function drawLock(ctx: CanvasRenderingContext2D, cx: number, cy: number, size: n
   ctx.arc(cx, by, bw * 0.29, Math.PI, 0)
   ctx.lineWidth = size * 0.18
   ctx.stroke()
+}
+
+/** The same colour as a grey of equal brightness (plain fills, so it draws the same every frame) */
+function toGrey(color: string): string {
+  const m = color.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*([\d.]+))?\)/)
+  if (!m) return color
+  const l = Math.round(0.3 * Number(m[1]) + 0.59 * Number(m[2]) + 0.11 * Number(m[3]))
+  return `rgba(${l},${l},${l},${m[4] ?? 1})`
 }
 
 function lighten(hex: string, amount: number): string {
