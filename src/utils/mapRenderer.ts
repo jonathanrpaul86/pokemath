@@ -11,6 +11,15 @@ export { WORLD_BOUNDS }
 const NODE_DESIGN_SIZE = { width: 600, height: 380 }
 const NODE_RADIUS = 18
 
+/**
+ * The Underground Paths beneath Saffron City: drawn as tunnels whose middle bows out by
+ * (dx, dy) grid units, so they don't run straight through Saffron's node
+ */
+const UNDERGROUND_LINKS: Record<string, [number, number]> = {
+  'route-5|route-6': [-5, 0],
+  'route-7|route-8': [0, 5],
+}
+
 /** Areas out at sea: drawn as islands, and reached by sea lanes instead of roads */
 const SEA_AREA_IDS = new Set(['seafoam-islands', 'cinnabar-island', 'route-19', 'route-20', 'route-21'])
 
@@ -26,6 +35,10 @@ const TERRAIN: Record<string, TerrainStyle> = {
   'route-2':          { blob: '#a8e060', node: '#48a828' },
   'route-22':         { blob: '#b8e070', node: '#62a830' },
   'route-23':         { blob: '#d8d070', node: '#8a8a20' },
+  'route-5':          { blob: '#b8e070', node: '#58a830' },
+  'route-6':          { blob: '#a8d868', node: '#4a9a28' },
+  'route-8':          { blob: '#c8e068', node: '#6a9820' },
+  'digletts-cave':    { blob: '#d8a878', node: '#9a6030' },
   'indigo-plateau':   { blob: '#a8a0f0', node: '#4838b0' },
   'route-1':          { blob: '#a8e060', node: '#5ab828' },
   'viridian-city':    { blob: '#60d8b8', node: '#1a9a78' },
@@ -363,11 +376,24 @@ function drawPaths(
       const x2 = tx(other.mapX), y2 = ty(other.mapY)
       const bothUnlocked = unlockedSet.has(area.id) && unlockedSet.has(connId)
       const seaLane = SEA_AREA_IDS.has(area.id) || SEA_AREA_IDS.has(connId)
+      const tunnel = UNDERGROUND_LINKS[`${area.id}|${connId}`]
 
       ctx.save()
       ctx.lineCap = 'round'
 
-      if (seaLane) {
+      if (tunnel) {
+        // Underground Path: a dashed tunnel bowing around the city above it
+        const cx = (x1 + x2) / 2 + (tx(tunnel[0] * MAP_GRID_UNIT) - tx(0)) * 2
+        const cy = (y1 + y2) / 2 + (ty(tunnel[1] * MAP_GRID_UNIT) - ty(0)) * 2
+        ctx.beginPath()
+        ctx.moveTo(x1, y1)
+        ctx.quadraticCurveTo(cx, cy, x2, y2)
+        ctx.strokeStyle = bothUnlocked ? 'rgba(110,70,30,0.75)' : 'rgba(255,255,255,0.22)'
+        ctx.lineWidth = ts(bothUnlocked ? 4 : 2.5)
+        ctx.setLineDash([ts(6), ts(5)])
+        ctx.stroke()
+        ctx.setLineDash([])
+      } else if (seaLane) {
         // Dotted surf route across the water
         ctx.beginPath()
         ctx.moveTo(x1, y1)
@@ -580,6 +606,9 @@ function drawTerrainIcon(
     case 'route-2':
     case 'route-22':
     case 'route-23':
+    case 'route-5':
+    case 'route-6':
+    case 'route-8':
     case 'route-3':
     case 'route-4':
     case 'route-7':
@@ -776,6 +805,32 @@ function drawTerrainIcon(
       ctx.beginPath()
       ctx.arc(cx, cy + ts(3), ts(9), Math.PI, 0)
       ctx.lineWidth = ts(2.2)
+      ctx.stroke()
+      break
+    }
+
+    case 'digletts-cave': {
+      // Diglett popping out of the ground
+      ctx.beginPath()
+      ctx.moveTo(cx - ts(7), cy + ts(8))
+      ctx.lineTo(cx - ts(7), cy - ts(2))
+      ctx.arc(cx, cy - ts(2), ts(7), Math.PI, 0)
+      ctx.lineTo(cx + ts(7), cy + ts(8))
+      ctx.closePath()
+      ctx.fill()
+      // Eyes and nose
+      ctx.fillStyle = 'rgba(60,30,10,0.9)'
+      ctx.fillRect(cx - ts(3.5), cy - ts(4), ts(1.8), ts(3.5))
+      ctx.fillRect(cx + ts(1.7), cy - ts(4), ts(1.8), ts(3.5))
+      ctx.fillStyle = 'rgba(230,110,140,0.95)'
+      ctx.beginPath()
+      ctx.ellipse(cx, cy + ts(1.5), ts(3), ts(2), 0, 0, Math.PI * 2)
+      ctx.fill()
+      // Ground line
+      ctx.lineWidth = ts(2)
+      ctx.beginPath()
+      ctx.moveTo(cx - ts(11), cy + ts(8.5))
+      ctx.lineTo(cx + ts(11), cy + ts(8.5))
       ctx.stroke()
       break
     }

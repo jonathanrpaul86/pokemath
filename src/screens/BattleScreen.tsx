@@ -83,6 +83,7 @@ const FIELD_THEMES: Record<string, [string, string, string, string]> = {
   'mt-moon':         ['#0a0520', '#1a0a40', '#100820', '#060410'],
   'cerulean-city':   ['#70c8f8', '#38a0e0', '#1060c8', '#083880'],
   'rock-tunnel':     ['#100808', '#1c0e08', '#2a1808', '#140c04'],
+  'digletts-cave':   ['#2a1808', '#4a2c10', '#6a4420', '#3a2410'],
   'lavender-town':   ['#280838', '#4a1870', '#2a1838', '#100818'],
   'celadon-city':    ['#50b870', '#309050', '#20a060', '#0a5830'],
   'fuchsia-city':    ['#780848', '#b83080', '#400820', '#200408'],

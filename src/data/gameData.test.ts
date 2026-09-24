@@ -85,6 +85,23 @@ describe('areas', () => {
 })
 
 describe('badges and gyms', () => {
+  it('each gym can be reached with only the badges from the gyms before it', () => {
+    KANTO_GYMS.forEach((gym, i) => {
+      const badges = KANTO_GYMS.slice(0, i).map(g => g.leader.badge)
+      const seen = new Set(['pallet-town'])
+      const queue = ['pallet-town']
+      while (queue.length) {
+        for (const id of AREA_MAP[queue.shift()!].connectedAreaIds) {
+          const gate = AREA_MAP[id].requiredBadge
+          if (seen.has(id) || (gate && !badges.includes(gate))) continue
+          seen.add(id)
+          queue.push(id)
+        }
+      }
+      expect(seen.has(gym.cityAreaId), `${gym.id} with ${i} badges`).toBe(true)
+    })
+  })
+
   it('every badge can be earned from exactly one gym', () => {
     const earned = KANTO_GYMS.map(g => g.leader.badge).sort()
     expect(earned).toEqual(Object.keys(BADGE_NAMES).sort())

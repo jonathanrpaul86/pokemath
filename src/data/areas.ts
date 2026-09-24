@@ -82,7 +82,7 @@ export const KANTO_AREAS: Area[] = [
     description: 'A leafy road north of Viridian City. Bug Pokémon wander out of the forest ahead.',
     areaType: 'route',
     exploresToComplete: 6,
-    connectedAreaIds: ['viridian-city', 'viridian-forest'],
+    connectedAreaIds: ['viridian-city', 'viridian-forest', 'digletts-cave'],
     ...mapAt(18, 54),
     mathDifficulty: 16,
     encounters: [
@@ -178,7 +178,7 @@ export const KANTO_AREAS: Area[] = [
     description: "A pretty waterside city with Misty's Water Gym. Pokémon Center is open to all trainers.",
     areaType: 'city',
     exploresToComplete: 0,
-    connectedAreaIds: ['route-4', 'route-9'],
+    connectedAreaIds: ['route-4', 'route-5', 'route-9'],
     ...mapAt(62, 22),
     mathDifficulty: 47,
     martItems: ['poke-ball', 'great-ball', 'potion', 'super-potion'],
@@ -189,16 +189,16 @@ export const KANTO_AREAS: Area[] = [
     name: 'Route 9',
     description: 'A rough, hilly path connecting Cerulean City to Rock Tunnel. Scrappy Pokémon patrol these dusty trails.',
     areaType: 'route',
-    exploresToComplete: 10,
-    requiredBadge: 'cascade-badge',
+    exploresToComplete: 8,
+    requiredBadge: 'thunder-badge',
     connectedAreaIds: ['cerulean-city', 'rock-tunnel'],
     ...mapAt(73, 22),
-    mathDifficulty: 51,
+    mathDifficulty: 56,
     encounters: [
-      { speciesId: 19, weight: 30, minLevel: 16, maxLevel: 22 }, // Rattata
-      { speciesId: 21, weight: 25, minLevel: 16, maxLevel: 21 }, // Spearow
-      { speciesId: 23, weight: 25, minLevel: 16, maxLevel: 21 }, // Ekans
-      { speciesId: 22, weight: 20, minLevel: 18, maxLevel: 22 }, // Fearow
+      { speciesId: 19, weight: 30, minLevel: 20, maxLevel: 25 }, // Rattata
+      { speciesId: 21, weight: 25, minLevel: 20, maxLevel: 24 }, // Spearow
+      { speciesId: 23, weight: 25, minLevel: 20, maxLevel: 24 }, // Ekans
+      { speciesId: 22, weight: 20, minLevel: 22, maxLevel: 25 }, // Fearow
     ],
   },
   {
@@ -206,25 +206,25 @@ export const KANTO_AREAS: Area[] = [
     name: 'Rock Tunnel',
     description: 'A pitch-black tunnel carved through solid rock.',
     areaType: 'cave',
-    exploresToComplete: 12,
+    exploresToComplete: 10,
     connectedAreaIds: ['route-9', 'lavender-town'],
     ...mapAt(84, 26),
-    mathDifficulty: 55,
+    mathDifficulty: 59,
     encounters: [
-      { speciesId: 74, weight: 30, minLevel: 16, maxLevel: 20 }, // Geodude
-      { speciesId: 66, weight: 25, minLevel: 16, maxLevel: 20 }, // Machop
-      { speciesId: 95, weight: 20, minLevel: 16, maxLevel: 20 }, // Onix
-      { speciesId: 75, weight: 15, minLevel: 18, maxLevel: 22 }, // Graveler
-      { speciesId: 41, weight: 10, minLevel: 16, maxLevel: 20 }, // Zubat
+      { speciesId: 74, weight: 30, minLevel: 21, maxLevel: 25 }, // Geodude
+      { speciesId: 66, weight: 25, minLevel: 21, maxLevel: 25 }, // Machop
+      { speciesId: 95, weight: 20, minLevel: 21, maxLevel: 25 }, // Onix
+      { speciesId: 75, weight: 15, minLevel: 23, maxLevel: 26 }, // Graveler
+      { speciesId: 41, weight: 10, minLevel: 21, maxLevel: 25 }, // Zubat
     ],
   },
   {
     id: 'lavender-town',
     name: 'Lavender Town',
-    description: 'A quiet, eerie town. The Pokémon Tower looms to the east, and the harbor city of Vermilion lies to the south.',
+    description: 'A quiet, eerie town. The Pokémon Tower looms to the east, and Route 8 leads west toward Saffron City.',
     areaType: 'town',
     exploresToComplete: 0,
-    connectedAreaIds: ['rock-tunnel', 'route-7', 'pokemon-tower', 'vermilion-city'],
+    connectedAreaIds: ['rock-tunnel', 'route-8', 'pokemon-tower'],
     ...mapAt(87, 48),
     mathDifficulty: 63,
     martItems: ['poke-ball', 'great-ball', 'potion', 'super-potion', 'revive'],
@@ -236,7 +236,7 @@ export const KANTO_AREAS: Area[] = [
     description: "A busy harbor city where ships come and go. Lt. Surge's Electric-type Gym crackles with energy.",
     areaType: 'city',
     exploresToComplete: 0,
-    connectedAreaIds: ['lavender-town'],
+    connectedAreaIds: ['route-6', 'digletts-cave'],
     ...mapAt(62, 70),
     mathDifficulty: 64,
     martItems: ['poke-ball', 'great-ball', 'potion', 'super-potion', 'revive'],
@@ -245,35 +245,104 @@ export const KANTO_AREAS: Area[] = [
   {
     id: 'pokemon-tower',
     name: 'Pokémon Tower',
-    description: 'A haunted tower in Lavender Town. Ghost-type Pokémon stir among the graves on every floor.',
+    description: 'A haunted tower in Lavender Town. Ghost-type Pokémon stir among the graves on every floor. Only trainers with the Rainbow Badge are brave enough to climb it.',
     areaType: 'special',
     exploresToComplete: 10,
+    requiredBadge: 'rainbow-badge',
     connectedAreaIds: ['lavender-town'],
     ...mapAt(95, 48),
-    mathDifficulty: 67,
+    mathDifficulty: 71,
     encounters: [
-      { speciesId: 92,  weight: 40, minLevel: 22, maxLevel: 28 }, // Gastly
-      { speciesId: 104, weight: 25, minLevel: 22, maxLevel: 27 }, // Cubone
-      { speciesId: 96,  weight: 20, minLevel: 22, maxLevel: 26 }, // Drowzee
-      { speciesId: 93,  weight: 15, minLevel: 24, maxLevel: 28 }, // Haunter
+      { speciesId: 92,  weight: 40, minLevel: 30, maxLevel: 35 }, // Gastly
+      { speciesId: 104, weight: 25, minLevel: 30, maxLevel: 34 }, // Cubone
+      { speciesId: 96,  weight: 20, minLevel: 30, maxLevel: 34 }, // Drowzee
+      { speciesId: 93,  weight: 15, minLevel: 32, maxLevel: 36 }, // Haunter
     ],
   },
   {
     id: 'route-7',
     name: 'Route 7',
-    description: 'A winding road linking Lavender Town to Celadon City. Electric and Fire types wander through tall grass.',
+    description: 'A short road between Celadon City and Saffron City. An Underground Path runs east beneath Saffron to Route 8. Electric and Fire types wander through the tall grass.',
     areaType: 'route',
-    exploresToComplete: 14,
+    exploresToComplete: 10,
     requiredBadge: 'thunder-badge',
-    connectedAreaIds: ['lavender-town', 'celadon-city', 'saffron-city'],
+    connectedAreaIds: ['celadon-city', 'saffron-city', 'route-8'],
     ...mapAt(51, 48),
-    mathDifficulty: 65,
+    mathDifficulty: 66,
     encounters: [
-      { speciesId: 37, weight: 25, minLevel: 22, maxLevel: 27 }, // Vulpix
-      { speciesId: 25, weight: 20, minLevel: 22, maxLevel: 27 }, // Pikachu
-      { speciesId: 48, weight: 20, minLevel: 22, maxLevel: 26 }, // Venonat
-      { speciesId: 39, weight: 20, minLevel: 22, maxLevel: 26 }, // Jigglypuff
-      { speciesId: 63, weight: 15, minLevel: 22, maxLevel: 26 }, // Abra
+      { speciesId: 37, weight: 25, minLevel: 24, maxLevel: 29 }, // Vulpix
+      { speciesId: 25, weight: 20, minLevel: 24, maxLevel: 29 }, // Pikachu
+      { speciesId: 48, weight: 20, minLevel: 24, maxLevel: 28 }, // Venonat
+      { speciesId: 39, weight: 20, minLevel: 24, maxLevel: 28 }, // Jigglypuff
+      { speciesId: 63, weight: 15, minLevel: 24, maxLevel: 28 }, // Abra
+    ],
+  },
+  {
+    id: 'route-8',
+    name: 'Route 8',
+    description: 'A grassy road between Saffron City and Lavender Town. An Underground Path runs west beneath Saffron to Route 7.',
+    areaType: 'route',
+    exploresToComplete: 8,
+    connectedAreaIds: ['lavender-town', 'saffron-city', 'route-7'],
+    ...mapAt(75, 48),
+    mathDifficulty: 64,
+    encounters: [
+      { speciesId: 17, weight: 25, minLevel: 24, maxLevel: 28 }, // Pidgeotto
+      { speciesId: 58, weight: 20, minLevel: 24, maxLevel: 28 }, // Growlithe
+      { speciesId: 23, weight: 20, minLevel: 24, maxLevel: 28 }, // Ekans
+      { speciesId: 27, weight: 20, minLevel: 24, maxLevel: 28 }, // Sandshrew
+      { speciesId: 56, weight: 15, minLevel: 24, maxLevel: 28 }, // Mankey
+    ],
+  },
+  {
+    id: 'route-5',
+    name: 'Route 5',
+    description: 'A road south of Cerulean City toward Saffron. Saffron’s gates are shut to most trainers, but an Underground Path leads south to Route 6.',
+    areaType: 'route',
+    exploresToComplete: 10,
+    requiredBadge: 'cascade-badge',
+    connectedAreaIds: ['cerulean-city', 'saffron-city', 'route-6'],
+    ...mapAt(62, 36),
+    mathDifficulty: 50,
+    encounters: [
+      { speciesId: 16, weight: 30, minLevel: 14, maxLevel: 18 }, // Pidgey
+      { speciesId: 43, weight: 20, minLevel: 14, maxLevel: 18 }, // Oddish
+      { speciesId: 69, weight: 20, minLevel: 14, maxLevel: 18 }, // Bellsprout
+      { speciesId: 52, weight: 20, minLevel: 14, maxLevel: 18 }, // Meowth
+      { speciesId: 56, weight: 10, minLevel: 15, maxLevel: 19 }, // Mankey
+    ],
+  },
+  {
+    id: 'route-6',
+    name: 'Route 6',
+    description: 'A road north of Vermilion City. The Underground Path here leads north to Route 5, beneath Saffron City.',
+    areaType: 'route',
+    exploresToComplete: 10,
+    connectedAreaIds: ['saffron-city', 'vermilion-city', 'route-5'],
+    ...mapAt(62, 60),
+    mathDifficulty: 53,
+    encounters: [
+      { speciesId: 16, weight: 25, minLevel: 16, maxLevel: 21 }, // Pidgey
+      { speciesId: 43, weight: 20, minLevel: 16, maxLevel: 20 }, // Oddish
+      { speciesId: 69, weight: 20, minLevel: 16, maxLevel: 20 }, // Bellsprout
+      { speciesId: 52, weight: 15, minLevel: 16, maxLevel: 20 }, // Meowth
+      { speciesId: 54, weight: 10, minLevel: 17, maxLevel: 21 }, // Psyduck
+      { speciesId: 17, weight: 10, minLevel: 19, maxLevel: 22 }, // Pidgeotto
+    ],
+  },
+  {
+    id: 'digletts-cave',
+    name: 'Diglett’s Cave',
+    description: 'A long tunnel dug by wild Diglett, linking Vermilion City to Route 2. Trees block the way in until a trainer has the Thunder Badge.',
+    areaType: 'cave',
+    exploresToComplete: 10,
+    requiredBadge: 'thunder-badge',
+    connectedAreaIds: ['vermilion-city', 'route-2'],
+    ...mapAt(40, 62),
+    mathDifficulty: 58,
+    encounters: [
+      { speciesId: 50, weight: 85, minLevel: 20, maxLevel: 26 }, // Diglett
+      { speciesId: 51, weight: 15, minLevel: 26, maxLevel: 30 }, // Dugtrio
     ],
   },
   {
@@ -295,7 +364,7 @@ export const KANTO_AREAS: Area[] = [
     areaType: 'city',
     exploresToComplete: 0,
     requiredBadge: 'rainbow-badge',
-    connectedAreaIds: ['route-7'],
+    connectedAreaIds: ['route-5', 'route-6', 'route-7', 'route-8'],
     ...mapAt(62, 48),
     mathDifficulty: 72,
     martItems: ['great-ball', 'ultra-ball', 'super-potion', 'hyper-potion', 'revive'],

@@ -50,6 +50,10 @@ const AREA_BACKFILLS: { areaId: string; impliedBy: string[] }[] = [
   { areaId: 'route-2', impliedBy: ['viridian-forest'] },
   { areaId: 'route-22', impliedBy: ['victory-road'] },
   { areaId: 'route-23', impliedBy: ['victory-road'] },
+  // Vermilion used to hang off Lavender Town, and Route 7 ran straight to it
+  { areaId: 'route-5', impliedBy: ['vermilion-city'] },
+  { areaId: 'route-6', impliedBy: ['vermilion-city'] },
+  { areaId: 'route-8', impliedBy: ['route-7'] },
 ]
 
 function backfillNewAreas(
