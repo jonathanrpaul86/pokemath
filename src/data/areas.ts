@@ -207,7 +207,7 @@ export const KANTO_AREAS: Area[] = [
     description: 'A pitch-black tunnel carved through solid rock.',
     areaType: 'cave',
     exploresToComplete: 10,
-    connectedAreaIds: ['route-9', 'lavender-town'],
+    connectedAreaIds: ['route-9', 'route-10'],
     ...mapAt(84, 26),
     mathDifficulty: 59,
     encounters: [
@@ -221,10 +221,10 @@ export const KANTO_AREAS: Area[] = [
   {
     id: 'lavender-town',
     name: 'Lavender Town',
-    description: 'A quiet, eerie town. The Pokémon Tower looms to the east, and Route 8 leads west toward Saffron City.',
+    description: 'A quiet, eerie town. The Pokémon Tower looms to the east, Route 8 leads west toward Saffron City, and Route 12 runs south along the coast.',
     areaType: 'town',
     exploresToComplete: 0,
-    connectedAreaIds: ['rock-tunnel', 'route-8', 'pokemon-tower'],
+    connectedAreaIds: ['route-10', 'route-8', 'route-12', 'pokemon-tower'],
     ...mapAt(87, 48),
     mathDifficulty: 63,
     martItems: ['poke-ball', 'great-ball', 'potion', 'super-potion', 'revive'],
@@ -236,7 +236,7 @@ export const KANTO_AREAS: Area[] = [
     description: "A busy harbor city where ships come and go. Lt. Surge's Electric-type Gym crackles with energy.",
     areaType: 'city',
     exploresToComplete: 0,
-    connectedAreaIds: ['route-6', 'digletts-cave'],
+    connectedAreaIds: ['route-6', 'route-11', 'digletts-cave'],
     ...mapAt(62, 70),
     mathDifficulty: 64,
     martItems: ['poke-ball', 'great-ball', 'potion', 'super-potion', 'revive'],
@@ -264,7 +264,7 @@ export const KANTO_AREAS: Area[] = [
     name: 'Route 7',
     description: 'A short road between Celadon City and Saffron City. An Underground Path runs east beneath Saffron to Route 8. Electric and Fire types wander through the tall grass.',
     areaType: 'route',
-    exploresToComplete: 10,
+    exploresToComplete: 8,
     requiredBadge: 'thunder-badge',
     connectedAreaIds: ['celadon-city', 'saffron-city', 'route-8'],
     ...mapAt(51, 48),
@@ -292,6 +292,127 @@ export const KANTO_AREAS: Area[] = [
       { speciesId: 23, weight: 20, minLevel: 24, maxLevel: 28 }, // Ekans
       { speciesId: 27, weight: 20, minLevel: 24, maxLevel: 28 }, // Sandshrew
       { speciesId: 56, weight: 15, minLevel: 24, maxLevel: 28 }, // Mankey
+    ],
+  },
+  {
+    id: 'route-10',
+    name: 'Route 10',
+    description: 'A path along the river between Rock Tunnel and Lavender Town. The hum of the old Power Plant drifts over the water.',
+    areaType: 'route',
+    exploresToComplete: 6,
+    connectedAreaIds: ['rock-tunnel', 'lavender-town', 'power-plant'],
+    ...mapAt(87, 36),
+    mathDifficulty: 61,
+    encounters: [
+      { speciesId: 100, weight: 30, minLevel: 22, maxLevel: 26 }, // Voltorb
+      { speciesId: 21,  weight: 20, minLevel: 22, maxLevel: 26 }, // Spearow
+      { speciesId: 23,  weight: 20, minLevel: 22, maxLevel: 26 }, // Ekans
+      { speciesId: 27,  weight: 15, minLevel: 22, maxLevel: 26 }, // Sandshrew
+      { speciesId: 81,  weight: 15, minLevel: 22, maxLevel: 26 }, // Magnemite
+    ],
+  },
+  {
+    id: 'power-plant',
+    name: 'Power Plant',
+    description: 'An abandoned power plant crackling with Electric-type Pokémon. It can only be reached by surfing, so trainers need the Soul Badge.',
+    areaType: 'special',
+    exploresToComplete: 10,
+    requiredBadge: 'soul-badge',
+    connectedAreaIds: ['route-10'],
+    ...mapAt(95, 33),
+    mathDifficulty: 84,
+    encounters: [
+      { speciesId: 81,  weight: 25, minLevel: 36, maxLevel: 40 }, // Magnemite
+      { speciesId: 100, weight: 20, minLevel: 36, maxLevel: 40 }, // Voltorb
+      { speciesId: 25,  weight: 20, minLevel: 36, maxLevel: 40 }, // Pikachu
+      { speciesId: 82,  weight: 15, minLevel: 38, maxLevel: 42 }, // Magneton
+      { speciesId: 101, weight: 10, minLevel: 38, maxLevel: 42 }, // Electrode
+      { speciesId: 125, weight: 10, minLevel: 38, maxLevel: 42 }, // Electabuzz
+    ],
+  },
+  {
+    id: 'route-11',
+    name: 'Route 11',
+    description: 'A grassy road east of Vermilion City, popular with trainers looking for a battle.',
+    areaType: 'route',
+    exploresToComplete: 8,
+    connectedAreaIds: ['vermilion-city', 'route-12'],
+    ...mapAt(74, 70),
+    mathDifficulty: 55,
+    encounters: [
+      { speciesId: 96, weight: 30, minLevel: 20, maxLevel: 25 }, // Drowzee
+      { speciesId: 21, weight: 25, minLevel: 20, maxLevel: 25 }, // Spearow
+      { speciesId: 23, weight: 20, minLevel: 20, maxLevel: 24 }, // Ekans
+      { speciesId: 27, weight: 25, minLevel: 20, maxLevel: 24 }, // Sandshrew
+    ],
+  },
+  {
+    id: 'route-12',
+    name: 'Route 12',
+    description: 'A long fishing pier south of Lavender Town. A sleeping Snorlax blocked it for ages; only trainers with the Marsh Badge get past.',
+    areaType: 'route',
+    exploresToComplete: 8,
+    requiredBadge: 'marsh-badge',
+    connectedAreaIds: ['lavender-town', 'route-11', 'route-13'],
+    ...mapAt(87, 62),
+    mathDifficulty: 76,
+    encounters: [
+      { speciesId: 44, weight: 25, minLevel: 34, maxLevel: 39 }, // Gloom
+      { speciesId: 70, weight: 25, minLevel: 34, maxLevel: 39 }, // Weepinbell
+      { speciesId: 48, weight: 20, minLevel: 34, maxLevel: 38 }, // Venonat
+      { speciesId: 17, weight: 20, minLevel: 34, maxLevel: 39 }, // Pidgeotto
+      { speciesId: 79, weight: 10, minLevel: 34, maxLevel: 38 }, // Slowpoke
+    ],
+  },
+  {
+    id: 'route-13',
+    name: 'Route 13',
+    description: 'A maze of fences and tall grass along the coast. Plenty of trainers wait among the hedges.',
+    areaType: 'route',
+    exploresToComplete: 8,
+    connectedAreaIds: ['route-12', 'route-14'],
+    ...mapAt(82, 78),
+    mathDifficulty: 77,
+    encounters: [
+      { speciesId: 17,  weight: 25, minLevel: 35, maxLevel: 40 }, // Pidgeotto
+      { speciesId: 44,  weight: 20, minLevel: 35, maxLevel: 40 }, // Gloom
+      { speciesId: 70,  weight: 20, minLevel: 35, maxLevel: 40 }, // Weepinbell
+      { speciesId: 48,  weight: 20, minLevel: 35, maxLevel: 39 }, // Venonat
+      { speciesId: 132, weight: 15, minLevel: 35, maxLevel: 39 }, // Ditto
+    ],
+  },
+  {
+    id: 'route-14',
+    name: 'Route 14',
+    description: 'A winding coastal road heading west toward Fuchsia City.',
+    areaType: 'route',
+    exploresToComplete: 8,
+    connectedAreaIds: ['route-13', 'route-15'],
+    ...mapAt(74, 85),
+    mathDifficulty: 78,
+    encounters: [
+      { speciesId: 49,  weight: 25, minLevel: 36, maxLevel: 41 }, // Venomoth
+      { speciesId: 44,  weight: 20, minLevel: 36, maxLevel: 40 }, // Gloom
+      { speciesId: 70,  weight: 20, minLevel: 36, maxLevel: 40 }, // Weepinbell
+      { speciesId: 17,  weight: 20, minLevel: 36, maxLevel: 41 }, // Pidgeotto
+      { speciesId: 132, weight: 15, minLevel: 36, maxLevel: 40 }, // Ditto
+    ],
+  },
+  {
+    id: 'route-15',
+    name: 'Route 15',
+    description: 'The last stretch of road before Fuchsia City. Strong trainers make their final stand here.',
+    areaType: 'route',
+    exploresToComplete: 8,
+    connectedAreaIds: ['route-14', 'fuchsia-city'],
+    ...mapAt(64, 89),
+    mathDifficulty: 79,
+    encounters: [
+      { speciesId: 17,  weight: 25, minLevel: 37, maxLevel: 42 }, // Pidgeotto
+      { speciesId: 49,  weight: 20, minLevel: 37, maxLevel: 42 }, // Venomoth
+      { speciesId: 44,  weight: 20, minLevel: 37, maxLevel: 41 }, // Gloom
+      { speciesId: 70,  weight: 20, minLevel: 37, maxLevel: 41 }, // Weepinbell
+      { speciesId: 132, weight: 15, minLevel: 37, maxLevel: 41 }, // Ditto
     ],
   },
   {
@@ -393,7 +514,7 @@ export const KANTO_AREAS: Area[] = [
     description: "Home of the Safari Zone and Koga's Poison-type Gym. The Safari Zone is open to explorers.",
     areaType: 'city',
     exploresToComplete: 0,
-    connectedAreaIds: ['cycling-road', 'safari-zone', 'seafoam-islands'],
+    connectedAreaIds: ['cycling-road', 'route-15', 'safari-zone', 'seafoam-islands'],
     ...mapAt(54, 89),
     mathDifficulty: 78,
     martItems: ['great-ball', 'ultra-ball', 'super-potion', 'hyper-potion', 'revive'],

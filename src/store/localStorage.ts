@@ -54,6 +54,8 @@ const AREA_BACKFILLS: { areaId: string; impliedBy: string[] }[] = [
   { areaId: 'route-5', impliedBy: ['vermilion-city'] },
   { areaId: 'route-6', impliedBy: ['vermilion-city'] },
   { areaId: 'route-8', impliedBy: ['route-7'] },
+  // Rock Tunnel used to open straight onto Lavender Town
+  { areaId: 'route-10', impliedBy: ['lavender-town'] },
 ]
 
 function backfillNewAreas(

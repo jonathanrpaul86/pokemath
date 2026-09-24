@@ -39,6 +39,13 @@ const TERRAIN: Record<string, TerrainStyle> = {
   'route-6':          { blob: '#a8d868', node: '#4a9a28' },
   'route-8':          { blob: '#c8e068', node: '#6a9820' },
   'digletts-cave':    { blob: '#d8a878', node: '#9a6030' },
+  'route-10':         { blob: '#b0e0a0', node: '#4a9a50' },
+  'power-plant':      { blob: '#f8e060', node: '#b89010' },
+  'route-11':         { blob: '#c0e070', node: '#6aa028' },
+  'route-12':         { blob: '#90d8c8', node: '#2a9888' },
+  'route-13':         { blob: '#a8d880', node: '#50a030' },
+  'route-14':         { blob: '#b0d878', node: '#5a9828' },
+  'route-15':         { blob: '#b8e080', node: '#62a030' },
   'indigo-plateau':   { blob: '#a8a0f0', node: '#4838b0' },
   'route-1':          { blob: '#a8e060', node: '#5ab828' },
   'viridian-city':    { blob: '#60d8b8', node: '#1a9a78' },
@@ -294,6 +301,7 @@ const SCATTER_TREES: [number, number][] = [
   [9, 60], [14, 71],                        // Route 22
   [35, 54], [46, 54], [36, 42],             // Celadon
   [48, 76], [60, 82],                       // Safari Zone
+  [81, 64], [92, 67], [78, 73], [69, 80],   // Routes 11–14
 ]
 
 const SCATTER_PEAKS: [number, number][] = [
@@ -609,6 +617,12 @@ function drawTerrainIcon(
     case 'route-5':
     case 'route-6':
     case 'route-8':
+    case 'route-10':
+    case 'route-11':
+    case 'route-12':
+    case 'route-13':
+    case 'route-14':
+    case 'route-15':
     case 'route-3':
     case 'route-4':
     case 'route-7':
@@ -640,6 +654,20 @@ function drawTerrainIcon(
       ctx.lineTo(cx,         cy - ts(5))
       ctx.lineTo(cx + ts(3), cy - ts(1))
       ctx.stroke()
+      break
+    }
+
+    case 'power-plant': {
+      // Lightning bolt
+      ctx.beginPath()
+      ctx.moveTo(cx + ts(2),   cy - ts(11))
+      ctx.lineTo(cx - ts(6),   cy + ts(1))
+      ctx.lineTo(cx - ts(0.5), cy + ts(1))
+      ctx.lineTo(cx - ts(2.5), cy + ts(11))
+      ctx.lineTo(cx + ts(6),   cy - ts(2))
+      ctx.lineTo(cx + ts(0.5), cy - ts(2))
+      ctx.closePath()
+      ctx.fill()
       break
     }
 
