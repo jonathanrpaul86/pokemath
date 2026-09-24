@@ -63,8 +63,15 @@ describe('updatedMoveset', () => {
     expect(updatedMoveset(makePokemon({ level: 9, moves: [SCRATCH, GROWL] }), species)).toEqual([EMBER, SCRATCH, GROWL])
   })
 
-  it('keeps the four newest moves once there are more than four', () => {
-    expect(updatedMoveset(makePokemon({ level: 30, moves: [SCRATCH, GROWL] }), species)).toEqual([SLASH, RAGE, LEER, EMBER])
+  it('keeps its four newest attacks, dropping moves that do nothing in battle', () => {
+    expect(updatedMoveset(makePokemon({ level: 30, moves: [SCRATCH, GROWL] }), species)).toEqual([SLASH, RAGE, EMBER, SCRATCH])
+  })
+
+  it('keeps an attack even when newer moves do nothing in battle', () => {
+    const TAIL_WHIP = move(39, 'tail-whip', null)
+    const SAND_ATTACK = move(28, 'sand-attack', null)
+    const statusHeavy = makeSpecies({ levelUpMoves: { 1: [SCRATCH], 5: [GROWL], 7: [LEER], 9: [TAIL_WHIP], 11: [SAND_ATTACK] } })
+    expect(updatedMoveset(makePokemon({ level: 11, moves: [SCRATCH] }), statusHeavy)).toEqual([SAND_ATTACK, TAIL_WHIP, LEER, SCRATCH])
   })
 
   it('fills in moves for Pokémon from older saves', () => {

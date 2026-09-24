@@ -59,8 +59,8 @@ export function trainerMoneyReward(topLevel: number): number {
 
 // ---- Pokemon factory --------------------------------------------------------
 
-/** Returns the 4 most recently learned moves for a species at a given level. */
-export function pickMoveset(species: PokemonSpecies, level: number): Move[] {
+/** Every level-up move a species has learned by a given level, newest first */
+function movesLearnedBy(species: PokemonSpecies, level: number): Array<{ learnLevel: number; move: Move }> {
   const entries: Array<{ learnLevel: number; move: Move }> = []
   for (const [learnLevelStr, moves] of Object.entries(species.levelUpMoves)) {
     const learnLevel = Number(learnLevelStr)
@@ -68,17 +68,33 @@ export function pickMoveset(species: PokemonSpecies, level: number): Move[] {
       for (const move of moves) entries.push({ learnLevel, move })
     }
   }
-  entries.sort((a, b) => b.learnLevel - a.learnLevel)
-  return entries.slice(0, 4).map(e => e.move)
+  return entries.sort((a, b) => b.learnLevel - a.learnLevel)
+}
+
+/** Returns the 4 most recently learned moves for a species at a given level. */
+export function pickMoveset(species: PokemonSpecies, level: number): Move[] {
+  return movesLearnedBy(species, level).slice(0, 4).map(e => e.move)
 }
 
 /**
- * Pokémon learn moves as they level up and evolve, keeping the four newest
- * (the same rule as wild Pokémon). Returns the moves a Pokémon should know
- * now, or null when its moves are already current.
+ * The four moves a player's Pokémon keeps at a given level. Moves that deal no
+ * damage do nothing in battle here, so its newest attacks come first, topped up
+ * with its newest other moves when it knows fewer than four. Newest first.
+ */
+export function learnedMoveset(species: PokemonSpecies, level: number): Move[] {
+  const learned = movesLearnedBy(species, level)
+  const isAttack = (e: { move: Move }) => (e.move.power ?? 0) > 0
+  const kept = [...learned.filter(isAttack), ...learned.filter(e => !isAttack(e))].slice(0, 4)
+  return kept.sort((a, b) => b.learnLevel - a.learnLevel).map(e => e.move)
+}
+
+/**
+ * Pokémon learn moves as they level up and evolve (see learnedMoveset).
+ * Returns the moves a Pokémon should know now, or null when its moves are
+ * already current.
  */
 export function updatedMoveset(pokemon: OwnedPokemon, species: PokemonSpecies): Move[] | null {
-  const moves = pickMoveset(species, pokemon.level)
+  const moves = learnedMoveset(species, pokemon.level)
   const known = pokemon.moves ?? []
   const current = moves.length === known.length && moves.every((m, i) => m.id === known[i].id)
   // An empty learnset (missing data) shouldn't wipe out moves a Pokémon already knows
@@ -102,7 +118,7 @@ export function createOwnedPokemon(
     maxHp: stats.hp,
     baseStats: species.baseStats,
     stats,
-    moves: pickMoveset(species, level),
+    moves: learnedMoveset(species, level),
     caughtAt: Date.now(),
   }
 }
