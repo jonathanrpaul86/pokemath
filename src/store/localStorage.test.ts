@@ -140,6 +140,7 @@ describe('migrating older saves', () => {
     const loaded = loadSave(0)!
     expect(loaded.storyteller).toEqual({ heardStoryIds: [], nextStoryAt: {} })
     expect(loaded.badges).toEqual([])
+    expect(loaded.claimedRewardAreaIds).toEqual([])
     expect(loaded.mathStats.operators['+']).toEqual({ totalAttempts: 0, correctAnswers: 0 })
   })
 

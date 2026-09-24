@@ -25,5 +25,7 @@ export type GameAction =
   | { type: 'SPEND_MONEY'; payload: { amount: number } }
   | { type: 'ADD_ITEM';    payload: { itemId: string; quantity: number } }
   | { type: 'REMOVE_ITEM'; payload: { itemId: string; quantity: number } }
+  | { type: 'CLAIM_AREA_REWARD'; payload: { areaId: string } }
+  | { type: 'EXCHANGE_KEY_ITEM'; payload: { takesKeyItemId: string; givesKeyItemId: string } }
   | { type: 'EARN_BADGE';  payload: { badgeId: BadgeId } }
   | { type: 'RECORD_GYM_TRAINER_DEFEAT'; payload: { gymId: string; trainerId: string } }

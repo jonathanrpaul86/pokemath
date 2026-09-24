@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { AREA_MAP, travelBlocker, isAreaExplored, exploresDone, meetsBadgeRequirement } from './areas'
+import { AREA_MAP, travelBlocker, isAreaExplored, exploresDone, meetsBadgeRequirement, unclaimedReward } from './areas'
 import { makeTrainer } from '../test/fixtures'
 
 const area = (id: string) => AREA_MAP[id]
@@ -52,6 +52,39 @@ describe('travelBlocker', () => {
   it('lets a badge holder through the gate', () => {
     const t = makeTrainer({ unlockedAreaIds: ['pewter-city'], badges: ['boulder-badge'] })
     expect(travelBlocker(area('pewter-city'), area('route-3'), t)).toBeNull()
+  })
+
+  it('needs the key item as well as the badge', () => {
+    const lavender = { unlockedAreaIds: ['lavender-town'], badges: ['marsh-badge' as const] }
+    expect(travelBlocker(area('lavender-town'), area('route-12'), makeTrainer(lavender))).toBe('key-item')
+    const withFlute = makeTrainer({ ...lavender, keyItems: [{ itemId: 'poke-flute', quantity: 1 }] })
+    expect(travelBlocker(area('lavender-town'), area('route-12'), withFlute)).toBeNull()
+  })
+
+  it('checks the badge before the key item', () => {
+    const t = makeTrainer({ unlockedAreaIds: ['lavender-town'], keyItems: [{ itemId: 'poke-flute', quantity: 1 }] })
+    expect(travelBlocker(area('lavender-town'), area('route-12'), t)).toBe('badge')
+  })
+
+  it('never re-locks a key-item area that was already visited', () => {
+    const t = makeTrainer({ unlockedAreaIds: ['celadon-city', 'route-16'] })
+    expect(travelBlocker(area('celadon-city'), area('route-16'), t)).toBeNull()
+  })
+})
+
+describe('unclaimedReward', () => {
+  it('appears once the area is fully explored', () => {
+    expect(unclaimedReward(area('route-11'), makeTrainer({ exploreProgress: { 'route-11': 7 } }))).toBeNull()
+    expect(unclaimedReward(area('route-11'), makeTrainer({ exploreProgress: { 'route-11': 8 } }))?.keyItemId).toBe('bike-voucher')
+  })
+
+  it('is only handed out once', () => {
+    const t = makeTrainer({ exploreProgress: { 'route-11': 8 }, claimedRewardAreaIds: ['route-11'] })
+    expect(unclaimedReward(area('route-11'), t)).toBeNull()
+  })
+
+  it('is null for areas without one', () => {
+    expect(unclaimedReward(area('route-1'), makeTrainer({ exploreProgress: { 'route-1': 8 } }))).toBeNull()
   })
 })
 

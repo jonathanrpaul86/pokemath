@@ -107,10 +107,28 @@ export const ITEM_DEFS: ItemDefinition[] = [
   {
     id: 'bicycle',
     name: 'Bicycle',
-    description: 'A folding bicycle that can be used anywhere.',
+    description: 'A folding bicycle that can be used anywhere. Needed to ride Cycling Road.',
     pocket: 'key-item',
     buyPrice: 0,
     sellPrice: 0,
+    howToGet: 'Explore all of Route 11 to earn a Bike Voucher, then trade it in at the Cerulean City Bike Shop.',
+  },
+  {
+    id: 'bike-voucher',
+    name: 'Bike Voucher',
+    description: 'A voucher from the Pokémon Fan Club. Trade it in at the Cerulean City Bike Shop for a free Bicycle!',
+    pocket: 'key-item',
+    buyPrice: 0,
+    sellPrice: 0,
+  },
+  {
+    id: 'poke-flute',
+    name: 'Poké Flute',
+    description: 'A flute that plays a tune so lovely it can wake up even a sleeping Snorlax.',
+    pocket: 'key-item',
+    buyPrice: 0,
+    sellPrice: 0,
+    howToGet: 'Explore all of the Pokémon Tower in Lavender Town, and Mr. Fuji will give you one.',
   },
 ]
 

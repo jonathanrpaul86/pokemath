@@ -101,6 +101,7 @@ function migrateTrainer(raw: any): Trainer {
     badges: [],
     gymProgress: {},
     storyteller: { heardStoryIds: [], nextStoryAt: {} },
+    claimedRewardAreaIds: [],
     ...rest,
     ...backfillNewAreas(
       raw.unlockedAreaIds ?? [],

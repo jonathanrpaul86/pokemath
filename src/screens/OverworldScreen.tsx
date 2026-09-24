@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
 import { useTrainer, useGameStore } from '../store'
 import { isMuted, setMuted } from '../utils/sound'
-import { AREA_MAP, KANTO_AREAS, meetsBadgeRequirement, travelBlocker, exploresDone, isAreaExplored } from '../data/areas'
+import { AREA_MAP, KANTO_AREAS, meetsBadgeRequirement, meetsKeyItemRequirement, travelBlocker, exploresDone, isAreaExplored, unclaimedReward } from '../data/areas'
+import { ITEM_MAP } from '../data/items'
 import { KANTO_NAMES } from '../data/pokedex'
 import { BADGE_NAMES, KANTO_GYMS } from '../data/gyms'
 import { hasCityHub } from '../data/cities'
@@ -10,6 +11,7 @@ import { preloadAreaSpecies, fetchPokemonSpecies } from '../services/pokeApi'
 import { WorldMapCanvas } from '../components/WorldMapCanvas'
 import ExploreModal from '../components/ExploreModal'
 import FullMapModal from '../components/FullMapModal'
+import NpcDialog from '../components/NpcDialog'
 import { canExplore } from '../utils/explore'
 import { updatedMoveset } from '../utils/formulas'
 import type { Area, OwnedPokemon, EncounterEntry, BattleRequest } from '../types'
@@ -213,12 +215,16 @@ export default function OverworldScreen({ onStartBattle, cityView, onCityViewCha
     !selectedIsAdjacent &&
     !selectedIsCurrent
   const meetsBadgeReq = meetsBadgeRequirement(selectedArea, trainer.badges, trainer.unlockedAreaIds)
+  const meetsKeyItemReq = meetsKeyItemRequirement(selectedArea, trainer.keyItems, trainer.unlockedAreaIds)
+  const neededKeyItem = selectedArea.requiredKeyItem ? ITEM_MAP[selectedArea.requiredKeyItem] : undefined
   const blocker = selectedIsAdjacent ? travelBlocker(currentArea, selectedArea, trainer) : null
   const needsExploring = blocker === 'explore'
   const canTravelToSelected = !selectedIsCurrent && selectedIsAdjacent && blocker === null
-  const selectedIsLocked = !selectedIsUnknown && (!meetsBadgeReq || needsExploring)
+  const selectedIsLocked = !selectedIsUnknown && (!meetsBadgeReq || !meetsKeyItemReq || needsExploring)
   const selectedExploresDone = exploresDone(selectedArea, trainer.exploreProgress)
   const selectedExplored = isAreaExplored(selectedArea, trainer.exploreProgress)
+  // Finishing an area can earn a gift, handed over once the explore is done
+  const pendingReward = !exploring && !showCity ? unclaimedReward(currentArea, trainer) : null
 
   return (
     <div className="overworld">
@@ -258,6 +264,7 @@ export default function OverworldScreen({ onStartBattle, cityView, onCityViewCha
             currentAreaId={trainer.currentAreaId}
             unlockedAreaIds={trainer.unlockedAreaIds}
             badges={trainer.badges}
+            keyItems={trainer.keyItems}
             exploreProgress={trainer.exploreProgress}
             selectedAreaId={selectedAreaId}
             onSelectArea={handleSelectArea}
@@ -300,7 +307,10 @@ export default function OverworldScreen({ onStartBattle, cityView, onCityViewCha
                 {selectedArea.requiredBadge && !meetsBadgeReq && (
                   <p>🏅 Earn the {BADGE_NAMES[selectedArea.requiredBadge] ?? selectedArea.requiredBadge} to travel here</p>
                 )}
-                {meetsBadgeReq && needsExploring && (
+                {meetsBadgeReq && !meetsKeyItemReq && neededKeyItem && (
+                  <p>🎒 You need the {neededKeyItem.name} to travel here. {neededKeyItem.howToGet}</p>
+                )}
+                {meetsBadgeReq && meetsKeyItemReq && needsExploring && (
                   <p>🧭 Finish exploring {currentArea.name} to travel here ({exploresDone(currentArea, trainer.exploreProgress)}/{currentArea.exploresToComplete})</p>
                 )}
               </div>
@@ -363,6 +373,20 @@ export default function OverworldScreen({ onStartBattle, cityView, onCityViewCha
 
       {/* ── Full Kanto map ── */}
       {fullMapOpen && <FullMapModal onClose={() => setFullMapOpen(false)} />}
+
+      {/* ── Completion reward ── */}
+      {pendingReward && (
+        <NpcDialog
+          house={{
+            id: `reward-${currentArea.id}`,
+            name: currentArea.name,
+            icon: '🎁',
+            npcName: pendingReward.npcName,
+            lines: [...pendingReward.lines, `🎁 You got the ${ITEM_MAP[pendingReward.keyItemId]?.name ?? pendingReward.keyItemId}!`],
+          }}
+          onClose={() => dispatch({ type: 'CLAIM_AREA_REWARD', payload: { areaId: currentArea.id } })}
+        />
+      )}
 
       {/* ── Explore modal ── */}
       {exploring && (

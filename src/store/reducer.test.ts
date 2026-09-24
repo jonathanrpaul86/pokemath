@@ -137,6 +137,45 @@ describe('EVOLVE_POKEMON', () => {
   })
 })
 
+describe('CLAIM_AREA_REWARD', () => {
+  const explored = () => makeTrainer({ exploreProgress: { 'pokemon-tower': 10 } })
+  const claim = (t: ReturnType<typeof makeTrainer>) =>
+    gameReducer(t, { type: 'CLAIM_AREA_REWARD', payload: { areaId: 'pokemon-tower' } })
+
+  it('gives the key item once the area is explored', () => {
+    const t = claim(explored())
+    expect(t.keyItems).toEqual([{ itemId: 'poke-flute', quantity: 1 }])
+    expect(t.claimedRewardAreaIds).toEqual(['pokemon-tower'])
+  })
+
+  it('does not hand it out twice', () => {
+    const t = claim(claim(explored()))
+    expect(t.keyItems).toEqual([{ itemId: 'poke-flute', quantity: 1 }])
+  })
+
+  it('does nothing before the area is explored', () => {
+    const t = makeTrainer({ exploreProgress: { 'pokemon-tower': 9 } })
+    expect(claim(t)).toBe(t)
+  })
+})
+
+describe('EXCHANGE_KEY_ITEM', () => {
+  const trade = { takesKeyItemId: 'bike-voucher', givesKeyItemId: 'bicycle' }
+
+  it('swaps the voucher for a bicycle', () => {
+    const t = gameReducer(
+      makeTrainer({ keyItems: [{ itemId: 'bike-voucher', quantity: 1 }] }),
+      { type: 'EXCHANGE_KEY_ITEM', payload: trade },
+    )
+    expect(t.keyItems).toEqual([{ itemId: 'bicycle', quantity: 1 }])
+  })
+
+  it('does nothing without the voucher', () => {
+    const t = makeTrainer()
+    expect(gameReducer(t, { type: 'EXCHANGE_KEY_ITEM', payload: trade })).toBe(t)
+  })
+})
+
 describe('createNewTrainer', () => {
   it('starts a normal game on Route 1 with nothing explored', () => {
     const t = createNewTrainer('Ash', makeSpecies())

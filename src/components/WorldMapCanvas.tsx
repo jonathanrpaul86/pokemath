@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react'
-import type { Area, BadgeId } from '../types'
+import type { Area, BadgeId, InventorySlot } from '../types'
 import { MapRenderer, WORLD_BOUNDS, type MapRenderState } from '../utils/mapRenderer'
 import { followView, viewRect, easeToward, type MapView } from '../utils/mapCamera'
 import { travelBlocker } from '../data/areas'
@@ -14,6 +14,7 @@ interface Props {
   currentAreaId: string
   unlockedAreaIds: string[]
   badges: BadgeId[]
+  keyItems: InventorySlot[]
   exploreProgress: Record<string, number>
   /** The area currently shown in the side panel (hover or click) */
   selectedAreaId: string
@@ -113,13 +114,13 @@ export function WorldMapCanvas(props: Props) {
   }
 
   function isReachable(targetId: string): boolean {
-    const { currentAreaId, areas, badges, unlockedAreaIds, exploreProgress } = latest.current
+    const { currentAreaId, areas, badges, keyItems, unlockedAreaIds, exploreProgress } = latest.current
     const currentArea = areas.find(a => a.id === currentAreaId)
     const targetArea = areas.find(a => a.id === targetId)
     if (!currentArea || !targetArea) return false
     return (
       currentArea.connectedAreaIds.includes(targetId) &&
-      travelBlocker(currentArea, targetArea, { badges, unlockedAreaIds, exploreProgress }) === null
+      travelBlocker(currentArea, targetArea, { badges, keyItems, unlockedAreaIds, exploreProgress }) === null
     )
   }
 

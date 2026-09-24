@@ -70,6 +70,15 @@ export const CITY_HUBS: Record<string, CityHubData> = {
         'This one is only ¥1,000,000! …No? Maybe next time!',
         'Misty’s Water Pokémon are quick. Earning badges helps your Pokémon grow strong enough to keep up.',
       ],
+      exchange: {
+        takesKeyItemId: 'bike-voucher',
+        givesKeyItemId: 'bicycle',
+        lines: [
+          'Is that… a Bike Voucher from the Pokémon Fan Club?!',
+          'A deal is a deal. Here you go: one shiny new Bicycle, free of charge!',
+          'You can ride it down Cycling Road, west of Celadon City. Just watch those hills!',
+        ],
+      },
     }],
     storyteller: { npcName: 'Captain Lou', rareEncounter: { speciesId: 1, level: 16 } }, // Bulbasaur
   },

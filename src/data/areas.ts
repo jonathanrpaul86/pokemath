@@ -1,4 +1,4 @@
-import type { Area, BadgeId, Trainer } from '../types'
+import type { Area, AreaReward, BadgeId, InventorySlot, Trainer } from '../types'
 import { mapAt } from './mapGrid'
 
 export const KANTO_AREAS: Area[] = [
@@ -305,6 +305,14 @@ export const KANTO_AREAS: Area[] = [
     exploresToComplete: 10,
     requiredBadge: 'rainbow-badge',
     connectedAreaIds: ['lavender-town'],
+    completionReward: {
+      npcName: 'Mr. Fuji',
+      lines: [
+        'You made it to the very top! The Ghost Pokémon here were only lonely, and you’ve helped them settle down.',
+        'Please take my Poké Flute. Its song can wake even a sleeping Snorlax, like the one snoozing on Route 12.',
+      ],
+      keyItemId: 'poke-flute',
+    },
     ...mapAt(95, 48),
     mathDifficulty: 71,
     encounters: [
@@ -392,6 +400,14 @@ export const KANTO_AREAS: Area[] = [
     areaType: 'route',
     exploresToComplete: 8,
     connectedAreaIds: ['vermilion-city', 'route-12'],
+    completionReward: {
+      npcName: 'Fan Club Chairman',
+      lines: [
+        'Oh, you explored every corner of Route 11? My, you must love Pokémon as much as I do!',
+        'I won this Bike Voucher in a raffle, but I never ride. Take it! The Bike Shop in Cerulean City will swap it for a Bicycle.',
+      ],
+      keyItemId: 'bike-voucher',
+    },
     ...mapAt(74, 70),
     mathDifficulty: 55,
     encounters: [
@@ -404,10 +420,11 @@ export const KANTO_AREAS: Area[] = [
   {
     id: 'route-12',
     name: 'Route 12',
-    description: 'A long fishing pier south of Lavender Town. A sleeping Snorlax blocked it for ages; only trainers with the Marsh Badge get past.',
+    description: 'A long fishing pier south of Lavender Town, blocked by a sleeping Snorlax. Trainers need the Marsh Badge and a Poké Flute to wake it.',
     areaType: 'route',
     exploresToComplete: 8,
     requiredBadge: 'marsh-badge',
+    requiredKeyItem: 'poke-flute',
     connectedAreaIds: ['lavender-town', 'route-11', 'route-13'],
     ...mapAt(87, 62),
     mathDifficulty: 76,
@@ -565,10 +582,11 @@ export const KANTO_AREAS: Area[] = [
   {
     id: 'route-16',
     name: 'Route 16',
-    description: 'The road west of Celadon City, and the gate to Cycling Road. A sleeping Snorlax blocked it for ages; only trainers with the Marsh Badge get past.',
+    description: 'The road west of Celadon City, and the gate to Cycling Road. Only trainers with the Marsh Badge and a Bicycle are let through.',
     areaType: 'route',
     exploresToComplete: 8,
     requiredBadge: 'marsh-badge',
+    requiredKeyItem: 'bicycle',
     connectedAreaIds: ['celadon-city', 'cycling-road'],
     ...mapAt(30, 48),
     mathDifficulty: 72,
@@ -762,6 +780,24 @@ export function meetsBadgeRequirement(area: Area, badges: BadgeId[], unlockedAre
   return !area.requiredBadge || badges.includes(area.requiredBadge) || unlockedAreaIds.includes(area.id)
 }
 
+export function hasKeyItem(keyItems: InventorySlot[], itemId: string): boolean {
+  return keyItems.some(slot => slot.itemId === itemId && slot.quantity > 0)
+}
+
+/** Like badges, key-item gates only block first entry */
+export function meetsKeyItemRequirement(area: Area, keyItems: InventorySlot[], unlockedAreaIds: string[]): boolean {
+  return !area.requiredKeyItem || hasKeyItem(keyItems, area.requiredKeyItem) || unlockedAreaIds.includes(area.id)
+}
+
+/** The area's completion reward, if it's fully explored and the reward hasn't been handed out yet */
+export function unclaimedReward(
+  area: Area,
+  trainer: Pick<Trainer, 'exploreProgress' | 'claimedRewardAreaIds'>,
+): AreaReward | null {
+  if (!area.completionReward || trainer.claimedRewardAreaIds.includes(area.id)) return null
+  return isAreaExplored(area, trainer.exploreProgress) ? area.completionReward : null
+}
+
 export function exploresDone(area: Area, exploreProgress: Record<string, number>): number {
   return Math.min(exploreProgress[area.id] ?? 0, area.exploresToComplete)
 }
@@ -771,7 +807,7 @@ export function isAreaExplored(area: Area, exploreProgress: Record<string, numbe
   return exploresDone(area, exploreProgress) >= area.exploresToComplete
 }
 
-export type TravelBlocker = 'badge' | 'explore'
+export type TravelBlocker = 'badge' | 'key-item' | 'explore'
 
 /**
  * Why the player can't step from `from` into the adjacent area `to`, or null if
@@ -781,10 +817,11 @@ export type TravelBlocker = 'badge' | 'explore'
 export function travelBlocker(
   from: Area,
   to: Area,
-  trainer: Pick<Trainer, 'badges' | 'unlockedAreaIds' | 'exploreProgress'>,
+  trainer: Pick<Trainer, 'badges' | 'keyItems' | 'unlockedAreaIds' | 'exploreProgress'>,
 ): TravelBlocker | null {
   if (trainer.unlockedAreaIds.includes(to.id)) return null
   if (!meetsBadgeRequirement(to, trainer.badges, trainer.unlockedAreaIds)) return 'badge'
+  if (!meetsKeyItemRequirement(to, trainer.keyItems, trainer.unlockedAreaIds)) return 'key-item'
   if (!isAreaExplored(from, trainer.exploreProgress)) return 'explore'
   return null
 }

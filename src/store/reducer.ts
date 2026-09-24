@@ -1,7 +1,7 @@
 import type { Trainer, OwnedPokemon, MathStats, ItemPocket } from '../types'
 import type { GameAction } from './actions'
 import { createOwnedPokemon, pokemonXpToNextLevel, pokemonLevelCap, calcStats } from '../utils/formulas'
-import { KANTO_AREAS, AREA_MAP } from '../data/areas'
+import { KANTO_AREAS, AREA_MAP, hasKeyItem, unclaimedReward } from '../data/areas'
 import { ITEM_MAP } from '../data/items'
 import { totalExplores, STORY_COOLDOWN_EXPLORES } from '../utils/storyteller'
 
@@ -44,6 +44,7 @@ export function createNewTrainer(name: string, starterSpecies: Parameters<typeof
     keyItems: [],
     badges: [],
     storyteller: { heardStoryIds: [], nextStoryAt: {} },
+    claimedRewardAreaIds: [],
   }
 }
 
@@ -356,6 +357,28 @@ export function gameReducer(trainer: Trainer, action: GameAction): Trainer {
         .map(s => s.itemId === itemId ? { ...s, quantity: s.quantity - quantity } : { ...s })
         .filter(s => s.quantity > 0)
       next = { ...trainer, [key]: slots }
+      break
+    }
+
+    case 'CLAIM_AREA_REWARD': {
+      const { areaId } = action.payload
+      const area = AREA_MAP[areaId]
+      const reward = area && unclaimedReward(area, trainer)
+      if (!reward) return trainer
+      next = {
+        ...gameReducer(trainer, { type: 'ADD_ITEM', payload: { itemId: reward.keyItemId, quantity: 1 } }),
+        claimedRewardAreaIds: [...trainer.claimedRewardAreaIds, areaId],
+      }
+      break
+    }
+
+    case 'EXCHANGE_KEY_ITEM': {
+      const { takesKeyItemId, givesKeyItemId } = action.payload
+      if (!hasKeyItem(trainer.keyItems, takesKeyItemId)) return trainer
+      next = gameReducer(
+        gameReducer(trainer, { type: 'REMOVE_ITEM', payload: { itemId: takesKeyItemId, quantity: 1 } }),
+        { type: 'ADD_ITEM', payload: { itemId: givesKeyItemId, quantity: 1 } },
+      )
       break
     }
 

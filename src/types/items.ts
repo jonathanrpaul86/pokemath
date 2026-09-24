@@ -15,6 +15,8 @@ export interface ItemDefinition {
   healAmount?: number
   /** Revive items: fraction of maxHp to restore (targets fainted Pokémon only) */
   revivePercent?: number
+  /** Key items that open areas: where to get one, shown on the map when it's needed */
+  howToGet?: string
 }
 
 export interface InventorySlot {

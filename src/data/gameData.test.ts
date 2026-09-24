@@ -84,20 +84,74 @@ describe('areas', () => {
   })
 })
 
+/**
+ * Every area reachable with these badges, collecting the key items that
+ * completion rewards and item trades hand out along the way
+ */
+function reachableWith(badges: string[]): Set<string> {
+  const keyItems = new Set<string>()
+  for (;;) {
+    const seen = new Set(['pallet-town'])
+    const queue = ['pallet-town']
+    while (queue.length) {
+      for (const id of AREA_MAP[queue.shift()!].connectedAreaIds) {
+        const { requiredBadge, requiredKeyItem } = AREA_MAP[id]
+        if (seen.has(id)) continue
+        if (requiredBadge && !badges.includes(requiredBadge)) continue
+        if (requiredKeyItem && !keyItems.has(requiredKeyItem)) continue
+        seen.add(id)
+        queue.push(id)
+      }
+    }
+    const before = keyItems.size
+    for (const id of seen) {
+      const reward = AREA_MAP[id].completionReward
+      if (reward) keyItems.add(reward.keyItemId)
+      for (const house of CITY_HUBS[id]?.houses ?? []) {
+        if (house.exchange && keyItems.has(house.exchange.takesKeyItemId)) keyItems.add(house.exchange.givesKeyItemId)
+      }
+    }
+    if (keyItems.size === before) return seen
+  }
+}
+
+describe('key items', () => {
+  const keyItem = (id: string) => ITEM_MAP[id]?.pocket === 'key-item'
+
+  it('gates and rewards only use real key items', () => {
+    for (const a of KANTO_AREAS) {
+      if (a.requiredKeyItem) expect(keyItem(a.requiredKeyItem), a.id).toBe(true)
+      if (a.completionReward) expect(keyItem(a.completionReward.keyItemId), a.id).toBe(true)
+    }
+    for (const house of Object.values(CITY_HUBS).flatMap(c => c.houses)) {
+      if (!house.exchange) continue
+      expect(keyItem(house.exchange.takesKeyItemId), house.id).toBe(true)
+      expect(keyItem(house.exchange.givesKeyItemId), house.id).toBe(true)
+    }
+  })
+
+  it('say where to get them when they open an area', () => {
+    for (const a of KANTO_AREAS) {
+      if (a.requiredKeyItem) expect(ITEM_MAP[a.requiredKeyItem].howToGet, a.id).toBeTruthy()
+    }
+  })
+
+  it('only reward areas that have something to explore', () => {
+    for (const a of KANTO_AREAS) {
+      if (a.completionReward) expect(a.exploresToComplete, a.id).toBeGreaterThan(0)
+    }
+  })
+
+  it('open every gated area once all badges are earned', () => {
+    const seen = reachableWith(KANTO_GYMS.map(g => g.leader.badge))
+    expect([...seen].sort()).toEqual(KANTO_AREAS.map(a => a.id).sort())
+  })
+})
+
 describe('badges and gyms', () => {
   it('each gym can be reached with only the badges from the gyms before it', () => {
     KANTO_GYMS.forEach((gym, i) => {
-      const badges = KANTO_GYMS.slice(0, i).map(g => g.leader.badge)
-      const seen = new Set(['pallet-town'])
-      const queue = ['pallet-town']
-      while (queue.length) {
-        for (const id of AREA_MAP[queue.shift()!].connectedAreaIds) {
-          const gate = AREA_MAP[id].requiredBadge
-          if (seen.has(id) || (gate && !badges.includes(gate))) continue
-          seen.add(id)
-          queue.push(id)
-        }
-      }
+      const seen = reachableWith(KANTO_GYMS.slice(0, i).map(g => g.leader.badge))
       expect(seen.has(gym.cityAreaId), `${gym.id} with ${i} badges`).toBe(true)
     })
   })

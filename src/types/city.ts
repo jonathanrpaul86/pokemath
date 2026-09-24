@@ -6,6 +6,15 @@ export interface NpcHouse {
   npcName: string
   /** Shown one at a time */
   lines: string[]
+  /** Trades one key item for another, if the player has the first */
+  exchange?: KeyItemExchange
+}
+
+export interface KeyItemExchange {
+  takesKeyItemId: string
+  givesKeyItemId: string
+  /** Shown instead of the usual lines when the trade happens */
+  lines: string[]
 }
 
 export interface StorytellerDefinition {
