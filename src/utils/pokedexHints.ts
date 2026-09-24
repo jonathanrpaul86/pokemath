@@ -55,7 +55,7 @@ function buildSources(): Map<number, SpeciesSource[]> {
 
   for (const [cityId, hub] of Object.entries(CITY_HUBS)) {
     const city = AREA_MAP[cityId].name
-    if (hub.storyteller) add(hub.storyteller.rareEncounter.speciesId, { kind: 'storyteller', cityId })
+    for (const id of hub.storyteller?.rareEncounter.speciesIds ?? []) add(id, { kind: 'storyteller', cityId })
     for (const house of hub.houses) {
       if (house.exchange) {
         const item = ITEM_MAP[house.exchange.takesKeyItemId]?.name ?? house.exchange.takesKeyItemId

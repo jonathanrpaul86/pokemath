@@ -28,6 +28,7 @@ describe('speciesSources', () => {
     expect(described(4).some(t => t.includes('Bill'))).toBe(true)                                           // Charmander
     expect(described(145).some(t => t.startsWith('Legendary!') && t.includes('Power Plant'))).toBe(true)    // Zapdos
     expect(described(151).some(t => t.includes('Champion'))).toBe(true)                                     // Mew
+    expect(described(107).some(t => t.includes('Storyteller') && t.includes('Saffron City'))).toBe(true)    // Hitmonchan
   })
 })
 
