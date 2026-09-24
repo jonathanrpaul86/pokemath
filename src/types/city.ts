@@ -31,8 +31,19 @@ export interface HouseGift {
 
 export interface StorytellerDefinition {
   npcName: string
-  /** Rare Pokémon offered for a correct first answer */
-  rareEncounter: { speciesId: number; level: number }
+  /** Offered for a correct first answer until the player has caught it (see storytellerRare) */
+  rareEncounter: {
+    /** Offered in order, skipping any the player already has */
+    speciesIds: number[]
+    level: number
+    /**
+     * Claim id of a one-time gift that also hands out one of these species.
+     * The Storyteller leaves it the last one, so the player gets each once.
+     */
+    sharedWithGiftId?: string
+  }
+  /** Given instead of the rare for a correct first answer, once the player has it */
+  backupItemId: string
 }
 
 /** The extra buildings a city has beyond its Center, Mart, and Gym */

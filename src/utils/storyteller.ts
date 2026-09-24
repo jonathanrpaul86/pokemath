@@ -1,5 +1,7 @@
-import type { Area, Story, StoryTier, Trainer } from '../types'
+import type { Area, Story, StoryTier, StorytellerDefinition, Trainer } from '../types'
 import { STORIES } from '../data/stories'
+import { EVOLUTIONS } from '../data/evolutions'
+import { evolutionLine } from './gifts'
 
 /** Explores (anywhere) needed after a story before a Storyteller has a new one */
 export const STORY_COOLDOWN_EXPLORES = 5
@@ -32,6 +34,35 @@ export function pickStory(tier: StoryTier, heardStoryIds: string[], rng: () => n
   const fresh = pool.filter(s => !heardStoryIds.includes(s.id))
   const candidates = fresh.length ? fresh : pool
   return candidates[Math.floor(rng() * candidates.length)]
+}
+
+type StorytellerTrainer = Pick<Trainer, 'pokedex' | 'party' | 'pc' | 'claimedRewardIds'>
+
+/**
+ * Whether the player needs another of a species to catch everything it can
+ * evolve into: one is enough, but Eevee takes one for each of its evolutions
+ */
+function needsAnother(speciesId: number, trainer: StorytellerTrainer): boolean {
+  const line = evolutionLine(speciesId)
+  const uncaughtFinalForms = line.filter(id => !EVOLUTIONS[id] && !trainer.pokedex[id]?.caught).length
+  const stillToEvolve = [...trainer.party, ...trainer.pc]
+    .filter(p => line.includes(p.speciesId) && EVOLUTIONS[p.speciesId]).length
+  return uncaughtFinalForms > stillToEvolve
+}
+
+/**
+ * The rare Pokémon a correct first answer earns: the first of the Storyteller's
+ * species the player still needs, or null once they need none (the backup item
+ * instead). A gift that shares the species keeps the last one until it's claimed.
+ */
+export function storytellerRare(
+  storyteller: StorytellerDefinition,
+  trainer: StorytellerTrainer,
+): { speciesId: number; level: number } | null {
+  const { speciesIds, level, sharedWithGiftId } = storyteller.rareEncounter
+  const needed = speciesIds.filter(id => needsAnother(id, trainer))
+  const leftForGift = sharedWithGiftId && !trainer.claimedRewardIds.includes(sharedWithGiftId) ? 1 : 0
+  return needed.length > leftForGift ? { speciesId: needed[0], level } : null
 }
 
 /** Answer choices in a random order, remembering which one is correct */

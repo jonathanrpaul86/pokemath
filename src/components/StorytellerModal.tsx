@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useGameStore, useTrainer } from '../store'
-import { storyStatus, storyTierFor, pickStory, shuffledChoices, STORY_COOLDOWN_EXPLORES } from '../utils/storyteller'
+import { storyStatus, storyTierFor, pickStory, shuffledChoices, storytellerRare, STORY_COOLDOWN_EXPLORES } from '../utils/storyteller'
 import { rollLootItem } from '../utils/explore'
 import { playCorrect, playWrong } from '../utils/sound'
 import { ITEM_MAP } from '../data/items'
@@ -20,8 +20,8 @@ type Stage =
   | { kind: 'offer' }
   | { kind: 'story' }
   | { kind: 'question' }
-  | { kind: 'reward-rare' }
-  | { kind: 'reward-item'; itemId: string }
+  | { kind: 'reward-rare'; rare: { speciesId: number; level: number } }
+  | { kind: 'reward-item'; itemId: string; firstTry: boolean }
 
 function readAloud(text: string) {
   if (!('speechSynthesis' in window)) return
@@ -46,7 +46,7 @@ export default function StorytellerModal({ area, storyteller, onRareEncounter, o
   const [wrongPicks, setWrongPicks] = useState<string[]>([])
   const [showPassage, setShowPassage] = useState(false)
 
-  const rareName = KANTO_NAMES[storyteller.rareEncounter.speciesId] ?? 'Pokémon'
+  const rareName = stage.kind === 'reward-rare' ? KANTO_NAMES[stage.rare.speciesId] ?? 'Pokémon' : ''
 
   // Stop reading aloud when the modal closes
   useEffect(() => () => { if ('speechSynthesis' in window) window.speechSynthesis.cancel() }, [])
@@ -68,24 +68,23 @@ export default function StorytellerModal({ area, storyteller, onRareEncounter, o
     }
     playCorrect()
     dispatch({ type: 'FINISH_STORY', payload: { cityId: area.id, storyId: story.id } })
-    if (wrongPicks.length === 0) {
-      setStage({ kind: 'reward-rare' })
+    // A first try earns the rare until the player has it, then the backup item
+    const firstTry = wrongPicks.length === 0
+    const rare = firstTry ? storytellerRare(storyteller, trainer) : null
+    if (rare) {
+      setStage({ kind: 'reward-rare', rare })
     } else {
-      const itemId = rollLootItem(area)
+      const itemId = firstTry ? storyteller.backupItemId : rollLootItem(area)
       dispatch({ type: 'ADD_ITEM', payload: { itemId, quantity: 1 } })
-      setStage({ kind: 'reward-item', itemId })
+      setStage({ kind: 'reward-item', itemId, firstTry })
     }
-  }
-
-  function goToRare() {
-    onRareEncounter({ ...storyteller.rareEncounter, intro: `A rare ${rareName} appeared!` })
   }
 
   function advance() {
     switch (stage.kind) {
       case 'offer': setStage({ kind: 'story' }); break
       case 'story': setStage({ kind: 'question' }); break
-      case 'reward-rare': goToRare(); break
+      case 'reward-rare': onRareEncounter({ ...stage.rare, intro: `A rare ${rareName} appeared!` }); break
       case 'resting':
       case 'tired':
       case 'reward-item': close(); break
@@ -171,7 +170,7 @@ export default function StorytellerModal({ area, storyteller, onRareEncounter, o
 
         {stage.kind === 'reward-rare' && (
           <div className="storyteller__reward">
-            <img className="storyteller__reward-sprite" src={spriteUrl(storyteller.rareEncounter.speciesId)} alt={rareName} />
+            <img className="storyteller__reward-sprite" src={spriteUrl(stage.rare.speciesId)} alt={rareName} />
             <p className="city-dialog__line">
               Wonderful — you were listening closely! Here’s a secret: a rare {rareName} is hiding nearby.
             </p>
@@ -180,7 +179,8 @@ export default function StorytellerModal({ area, storyteller, onRareEncounter, o
 
         {stage.kind === 'reward-item' && (
           <p className="city-dialog__line">
-            You got it! Here’s a {ITEM_MAP[stage.itemId]?.name ?? stage.itemId} for listening so well.
+            {stage.firstTry ? 'Wonderful — you got it on the first try!' : 'You got it!'}
+            {' '}Take this {ITEM_MAP[stage.itemId]?.name ?? stage.itemId} for listening so well.
           </p>
         )}
 

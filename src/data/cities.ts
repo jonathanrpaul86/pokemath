@@ -43,7 +43,7 @@ export const CITY_HUBS: Record<string, CityHubData> = {
         'Tired Pokémon? Come back to a Pokémon Center. You can always return to places you’ve already been.',
       ],
     }],
-    storyteller: { npcName: 'Grandpa Ed', rareEncounter: { speciesId: 133, level: 6 } }, // Eevee
+    storyteller: { npcName: 'Grandpa Ed', rareEncounter: { speciesIds: [133], level: 6 }, backupItemId: 'great-ball' }, // Eevee
   },
   'pewter-city': {
     houses: [{
@@ -58,7 +58,7 @@ export const CITY_HUBS: Record<string, CityHubData> = {
         'Brock’s Rock-type Pokémon have very tough skin. Make sure your team is strong before you visit his Gym!',
       ],
     }],
-    storyteller: { npcName: 'Storyteller Pat', rareEncounter: { speciesId: 138, level: 12 } }, // Omanyte
+    storyteller: { npcName: 'Storyteller Pat', rareEncounter: { speciesIds: [138], level: 12 }, backupItemId: 'great-ball' }, // Omanyte
   },
   'cerulean-city': {
     houses: [{
@@ -81,7 +81,12 @@ export const CITY_HUBS: Record<string, CityHubData> = {
         ],
       },
     }],
-    storyteller: { npcName: 'Captain Lou', rareEncounter: { speciesId: 1, level: 16 } }, // Bulbasaur
+    storyteller: {
+      npcName: 'Captain Lou',
+      // The starters the player didn't pick, sharing them with Bill on Route 25
+      rareEncounter: { speciesIds: [1, 4, 7], level: 16, sharedWithGiftId: 'route-25' },
+      backupItemId: 'revive',
+    },
   },
   'lavender-town': {
     houses: [{
@@ -95,7 +100,7 @@ export const CITY_HUBS: Record<string, CityHubData> = {
         'The Pokémon Tower east of here looks spooky, but most of its Ghost Pokémon are just playful.',
       ],
     }],
-    storyteller: { npcName: 'Granny Iris', rareEncounter: { speciesId: 143, level: 26 } }, // Snorlax
+    storyteller: { npcName: 'Granny Iris', rareEncounter: { speciesIds: [143], level: 26 }, backupItemId: 'ultra-ball' }, // Snorlax
   },
   'vermilion-city': {
     houses: [{
@@ -110,7 +115,7 @@ export const CITY_HUBS: Record<string, CityHubData> = {
         'So take good care of all your Pokémon, not just your strongest one!',
       ],
     }],
-    storyteller: { npcName: 'Sailor Finn', rareEncounter: { speciesId: 83, level: 22 } }, // Farfetch'd
+    storyteller: { npcName: 'Sailor Finn', rareEncounter: { speciesIds: [83], level: 22 }, backupItemId: 'hyper-potion' }, // Farfetch'd
   },
   'celadon-city': {
     houses: [{
@@ -124,7 +129,7 @@ export const CITY_HUBS: Record<string, CityHubData> = {
         'And don’t forget to check your Pokédex. Filling it up is half the fun!',
       ],
     }],
-    storyteller: { npcName: 'Poet Rin', rareEncounter: { speciesId: 137, level: 26 } }, // Porygon
+    storyteller: { npcName: 'Poet Rin', rareEncounter: { speciesIds: [137], level: 26 }, backupItemId: 'full-restore' }, // Porygon
   },
   'saffron-city': {
     houses: [{
@@ -146,7 +151,12 @@ export const CITY_HUBS: Record<string, CityHubData> = {
         ],
       },
     }],
-    storyteller: { npcName: 'Madame Sol', rareEncounter: { speciesId: 106, level: 32 } }, // Hitmonlee
+    storyteller: {
+      npcName: 'Madame Sol',
+      // Hitmonlee, then Hitmonchan, sharing them with the Dojo's gift
+      rareEncounter: { speciesIds: [106, 107], level: 32, sharedWithGiftId: 'fighting-dojo' },
+      backupItemId: 'max-revive',
+    },
   },
   'fuchsia-city': {
     houses: [{
@@ -160,7 +170,7 @@ export const CITY_HUBS: Record<string, CityHubData> = {
         'Oh, and one of Professor Oak’s aides is on Route 15, just east of town. He has a gift for trainers who explore all of it!',
       ],
     }],
-    storyteller: { npcName: 'Ranger Kit', rareEncounter: { speciesId: 127, level: 34 } }, // Pinsir
+    storyteller: { npcName: 'Ranger Kit', rareEncounter: { speciesIds: [127], level: 34 }, backupItemId: 'full-restore' }, // Pinsir
   },
   'cinnabar-island': {
     houses: [{
@@ -183,7 +193,7 @@ export const CITY_HUBS: Record<string, CityHubData> = {
         ],
       },
     }],
-    storyteller: { npcName: 'Professor Ash', rareEncounter: { speciesId: 142, level: 38 } }, // Aerodactyl
+    storyteller: { npcName: 'Professor Ash', rareEncounter: { speciesIds: [142], level: 38 }, backupItemId: 'max-revive' }, // Aerodactyl
   },
 }
 

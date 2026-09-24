@@ -26,6 +26,10 @@ const ALL_GIFTS: { source: string; gift: GiftDefinition }[] = [
   ]),
 ]
 
+/** Every species a Storyteller can offer */
+const STORYTELLER_RARES = Object.entries(CITY_HUBS).flatMap(([city, c]) =>
+  (c.storyteller?.rareEncounter.speciesIds ?? []).map(speciesId => ({ city, speciesId })))
+
 describe('areas', () => {
   it('have unique ids', () => {
     const ids = KANTO_AREAS.map(a => a.id)
@@ -202,7 +206,7 @@ describe('Pokédex', () => {
     const obtainable = new Set<number>([
       ...STARTER_SPECIES_IDS,
       ...KANTO_AREAS.flatMap(a => a.encounters.map(e => e.speciesId)),
-      ...Object.values(CITY_HUBS).flatMap(c => c.storyteller ? [c.storyteller.rareEncounter.speciesId] : []),
+      ...STORYTELLER_RARES.map(r => r.speciesId),
       ...ALL_GIFTS.flatMap(({ gift }) => gift.kind === 'pokemon' ? gift.speciesIds : []),
       ...KANTO_AREAS.flatMap(a => a.legendary ? [a.legendary.speciesId] : []),
     ].flatMap(evolutionLine))
@@ -315,8 +319,26 @@ describe('cities', () => {
 
   it('offer Storyteller rares that are not already in any wild area', () => {
     const wild = new Set(KANTO_AREAS.flatMap(a => a.encounters.map(e => e.speciesId)))
+    for (const { city, speciesId } of STORYTELLER_RARES) expect(wild.has(speciesId), city).toBe(false)
+  })
+
+  it('give Storyteller backup items that go in the Bag', () => {
     for (const [id, c] of Object.entries(CITY_HUBS)) {
-      if (c.storyteller) expect(wild.has(c.storyteller.rareEncounter.speciesId), id).toBe(false)
+      if (c.storyteller) expect(ITEM_MAP[c.storyteller.backupItemId]?.pocket, id).toMatch(/^(item|ball)$/)
+    }
+  })
+
+  it('share Storyteller rares only with a one-time gift of the same species', () => {
+    const oneTimeGifts = new Map<string, GiftDefinition>([
+      ...KANTO_AREAS.flatMap(a => a.completionReward ? [[a.id, a.completionReward.gift] as const] : []),
+      ...Object.values(CITY_HUBS).flatMap(c => c.houses).flatMap(h => h.gift ? [[h.id, h.gift.gift] as const] : []),
+    ])
+    for (const [id, c] of Object.entries(CITY_HUBS)) {
+      const rare = c.storyteller?.rareEncounter
+      if (!rare?.sharedWithGiftId) continue
+      const gift = oneTimeGifts.get(rare.sharedWithGiftId)
+      const given = gift?.kind === 'pokemon' ? [...gift.speciesIds].sort((a, b) => a - b) : []
+      expect(given, id).toEqual([...rare.speciesIds].sort((a, b) => a - b))
     }
   })
 })
