@@ -31,8 +31,11 @@ export interface HouseGift {
 
 export interface StorytellerDefinition {
   npcName: string
-  /** Rare Pokémon offered for a correct first answer */
-  rareEncounter: { speciesId: number; level: number }
+  /**
+   * Rare Pokémon offered for a correct first answer: a set species, or
+   * `missingStarter` for a starter the player doesn't have yet
+   */
+  rareEncounter: { speciesId: number; level: number } | { missingStarter: true; level: number }
 }
 
 /** The extra buildings a city has beyond its Center, Mart, and Gym */

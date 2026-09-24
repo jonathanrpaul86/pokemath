@@ -12,11 +12,16 @@ export function evolutionLine(speciesId: number): number[] {
   return line
 }
 
+/** The species whose evolution line the player hasn't caught any of */
+export function uncaughtLines(speciesIds: readonly number[], pokedex: Record<number, PokedexEntry>): number[] {
+  return speciesIds.filter(id => !evolutionLine(id).some(member => pokedex[member]?.caught))
+}
+
 /**
  * Which species a Pokémon gift offers: the ones whose evolution line the
  * player hasn't caught yet, or all of them once they've caught every one
  */
 export function giftChoices(speciesIds: number[], pokedex: Record<number, PokedexEntry>): number[] {
-  const fresh = speciesIds.filter(id => !evolutionLine(id).some(member => pokedex[member]?.caught))
+  const fresh = uncaughtLines(speciesIds, pokedex)
   return fresh.length ? fresh : speciesIds
 }

@@ -26,6 +26,13 @@ const ALL_GIFTS: { source: string; gift: GiftDefinition }[] = [
   ]),
 ]
 
+/** Every species a Storyteller can offer; a missing-starter one offers the starters */
+const STORYTELLER_RARES = Object.entries(CITY_HUBS).flatMap(([city, c]) => {
+  const rare = c.storyteller?.rareEncounter
+  if (!rare) return []
+  return ('speciesId' in rare ? [rare.speciesId] : [...STARTER_SPECIES_IDS]).map(speciesId => ({ city, speciesId }))
+})
+
 describe('areas', () => {
   it('have unique ids', () => {
     const ids = KANTO_AREAS.map(a => a.id)
@@ -202,7 +209,7 @@ describe('Pokédex', () => {
     const obtainable = new Set<number>([
       ...STARTER_SPECIES_IDS,
       ...KANTO_AREAS.flatMap(a => a.encounters.map(e => e.speciesId)),
-      ...Object.values(CITY_HUBS).flatMap(c => c.storyteller ? [c.storyteller.rareEncounter.speciesId] : []),
+      ...STORYTELLER_RARES.map(r => r.speciesId),
       ...ALL_GIFTS.flatMap(({ gift }) => gift.kind === 'pokemon' ? gift.speciesIds : []),
       ...KANTO_AREAS.flatMap(a => a.legendary ? [a.legendary.speciesId] : []),
     ].flatMap(evolutionLine))
@@ -315,9 +322,7 @@ describe('cities', () => {
 
   it('offer Storyteller rares that are not already in any wild area', () => {
     const wild = new Set(KANTO_AREAS.flatMap(a => a.encounters.map(e => e.speciesId)))
-    for (const [id, c] of Object.entries(CITY_HUBS)) {
-      if (c.storyteller) expect(wild.has(c.storyteller.rareEncounter.speciesId), id).toBe(false)
-    }
+    for (const { city, speciesId } of STORYTELLER_RARES) expect(wild.has(speciesId), city).toBe(false)
   })
 })
 

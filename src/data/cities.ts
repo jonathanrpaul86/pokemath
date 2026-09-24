@@ -81,7 +81,7 @@ export const CITY_HUBS: Record<string, CityHubData> = {
         ],
       },
     }],
-    storyteller: { npcName: 'Captain Lou', rareEncounter: { speciesId: 1, level: 16 } }, // Bulbasaur
+    storyteller: { npcName: 'Captain Lou', rareEncounter: { missingStarter: true, level: 16 } },
   },
   'lavender-town': {
     houses: [{
