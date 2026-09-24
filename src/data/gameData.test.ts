@@ -8,7 +8,21 @@ import { KANTO_GYMS, BADGE_NAMES } from './gyms'
 import { CITY_HUBS, hasCityHub } from './cities'
 import { STORIES } from './stories'
 import { ITEM_MAP } from './items'
+import { KANTO_NAMES } from './pokedex'
 import { WORLD_BOUNDS } from './mapGrid'
+import { EVOLUTIONS } from './evolutions'
+import { STARTER_SPECIES_IDS } from './areas'
+import { evolutionLine } from '../utils/gifts'
+import type { GiftDefinition } from '../types'
+
+/** Every gift an NPC can hand out: area rewards, house trades, and house gifts */
+const ALL_GIFTS: { source: string; gift: GiftDefinition }[] = [
+  ...KANTO_AREAS.flatMap(a => a.completionReward ? [{ source: a.id, gift: a.completionReward.gift }] : []),
+  ...Object.values(CITY_HUBS).flatMap(c => c.houses).flatMap(h => [
+    ...(h.exchange ? [{ source: h.id, gift: h.exchange.gives }] : []),
+    ...(h.gift ? [{ source: h.id, gift: h.gift.gift }] : []),
+  ]),
+]
 
 describe('areas', () => {
   it('have unique ids', () => {
@@ -104,11 +118,12 @@ function reachableWith(badges: string[]): Set<string> {
       }
     }
     const before = keyItems.size
+    const addGift = (gift: GiftDefinition) => { if (gift.kind === 'key-item') keyItems.add(gift.keyItemId) }
     for (const id of seen) {
       const reward = AREA_MAP[id].completionReward
-      if (reward) keyItems.add(reward.keyItemId)
+      if (reward) addGift(reward.gift)
       for (const house of CITY_HUBS[id]?.houses ?? []) {
-        if (house.exchange && keyItems.has(house.exchange.takesKeyItemId)) keyItems.add(house.exchange.givesKeyItemId)
+        if (house.exchange && keyItems.has(house.exchange.takesKeyItemId)) addGift(house.exchange.gives)
       }
     }
     if (keyItems.size === before) return seen
@@ -121,12 +136,27 @@ describe('key items', () => {
   it('gates and rewards only use real key items', () => {
     for (const a of KANTO_AREAS) {
       if (a.requiredKeyItem) expect(keyItem(a.requiredKeyItem), a.id).toBe(true)
-      if (a.completionReward) expect(keyItem(a.completionReward.keyItemId), a.id).toBe(true)
+      for (const e of a.encounters) if (e.requiresKeyItem) expect(keyItem(e.requiresKeyItem), a.id).toBe(true)
     }
     for (const house of Object.values(CITY_HUBS).flatMap(c => c.houses)) {
-      if (!house.exchange) continue
-      expect(keyItem(house.exchange.takesKeyItemId), house.id).toBe(true)
-      expect(keyItem(house.exchange.givesKeyItemId), house.id).toBe(true)
+      if (house.exchange) expect(keyItem(house.exchange.takesKeyItemId), house.id).toBe(true)
+    }
+    for (const { source, gift } of ALL_GIFTS) {
+      if (gift.kind === 'key-item') expect(keyItem(gift.keyItemId), source).toBe(true)
+    }
+  })
+
+  it('can all be found somewhere, if an area or encounter needs one', () => {
+    const given = new Set(ALL_GIFTS.flatMap(({ gift }) => gift.kind === 'key-item' ? [gift.keyItemId] : []))
+    for (const a of KANTO_AREAS) {
+      if (a.requiredKeyItem) expect(given.has(a.requiredKeyItem), a.id).toBe(true)
+      for (const e of a.encounters) if (e.requiresKeyItem) expect(given.has(e.requiresKeyItem), a.id).toBe(true)
+    }
+  })
+
+  it('leave every explorable area with Pokémon you can meet without one', () => {
+    for (const a of KANTO_AREAS.filter(a => a.encounters.length)) {
+      expect(a.encounters.some(e => !e.requiresKeyItem), a.id).toBe(true)
     }
   })
 
@@ -145,6 +175,43 @@ describe('key items', () => {
   it('open every gated area once all badges are earned', () => {
     const seen = reachableWith(KANTO_GYMS.map(g => g.leader.badge))
     expect([...seen].sort()).toEqual(KANTO_AREAS.map(a => a.id).sort())
+  })
+})
+
+describe('gifts', () => {
+  it('give real Kanto Pokémon at sensible levels', () => {
+    for (const { source, gift } of ALL_GIFTS) {
+      if (gift.kind !== 'pokemon') continue
+      expect(gift.speciesIds.length, source).toBeGreaterThan(0)
+      for (const id of gift.speciesIds) expect(KANTO_NAMES[id], source).toBeDefined()
+      expect(gift.level, source).toBeGreaterThan(0)
+      expect(gift.level, source).toBeLessThanOrEqual(100)
+    }
+  })
+
+  it('have unique ids, so each one-time gift is tracked separately', () => {
+    const ids = [...KANTO_AREAS.filter(a => a.completionReward).map(a => a.id), ...Object.values(CITY_HUBS).flatMap(c => c.houses).filter(h => h.gift).map(h => h.id)]
+    expect(new Set(ids).size).toBe(ids.length)
+  })
+})
+
+describe('Pokédex', () => {
+  it('has every species except the legendaries and Mew obtainable', () => {
+    const obtainable = new Set<number>([
+      ...STARTER_SPECIES_IDS,
+      ...KANTO_AREAS.flatMap(a => a.encounters.map(e => e.speciesId)),
+      ...Object.values(CITY_HUBS).flatMap(c => c.storyteller ? [c.storyteller.rareEncounter.speciesId] : []),
+      ...ALL_GIFTS.flatMap(({ gift }) => gift.kind === 'pokemon' ? gift.speciesIds : []),
+    ].flatMap(evolutionLine))
+    const missing = Object.keys(KANTO_NAMES).map(Number).filter(id => !obtainable.has(id))
+    expect(missing).toEqual([144, 145, 146, 150, 151]) // Articuno, Zapdos, Moltres, Mewtwo, Mew
+  })
+
+  it('offers evolution choices that are real species', () => {
+    for (const [id, evo] of Object.entries(EVOLUTIONS)) {
+      for (const choice of evo.choices ?? []) expect(KANTO_NAMES[choice], id).toBeDefined()
+      if (evo.choices) expect(evo.choices, id).toContain(evo.evolvesIntoId)
+    }
   })
 })
 

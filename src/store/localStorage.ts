@@ -84,7 +84,7 @@ function backfillNewAreas(
 function migrateTrainer(raw: any): Trainer {
   // Trainer level/XP were removed; drop them from older saves
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { level, xp, xpToNextLevel, ...rest } = raw
+  const { level, xp, xpToNextLevel, claimedRewardAreaIds, ...rest } = raw
   const mathStats: MathStats = {
     ...DEFAULT_MATH_STATS,
     ...(raw.mathStats ?? {}),
@@ -101,12 +101,13 @@ function migrateTrainer(raw: any): Trainer {
     badges: [],
     gymProgress: {},
     storyteller: { heardStoryIds: [], nextStoryAt: {} },
-    claimedRewardAreaIds: [],
     ...rest,
     ...backfillNewAreas(
       raw.unlockedAreaIds ?? [],
       raw.exploreProgress ?? migrateExploreProgress(raw.unlockedAreaIds),
     ),
+    // Renamed from claimedRewardAreaIds once houses could hand out gifts too
+    claimedRewardIds: raw.claimedRewardIds ?? claimedRewardAreaIds ?? [],
     party: (raw.party ?? []).map(migratePokemon),
     pc:    (raw.pc    ?? []).map(migratePokemon),
     mathStats,

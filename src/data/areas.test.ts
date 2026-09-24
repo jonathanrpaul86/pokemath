@@ -75,11 +75,12 @@ describe('travelBlocker', () => {
 describe('unclaimedReward', () => {
   it('appears once the area is fully explored', () => {
     expect(unclaimedReward(area('route-11'), makeTrainer({ exploreProgress: { 'route-11': 7 } }))).toBeNull()
-    expect(unclaimedReward(area('route-11'), makeTrainer({ exploreProgress: { 'route-11': 8 } }))?.keyItemId).toBe('bike-voucher')
+    expect(unclaimedReward(area('route-11'), makeTrainer({ exploreProgress: { 'route-11': 8 } }))?.gift)
+      .toEqual({ kind: 'key-item', keyItemId: 'bike-voucher' })
   })
 
   it('is only handed out once', () => {
-    const t = makeTrainer({ exploreProgress: { 'route-11': 8 }, claimedRewardAreaIds: ['route-11'] })
+    const t = makeTrainer({ exploreProgress: { 'route-11': 8 }, claimedRewardIds: ['route-11'] })
     expect(unclaimedReward(area('route-11'), t)).toBeNull()
   })
 

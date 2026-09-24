@@ -140,8 +140,15 @@ describe('migrating older saves', () => {
     const loaded = loadSave(0)!
     expect(loaded.storyteller).toEqual({ heardStoryIds: [], nextStoryAt: {} })
     expect(loaded.badges).toEqual([])
-    expect(loaded.claimedRewardAreaIds).toEqual([])
+    expect(loaded.claimedRewardIds).toEqual([])
     expect(loaded.mathStats.operators['+']).toEqual({ totalAttempts: 0, correctAnswers: 0 })
+  })
+
+  it('keeps gifts claimed under the old field name', () => {
+    storeRaw(0, { ...makeTrainer(), claimedRewardIds: undefined, claimedRewardAreaIds: ['route-11'] })
+    const loaded = loadSave(0) as unknown as Record<string, unknown>
+    expect(loaded.claimedRewardIds).toEqual(['route-11'])
+    expect(loaded).not.toHaveProperty('claimedRewardAreaIds')
   })
 
   it('returns null for corrupt saves instead of crashing', () => {

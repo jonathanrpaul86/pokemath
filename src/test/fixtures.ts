@@ -69,7 +69,7 @@ export function makeTrainer(overrides: Partial<Trainer> = {}): Trainer {
     keyItems: [],
     badges: [],
     storyteller: { heardStoryIds: [], nextStoryAt: {} },
-    claimedRewardAreaIds: [],
+    claimedRewardIds: [],
     ...overrides,
   }
 }

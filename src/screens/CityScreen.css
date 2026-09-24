@@ -105,6 +105,52 @@
 .city-building--good .city-building__status { color: #48bb78; font-weight: 700; }
 .city-building--locked .city-building__status { color: #e63946; }
 .city-building--new { border-color: #d69e2e; }
+
+/* Gift Pokémon picker */
+.gift-choices {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(6.5rem, 1fr));
+  gap: 0.6rem;
+  margin: 0.4rem 0 0.8rem;
+}
+
+.gift-choice {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2rem;
+  padding: 0.5rem 0.4rem 0.6rem;
+  border: 2px solid #1a3c8c;
+  border-radius: 12px;
+  background: #16213e;
+  color: #fff;
+  cursor: pointer;
+  transition: transform 0.1s ease, border-color 0.15s ease;
+}
+
+.gift-choice:hover {
+  transform: translateY(-2px);
+  border-color: #ffd700;
+}
+
+.gift-choice__key {
+  position: absolute;
+  top: 4px;
+  left: 8px;
+  font-size: 0.75rem;
+  color: #aac4e0;
+}
+
+.gift-choice__sprite {
+  width: 96px;
+  height: 96px;
+  image-rendering: pixelated;
+}
+
+.gift-choice__name {
+  font-weight: 800;
+}
 .city-building--new .city-building__status { color: #f6c453; font-weight: 800; }
 
 /* ── NPC + Storyteller dialogs ── */

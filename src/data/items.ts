@@ -130,6 +130,38 @@ export const ITEM_DEFS: ItemDefinition[] = [
     sellPrice: 0,
     howToGet: 'Explore all of the Pokémon Tower in Lavender Town, and Mr. Fuji will give you one.',
   },
+  {
+    id: 'old-rod',
+    name: 'Old Rod',
+    description: 'A battered old fishing rod. Magikarp will bite in areas near the water.',
+    pocket: 'key-item',
+    buyPrice: 0,
+    sellPrice: 0,
+  },
+  {
+    id: 'good-rod',
+    name: 'Good Rod',
+    description: 'A decent fishing rod. Poliwag and Goldeen bite in rivers and lakes.',
+    pocket: 'key-item',
+    buyPrice: 0,
+    sellPrice: 0,
+  },
+  {
+    id: 'super-rod',
+    name: 'Super Rod',
+    description: 'An awesome, high-tech fishing rod. Shellder and other sea Pokémon bite along the coast.',
+    pocket: 'key-item',
+    buyPrice: 0,
+    sellPrice: 0,
+  },
+  {
+    id: 'dome-fossil',
+    name: 'Dome Fossil',
+    description: 'The fossil of an ancient Pokémon that lived in the sea. The Pokémon Lab on Cinnabar Island can bring it back to life.',
+    pocket: 'key-item',
+    buyPrice: 0,
+    sellPrice: 0,
+  },
 ]
 
 export const ITEM_MAP: Record<string, ItemDefinition> = Object.fromEntries(

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useTrainer, useGameStore } from '../store'
+import { useTrainer } from '../store'
 import { CITY_HUBS } from '../data/cities'
 import { gymForCity } from '../data/gyms'
 import { exploresDone, isAreaExplored, hasKeyItem } from '../data/areas'
@@ -9,10 +9,11 @@ import { storyStatus } from '../utils/storyteller'
 import PokemonCenterModal from '../components/PokemonCenterModal'
 import PokeMartModal from '../components/PokeMartModal'
 import NpcDialog from '../components/NpcDialog'
+import GiftDialog from '../components/GiftDialog'
 import StorytellerModal from '../components/StorytellerModal'
 import ExploreModal from '../components/ExploreModal'
 import GymScreen from './GymScreen'
-import type { Area, BattleRequest, KeyItemExchange, NpcHouse } from '../types'
+import type { Area, BattleRequest, GiftDefinition, NpcHouse } from '../types'
 import './CityScreen.css'
 
 interface Props {
@@ -26,7 +27,7 @@ type OpenBuilding =
   | { kind: 'mart' }
   | { kind: 'gym'; gymId: string }
   | { kind: 'house'; house: NpcHouse }
-  | { kind: 'exchange'; house: NpcHouse; exchange: KeyItemExchange }
+  | { kind: 'gift'; house: NpcHouse; lines: string[]; gift: GiftDefinition; claimId?: string; takesKeyItemId?: string }
   | { kind: 'storyteller' }
   | { kind: 'explore' }
 
@@ -42,7 +43,6 @@ interface BuildingCard {
 
 export default function CityScreen({ area, onOpenMap, onStartBattle }: Props) {
   const trainer = useTrainer()
-  const { dispatch } = useGameStore()
   const [open, setOpen] = useState<OpenBuilding | null>(null)
   const hub = CITY_HUBS[area.id]
   const gym = gymForCity(area.id)
@@ -67,14 +67,24 @@ export default function CityScreen({ area, onOpenMap, onStartBattle }: Props) {
     })
   }
   for (const house of hub?.houses ?? []) {
-    const exchange = house.exchange && hasKeyItem(trainer.keyItems, house.exchange.takesKeyItemId) ? house.exchange : undefined
-    cards.push(exchange
-      ? {
-          key: house.id, icon: house.icon, name: house.name, tone: 'new',
-          status: `🎁 Show your ${ITEM_MAP[exchange.takesKeyItemId]?.name ?? 'item'}`,
-          open: { kind: 'exchange', house, exchange },
-        }
-      : { key: house.id, icon: house.icon, name: house.name, status: house.npcName, open: { kind: 'house', house } })
+    const card = { key: house.id, icon: house.icon, name: house.name }
+    const { exchange, gift } = house
+    if (exchange && hasKeyItem(trainer.keyItems, exchange.takesKeyItemId)) {
+      cards.push({
+        ...card, tone: 'new', status: `🎁 Show your ${ITEM_MAP[exchange.takesKeyItemId]?.name ?? 'item'}`,
+        open: { kind: 'gift', house, lines: exchange.lines, gift: exchange.gives, takesKeyItemId: exchange.takesKeyItemId },
+      })
+    } else if (
+      gift && !trainer.claimedRewardIds.includes(house.id)
+      && (!gift.requiredBadge || trainer.badges.includes(gift.requiredBadge))
+    ) {
+      cards.push({
+        ...card, tone: 'new', status: '🎁 Has a gift for you',
+        open: { kind: 'gift', house, lines: gift.lines, gift: gift.gift, claimId: house.id },
+      })
+    } else {
+      cards.push({ ...card, status: house.npcName, open: { kind: 'house', house } })
+    }
   }
   if (hub?.storyteller) {
     const status = storyStatus(trainer, area.id)
@@ -148,17 +158,16 @@ export default function CityScreen({ area, onOpenMap, onStartBattle }: Props) {
       {open?.kind === 'mart' && area.martItems && <PokeMartModal martItems={area.martItems} onClose={close} />}
       {open?.kind === 'gym' && <GymScreen gymId={open.gymId} onExit={close} />}
       {open?.kind === 'house' && <NpcDialog house={open.house} onClose={close} />}
-      {open?.kind === 'exchange' && (
-        <NpcDialog
-          house={{
-            ...open.house,
-            lines: [...open.exchange.lines, `🎁 You got the ${ITEM_MAP[open.exchange.givesKeyItemId]?.name ?? open.exchange.givesKeyItemId}!`],
-          }}
-          onClose={() => {
-            const { takesKeyItemId, givesKeyItemId } = open.exchange
-            dispatch({ type: 'EXCHANGE_KEY_ITEM', payload: { takesKeyItemId, givesKeyItemId } })
-            close()
-          }}
+      {open?.kind === 'gift' && (
+        <GiftDialog
+          place={open.house.name}
+          icon={open.house.icon}
+          npcName={open.house.npcName}
+          lines={open.lines}
+          gift={open.gift}
+          claimId={open.claimId}
+          takesKeyItemId={open.takesKeyItemId}
+          onClose={close}
         />
       )}
       {open?.kind === 'storyteller' && hub?.storyteller && (

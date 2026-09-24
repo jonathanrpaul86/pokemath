@@ -3,6 +3,7 @@ import { useTrainer, useGameStore } from '../store'
 import { isMuted, setMuted } from '../utils/sound'
 import { AREA_MAP, KANTO_AREAS, meetsBadgeRequirement, meetsKeyItemRequirement, travelBlocker, exploresDone, isAreaExplored, unclaimedReward } from '../data/areas'
 import { ITEM_MAP } from '../data/items'
+import { availableEncounters } from '../utils/encounter'
 import { KANTO_NAMES } from '../data/pokedex'
 import { BADGE_NAMES, KANTO_GYMS } from '../data/gyms'
 import { hasCityHub } from '../data/cities'
@@ -11,7 +12,7 @@ import { preloadAreaSpecies, fetchPokemonSpecies } from '../services/pokeApi'
 import { WorldMapCanvas } from '../components/WorldMapCanvas'
 import ExploreModal from '../components/ExploreModal'
 import FullMapModal from '../components/FullMapModal'
-import NpcDialog from '../components/NpcDialog'
+import GiftDialog from '../components/GiftDialog'
 import { canExplore } from '../utils/explore'
 import { updatedMoveset } from '../utils/formulas'
 import type { Area, OwnedPokemon, EncounterEntry, BattleRequest } from '../types'
@@ -136,6 +137,8 @@ export default function OverworldScreen({ onStartBattle, cityView, onCityViewCha
   const { dispatch } = useGameStore()
   const [exploring, setExploring] = useState(false)
   const [fullMapOpen, setFullMapOpen] = useState(false)
+  // An area whose reward the player put off (e.g. offline), so it doesn't pop straight back up
+  const [rewardPutOffFor, setRewardPutOffFor] = useState<string | null>(null)
   const [muted, setMutedState] = useState(isMuted())
   // Which area is shown in the side panel (defaults to current, updates on hover/click)
   const [selectedAreaId, setSelectedAreaId] = useState(trainer.currentAreaId)
@@ -195,6 +198,7 @@ export default function OverworldScreen({ onStartBattle, cityView, onCityViewCha
   }, [movesKey])
 
   function handleTravel(areaId: string) {
+    setRewardPutOffFor(null)
     dispatch({ type: 'UNLOCK_AREA', payload: { areaId } })
     dispatch({ type: 'SET_CURRENT_AREA', payload: { areaId } })
     // Arriving in a city opens its hub
@@ -224,7 +228,9 @@ export default function OverworldScreen({ onStartBattle, cityView, onCityViewCha
   const selectedExploresDone = exploresDone(selectedArea, trainer.exploreProgress)
   const selectedExplored = isAreaExplored(selectedArea, trainer.exploreProgress)
   // Finishing an area can earn a gift, handed over once the explore is done
-  const pendingReward = !exploring && !showCity ? unclaimedReward(currentArea, trainer) : null
+  const pendingReward = !exploring && !showCity && rewardPutOffFor !== currentArea.id
+    ? unclaimedReward(currentArea, trainer)
+    : null
 
   return (
     <div className="overworld">
@@ -349,7 +355,7 @@ export default function OverworldScreen({ onStartBattle, cityView, onCityViewCha
             </div>
 
             {!selectedIsUnknown && selectedArea.encounters.length > 0 && (
-              <EncounterPreview encounters={selectedArea.encounters} />
+              <EncounterPreview encounters={availableEncounters(selectedArea, trainer.keyItems)} />
             )}
           </div>
           )}
@@ -376,15 +382,15 @@ export default function OverworldScreen({ onStartBattle, cityView, onCityViewCha
 
       {/* ── Completion reward ── */}
       {pendingReward && (
-        <NpcDialog
-          house={{
-            id: `reward-${currentArea.id}`,
-            name: currentArea.name,
-            icon: '🎁',
-            npcName: pendingReward.npcName,
-            lines: [...pendingReward.lines, `🎁 You got the ${ITEM_MAP[pendingReward.keyItemId]?.name ?? pendingReward.keyItemId}!`],
-          }}
-          onClose={() => dispatch({ type: 'CLAIM_AREA_REWARD', payload: { areaId: currentArea.id } })}
+        <GiftDialog
+          key={currentArea.id}
+          place={currentArea.name}
+          icon="🎁"
+          npcName={pendingReward.npcName}
+          lines={pendingReward.lines}
+          gift={pendingReward.gift}
+          claimId={currentArea.id}
+          onClose={() => setRewardPutOffFor(currentArea.id)}
         />
       )}
 

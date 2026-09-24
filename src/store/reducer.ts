@@ -1,11 +1,11 @@
 import type { Trainer, OwnedPokemon, MathStats, ItemPocket } from '../types'
 import type { GameAction } from './actions'
 import { createOwnedPokemon, pokemonXpToNextLevel, pokemonLevelCap, calcStats } from '../utils/formulas'
-import { KANTO_AREAS, AREA_MAP, hasKeyItem, unclaimedReward } from '../data/areas'
+import { KANTO_AREAS, AREA_MAP, hasKeyItem } from '../data/areas'
 import { ITEM_MAP } from '../data/items'
 import { totalExplores, STORY_COOLDOWN_EXPLORES } from '../utils/storyteller'
 
-const PARTY_MAX = 6
+export const PARTY_MAX = 6
 const DEV_TRAINER_NAME = 'DEBUG'
 const DEV_STARTER_LEVEL = 40
 
@@ -44,7 +44,7 @@ export function createNewTrainer(name: string, starterSpecies: Parameters<typeof
     keyItems: [],
     badges: [],
     storyteller: { heardStoryIds: [], nextStoryAt: {} },
-    claimedRewardAreaIds: [],
+    claimedRewardIds: [],
   }
 }
 
@@ -360,25 +360,15 @@ export function gameReducer(trainer: Trainer, action: GameAction): Trainer {
       break
     }
 
-    case 'CLAIM_AREA_REWARD': {
-      const { areaId } = action.payload
-      const area = AREA_MAP[areaId]
-      const reward = area && unclaimedReward(area, trainer)
-      if (!reward) return trainer
-      next = {
-        ...gameReducer(trainer, { type: 'ADD_ITEM', payload: { itemId: reward.keyItemId, quantity: 1 } }),
-        claimedRewardAreaIds: [...trainer.claimedRewardAreaIds, areaId],
-      }
-      break
-    }
-
-    case 'EXCHANGE_KEY_ITEM': {
-      const { takesKeyItemId, givesKeyItemId } = action.payload
-      if (!hasKeyItem(trainer.keyItems, takesKeyItemId)) return trainer
-      next = gameReducer(
-        gameReducer(trainer, { type: 'REMOVE_ITEM', payload: { itemId: takesKeyItemId, quantity: 1 } }),
-        { type: 'ADD_ITEM', payload: { itemId: givesKeyItemId, quantity: 1 } },
-      )
+    case 'RECEIVE_GIFT': {
+      const { claimId, takesKeyItemId, keyItemId, pokemon } = action.payload
+      if (claimId && trainer.claimedRewardIds.includes(claimId)) return trainer
+      if (takesKeyItemId && !hasKeyItem(trainer.keyItems, takesKeyItemId)) return trainer
+      let t = trainer
+      if (takesKeyItemId) t = gameReducer(t, { type: 'REMOVE_ITEM', payload: { itemId: takesKeyItemId, quantity: 1 } })
+      if (keyItemId) t = gameReducer(t, { type: 'ADD_ITEM', payload: { itemId: keyItemId, quantity: 1 } })
+      if (pokemon) t = gameReducer(t, { type: 'CATCH_POKEMON', payload: { pokemon } })
+      next = claimId ? { ...t, claimedRewardIds: [...t.claimedRewardIds, claimId] } : t
       break
     }
 

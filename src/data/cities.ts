@@ -72,7 +72,7 @@ export const CITY_HUBS: Record<string, CityHubData> = {
       ],
       exchange: {
         takesKeyItemId: 'bike-voucher',
-        givesKeyItemId: 'bicycle',
+        gives: { kind: 'key-item', keyItemId: 'bicycle' },
         lines: [
           'Is that… a Bike Voucher from the Pokémon Fan Club?!',
           'A deal is a deal. Here you go: one shiny new Bicycle, free of charge!',
@@ -136,6 +136,14 @@ export const CITY_HUBS: Record<string, CityHubData> = {
         'A true fighter is kind as well as strong.',
         'Sabrina’s Psychic Pokémon are very powerful. Bring your toughest team, and a Bag full of Potions!',
       ],
+      gift: {
+        requiredBadge: 'marsh-badge',
+        gift: { kind: 'pokemon', speciesIds: [107, 106], level: 38 },
+        lines: [
+          'Hiyah! You beat Sabrina? Then you have the heart of a true fighter!',
+          'As a reward, one of my prized Fighting Pokémon will join you. Choose wisely!',
+        ],
+      },
     }],
     storyteller: { npcName: 'Madame Sol', rareEncounter: { speciesId: 106, level: 32 } }, // Hitmonlee
   },
@@ -163,6 +171,15 @@ export const CITY_HUBS: Record<string, CityHubData> = {
         'Blaine loves riddles almost as much as he loves fire.',
         'His Fire Pokémon hit hard. Make sure your team is fully healed before you go in!',
       ],
+      exchange: {
+        takesKeyItemId: 'dome-fossil',
+        gives: { kind: 'pokemon', speciesIds: [140], level: 35 },
+        lines: [
+          'Oh! Is that a Dome Fossil? Let me put it in our machine…',
+          'Whirr… beep… DING! It worked! The ancient Pokémon Kabuto is alive again!',
+          'It seems to like you already. Please take good care of it!',
+        ],
+      },
     }],
     storyteller: { npcName: 'Professor Ash', rareEncounter: { speciesId: 142, level: 38 } }, // Aerodactyl
   },

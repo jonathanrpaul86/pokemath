@@ -7,6 +7,7 @@ import { generateProblem, checkAnswer } from '../utils/math'
 import { battleXpReward, trainerMoneyReward, pokemonXpToNextLevel } from '../utils/formulas'
 import { playCorrect, playWrong, playCatch, playVictory, playLevelUp, isMuted, setMuted } from '../utils/sound'
 import { EVOLUTIONS } from '../data/evolutions'
+import { KANTO_NAMES } from '../data/pokedex'
 import { ITEM_MAP, BALL_EMOJI, ITEM_EMOJI } from '../data/items'
 import type { Area, BattlePhase, BattleOutcome, MathProblem, Move, OwnedPokemon, WildPokemon, TrainerBattle, WildOverride } from '../types'
 import './BattleScreen.css'
@@ -246,6 +247,8 @@ export default function BattleScreen({ area, onBattleEnd, trainerBattle, wildOve
   const [showMoveMenu, setShowMoveMenu] = useState(false)
   const battleRef = useRef<BattleData | null>(null)
   const evolvedRef = useRef<Set<string>>(new Set())
+  // Branching evolutions (Eevee) the player already picked or put off, keyed like evolvedRef
+  const [settledEvolutions, setSettledEvolutions] = useState<string[]>([])
   const prevLevelRef = useRef<Record<string, number>>({})
   const [muted, setMutedState] = useState(isMuted())
 
@@ -289,7 +292,7 @@ export default function BattleScreen({ area, onBattleEnd, trainerBattle, wildOve
       }
 
       const { speciesId, level } = wildOverride ?? (() => {
-        const entry = pickEncounter(area)
+        const entry = pickEncounter(area, Math.random, trainer.keyItems)
         return { speciesId: entry.speciesId, level: pickLevel(entry) }
       })()
       const wildSpecies = await fetchPokemonSpecies(speciesId)
@@ -558,16 +561,19 @@ export default function BattleScreen({ area, onBattleEnd, trainerBattle, wildOve
     if (evolvedRef.current.has(key)) return
 
     const evo = EVOLUTIONS[pokemon.speciesId]
-    if (!evo || pokemon.level < evo.atLevel) return
+    // Branching evolutions wait for the player's pick (see evolutionChoice)
+    if (!evo || evo.choices || pokemon.level < evo.atLevel) return
 
     evolvedRef.current.add(key)
-    const prevName = capitalize(pokemon.name)
+    evolveInto(pokemon.uid, capitalize(pokemon.name), evo.evolvesIntoId)
+  }, [battle?.phase]) // eslint-disable-line
 
-    fetchPokemonSpecies(evo.evolvesIntoId).then(newSpecies => {
+  function evolveInto(uid: string, prevName: string, speciesId: number) {
+    fetchPokemonSpecies(speciesId).then(newSpecies => {
       dispatch({
         type: 'EVOLVE_POKEMON',
         payload: {
-          uid: pokemon.uid,
+          uid,
           newSpeciesId: newSpecies.id,
           newName: newSpecies.name,
           newBaseStats: newSpecies.baseStats,
@@ -584,7 +590,25 @@ export default function BattleScreen({ area, onBattleEnd, trainerBattle, wildOve
         }
       })
     })
-  }, [battle?.phase]) // eslint-disable-line
+  }
+
+  /** Pick a branch, or null to stay as-is for now (asked again next level) */
+  function resolveEvolutionChoice(speciesId: number | null) {
+    if (!evolutionChoice) return
+    setSettledEvolutions(keys => [...keys, evolutionChoice.key])
+    if (speciesId !== null) evolveInto(evolutionChoice.uid, evolutionChoice.prevName, speciesId)
+  }
+
+  // A branching evolution (Eevee) waiting for the player to pick, after a win or catch
+  const evolutionChoice = (() => {
+    if (!battle || (battle.phase !== 'victory' && battle.phase !== 'caught')) return null
+    const pokemon = trainer.party[battle.activeIdx]
+    const evo = pokemon && EVOLUTIONS[pokemon.speciesId]
+    if (!pokemon || !evo?.choices || pokemon.level < evo.atLevel) return null
+    const key = `${pokemon.uid}@${pokemon.speciesId}@${pokemon.level}`
+    if (settledEvolutions.includes(key)) return null
+    return { key, uid: pokemon.uid, prevName: capitalize(pokemon.name), options: evo.choices }
+  })()
 
   // ---- Keyboard input --------------------------------------------------------
 
@@ -593,7 +617,13 @@ export default function BattleScreen({ area, onBattleEnd, trainerBattle, wildOve
       const b = battleRef.current
       if (!b) return
 
-      // Terminal phase: Enter continues
+      // Terminal phase: pick an evolution first if one is waiting, then Enter continues
+      if (isBattleOutcome(b.phase) && evolutionChoice) {
+        const n = parseInt(e.key, 10)
+        if (n >= 1 && n <= evolutionChoice.options.length) { e.preventDefault(); resolveEvolutionChoice(evolutionChoice.options[n - 1]) }
+        else if (e.key === 'Escape') { e.preventDefault(); resolveEvolutionChoice(null) }
+        return
+      }
       if (isBattleOutcome(b.phase)) {
         if (e.key === 'Enter') {
           e.preventDefault()
@@ -701,7 +731,7 @@ export default function BattleScreen({ area, onBattleEnd, trainerBattle, wildOve
     }
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
-  }, [answer, showSwitch, switchHighlight, showBallMenu, showItemMenu, usingItemInBattle, pendingTrainerSend, showMoveMenu]) // eslint-disable-line
+  }, [answer, showSwitch, switchHighlight, showBallMenu, showItemMenu, usingItemInBattle, pendingTrainerSend, showMoveMenu, evolutionChoice?.key]) // eslint-disable-line
 
   // ---- Action handlers -------------------------------------------------------
 
@@ -1300,7 +1330,19 @@ export default function BattleScreen({ area, onBattleEnd, trainerBattle, wildOve
 
             {/* Right column always rendered so left column width stays fixed */}
             <div className="battle-commands__right">
-              {isTerminal ? (
+              {isTerminal && evolutionChoice ? (
+                <div className="battle-result-panel evolution-choice">
+                  <p className="evolution-choice__prompt">✨ Evolve {evolutionChoice.prevName} into…</p>
+                  <div className="evolution-choice__options">
+                    {evolutionChoice.options.map((id, i) => (
+                      <button key={id} className="btn btn-primary" onClick={() => resolveEvolutionChoice(id)}>
+                        ({i + 1}) {KANTO_NAMES[id] ?? `#${id}`}
+                      </button>
+                    ))}
+                  </div>
+                  <button className="btn btn-secondary" onClick={() => resolveEvolutionChoice(null)}>Not now</button>
+                </div>
+              ) : isTerminal ? (
                 <div className="battle-result-panel">
                   <button
                     className="btn btn-primary"

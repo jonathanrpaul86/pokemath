@@ -5,6 +5,7 @@ import { KANTO_AREAS } from '../data/areas'
 import { STORY_COOLDOWN_EXPLORES } from '../utils/storyteller'
 import { CHARMANDER_BASE, CHARMELEON_BASE, makePokemon, makeSpecies, makeTrainer } from '../test/fixtures'
 import type { Move } from '../types'
+import type { GameAction } from './actions'
 
 const gainXp = (trainer = makeTrainer(), amount: number) =>
   gameReducer(trainer, { type: 'GAIN_POKEMON_XP', payload: { uid: 'pkmn-1', amount } })
@@ -137,42 +138,45 @@ describe('EVOLVE_POKEMON', () => {
   })
 })
 
-describe('CLAIM_AREA_REWARD', () => {
-  const explored = () => makeTrainer({ exploreProgress: { 'pokemon-tower': 10 } })
-  const claim = (t: ReturnType<typeof makeTrainer>) =>
-    gameReducer(t, { type: 'CLAIM_AREA_REWARD', payload: { areaId: 'pokemon-tower' } })
+describe('RECEIVE_GIFT', () => {
+  const receive = (t: ReturnType<typeof makeTrainer>, payload: Extract<GameAction, { type: 'RECEIVE_GIFT' }>['payload']) =>
+    gameReducer(t, { type: 'RECEIVE_GIFT', payload })
 
-  it('gives the key item once the area is explored', () => {
-    const t = claim(explored())
+  it('gives a key item and records the gift', () => {
+    const t = receive(makeTrainer(), { claimId: 'pokemon-tower', keyItemId: 'poke-flute' })
     expect(t.keyItems).toEqual([{ itemId: 'poke-flute', quantity: 1 }])
-    expect(t.claimedRewardAreaIds).toEqual(['pokemon-tower'])
+    expect(t.claimedRewardIds).toEqual(['pokemon-tower'])
   })
 
-  it('does not hand it out twice', () => {
-    const t = claim(claim(explored()))
-    expect(t.keyItems).toEqual([{ itemId: 'poke-flute', quantity: 1 }])
+  it('does not hand the same gift out twice', () => {
+    const once = receive(makeTrainer(), { claimId: 'pokemon-tower', keyItemId: 'poke-flute' })
+    expect(receive(once, { claimId: 'pokemon-tower', keyItemId: 'poke-flute' })).toBe(once)
   })
 
-  it('does nothing before the area is explored', () => {
-    const t = makeTrainer({ exploreProgress: { 'pokemon-tower': 9 } })
-    expect(claim(t)).toBe(t)
-  })
-})
-
-describe('EXCHANGE_KEY_ITEM', () => {
-  const trade = { takesKeyItemId: 'bike-voucher', givesKeyItemId: 'bicycle' }
-
-  it('swaps the voucher for a bicycle', () => {
-    const t = gameReducer(
+  it('trades a key item away', () => {
+    const t = receive(
       makeTrainer({ keyItems: [{ itemId: 'bike-voucher', quantity: 1 }] }),
-      { type: 'EXCHANGE_KEY_ITEM', payload: trade },
+      { takesKeyItemId: 'bike-voucher', keyItemId: 'bicycle' },
     )
     expect(t.keyItems).toEqual([{ itemId: 'bicycle', quantity: 1 }])
   })
 
-  it('does nothing without the voucher', () => {
+  it('does nothing if the traded item is missing', () => {
     const t = makeTrainer()
-    expect(gameReducer(t, { type: 'EXCHANGE_KEY_ITEM', payload: trade })).toBe(t)
+    expect(receive(t, { takesKeyItemId: 'dome-fossil', pokemon: makePokemon({ uid: 'kabuto', speciesId: 140 }) })).toBe(t)
+  })
+
+  it('adds a gift Pokémon to the party and the Pokédex', () => {
+    const t = receive(makeTrainer(), { claimId: 'safari-zone', pokemon: makePokemon({ uid: 'licky', speciesId: 108 }) })
+    expect(t.party.map(p => p.uid)).toContain('licky')
+    expect(t.pokedex[108]).toEqual({ seen: true, caught: true })
+  })
+
+  it('sends a gift Pokémon to the PC when the party is full', () => {
+    const party = Array.from({ length: 6 }, (_, i) => makePokemon({ uid: `p${i}` }))
+    const t = receive(makeTrainer({ party }), { pokemon: makePokemon({ uid: 'licky', speciesId: 108 }) })
+    expect(t.party).toHaveLength(6)
+    expect(t.pc.map(p => p.uid)).toEqual(['licky'])
   })
 })
 

@@ -1,6 +1,8 @@
 export interface Evolution {
   evolvesIntoId: number
   atLevel: number
+  /** Branching evolutions: the player picks one (evolvesIntoId is the first) */
+  choices?: number[]
 }
 
 /**
@@ -73,7 +75,7 @@ export const EVOLUTIONS: Record<number, Evolution> = {
   118: { evolvesIntoId: 119, atLevel: 33 }, // Goldeen → Seaking
   120: { evolvesIntoId: 121, atLevel: 30 }, // Staryu → Starmie
   129: { evolvesIntoId: 130, atLevel: 20 }, // Magikarp → Gyarados
-  133: { evolvesIntoId: 134, atLevel: 30 }, // Eevee → Vaporeon
+  133: { evolvesIntoId: 134, atLevel: 30, choices: [134, 135, 136] }, // Eevee → Vaporeon, Jolteon, or Flareon
   138: { evolvesIntoId: 139, atLevel: 40 }, // Omanyte → Omastar
   140: { evolvesIntoId: 141, atLevel: 40 }, // Kabuto → Kabutops
   147: { evolvesIntoId: 148, atLevel: 30 }, // Dratini → Dragonair

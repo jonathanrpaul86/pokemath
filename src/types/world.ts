@@ -7,16 +7,24 @@ export interface EncounterEntry {
   weight: number
   minLevel: number
   maxLevel: number
+  /** Only appears for players holding this key item (e.g. a fishing rod) */
+  requiresKeyItem?: string
 }
 
 export type AreaType = 'city' | 'town' | 'route' | 'forest' | 'cave' | 'special'
 
+/** Something an NPC hands over: a key item, or a Pokémon */
+export type GiftDefinition =
+  | { kind: 'key-item'; keyItemId: string }
+  /** More than one species lets the player pick (from ones they haven't caught yet) */
+  | { kind: 'pokemon'; speciesIds: number[]; level: number }
+
 /** A one-time gift from an NPC once an area is fully explored */
 export interface AreaReward {
   npcName: string
-  /** Shown one at a time, before the "You got …" line */
+  /** Shown one at a time, before the gift is handed over */
   lines: string[]
-  keyItemId: string
+  gift: GiftDefinition
 }
 
 export interface Area {

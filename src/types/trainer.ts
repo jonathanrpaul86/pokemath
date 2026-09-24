@@ -38,6 +38,6 @@ export interface Trainer {
   /** Progress per gym — keyed by GymDefinition.id */
   gymProgress?: Record<string, GymProgress>
   storyteller: StorytellerProgress
-  /** Areas whose completion reward has been handed out */
-  claimedRewardAreaIds: string[]
+  /** One-time gifts already handed out: area ids (completion rewards) and house ids */
+  claimedRewardIds: string[]
 }

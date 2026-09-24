@@ -146,6 +146,14 @@ export const KANTO_AREAS: Area[] = [
     areaType: 'cave',
     exploresToComplete: 12,
     connectedAreaIds: ['route-3', 'route-4'],
+    completionReward: {
+      npcName: 'Super Nerd',
+      lines: [
+        'Hey! You explored all of Mt. Moon? Then you deserve this!',
+        'It’s a Dome Fossil, from a Pokémon that lived in the sea long, long ago. The Pokémon Lab on Cinnabar Island can bring fossils back to life!',
+      ],
+      gift: { kind: 'key-item', keyItemId: 'dome-fossil' },
+    },
     ...mapAt(40, 23),
     mathDifficulty: 39,
     encounters: [
@@ -170,6 +178,7 @@ export const KANTO_AREAS: Area[] = [
       { speciesId: 43, weight: 20, minLevel: 12, maxLevel: 16 }, // Oddish
       { speciesId: 69, weight: 15, minLevel: 12, maxLevel: 16 }, // Bellsprout
       { speciesId: 52, weight: 10, minLevel: 12, maxLevel: 15 }, // Meowth
+      { speciesId: 129, weight: 15, minLevel: 10, maxLevel: 15, requiresKeyItem: 'old-rod' }, // Magikarp (old rod)
     ],
   },
   {
@@ -199,6 +208,8 @@ export const KANTO_AREAS: Area[] = [
       { speciesId: 16, weight: 20, minLevel: 12, maxLevel: 16 }, // Pidgey
       { speciesId: 63, weight: 15, minLevel: 12, maxLevel: 15 }, // Abra
       { speciesId: 14, weight: 15, minLevel: 12, maxLevel: 15 }, // Kakuna
+      { speciesId: 129, weight: 15, minLevel: 10, maxLevel: 15, requiresKeyItem: 'old-rod' }, // Magikarp (old rod)
+      { speciesId: 60,  weight: 15, minLevel: 12, maxLevel: 16, requiresKeyItem: 'good-rod' }, // Poliwag (good rod)
     ],
   },
   {
@@ -208,6 +219,14 @@ export const KANTO_AREAS: Area[] = [
     areaType: 'route',
     exploresToComplete: 8,
     connectedAreaIds: ['route-24'],
+    completionReward: {
+      npcName: 'Bill',
+      lines: [
+        'Hi! I’m Bill, a Pokémon researcher. Thanks for visiting my Sea Cottage!',
+        'I raise the three Pokémon that new trainers pick from in Pallet Town. Would you like one you don’t have yet?',
+      ],
+      gift: { kind: 'pokemon', speciesIds: [1, 4, 7], level: 15 },
+    },
     ...mapAt(73, 8),
     mathDifficulty: 46,
     encounters: [
@@ -216,6 +235,8 @@ export const KANTO_AREAS: Area[] = [
       { speciesId: 69, weight: 20, minLevel: 13, maxLevel: 17 }, // Bellsprout
       { speciesId: 48, weight: 20, minLevel: 13, maxLevel: 17 }, // Venonat
       { speciesId: 63, weight: 15, minLevel: 13, maxLevel: 16 }, // Abra
+      { speciesId: 129, weight: 15, minLevel: 10, maxLevel: 15, requiresKeyItem: 'old-rod' }, // Magikarp (old rod)
+      { speciesId: 118, weight: 10, minLevel: 13, maxLevel: 17, requiresKeyItem: 'good-rod' }, // Goldeen (good rod)
     ],
   },
   {
@@ -311,7 +332,7 @@ export const KANTO_AREAS: Area[] = [
         'You made it to the very top! The Ghost Pokémon here were only lonely, and you’ve helped them settle down.',
         'Please take my Poké Flute. Its song can wake even a sleeping Snorlax, like the one snoozing on Route 12.',
       ],
-      keyItemId: 'poke-flute',
+      gift: { kind: 'key-item', keyItemId: 'poke-flute' },
     },
     ...mapAt(95, 48),
     mathDifficulty: 71,
@@ -355,6 +376,7 @@ export const KANTO_AREAS: Area[] = [
       { speciesId: 23, weight: 20, minLevel: 24, maxLevel: 28 }, // Ekans
       { speciesId: 27, weight: 20, minLevel: 24, maxLevel: 28 }, // Sandshrew
       { speciesId: 56, weight: 15, minLevel: 24, maxLevel: 28 }, // Mankey
+      { speciesId: 122, weight: 5 , minLevel: 25, maxLevel: 28 }, // Mr. Mime
     ],
   },
   {
@@ -364,6 +386,14 @@ export const KANTO_AREAS: Area[] = [
     areaType: 'route',
     exploresToComplete: 6,
     connectedAreaIds: ['rock-tunnel', 'lavender-town', 'power-plant'],
+    completionReward: {
+      npcName: 'Fishing Guru’s Brother',
+      lines: [
+        'You explored the whole river path? My big brother would be proud!',
+        'Here, have my Good Rod. With it, Poliwag and Goldeen will bite in rivers all over Kanto.',
+      ],
+      gift: { kind: 'key-item', keyItemId: 'good-rod' },
+    },
     ...mapAt(87, 36),
     mathDifficulty: 61,
     encounters: [
@@ -372,6 +402,9 @@ export const KANTO_AREAS: Area[] = [
       { speciesId: 23,  weight: 20, minLevel: 22, maxLevel: 26 }, // Ekans
       { speciesId: 27,  weight: 15, minLevel: 22, maxLevel: 26 }, // Sandshrew
       { speciesId: 81,  weight: 15, minLevel: 22, maxLevel: 26 }, // Magnemite
+      { speciesId: 129, weight: 10, minLevel: 20, maxLevel: 25, requiresKeyItem: 'old-rod' }, // Magikarp (old rod)
+      { speciesId: 60,  weight: 15, minLevel: 22, maxLevel: 25, requiresKeyItem: 'good-rod' }, // Poliwag (good rod)
+      { speciesId: 118, weight: 10, minLevel: 22, maxLevel: 25, requiresKeyItem: 'good-rod' }, // Goldeen (good rod)
     ],
   },
   {
@@ -391,6 +424,8 @@ export const KANTO_AREAS: Area[] = [
       { speciesId: 82,  weight: 15, minLevel: 38, maxLevel: 42 }, // Magneton
       { speciesId: 101, weight: 10, minLevel: 38, maxLevel: 42 }, // Electrode
       { speciesId: 125, weight: 10, minLevel: 38, maxLevel: 42 }, // Electabuzz
+      { speciesId: 88,  weight: 15, minLevel: 36, maxLevel: 40 }, // Grimer
+      { speciesId: 89,  weight: 5 , minLevel: 40, maxLevel: 42 }, // Muk
     ],
   },
   {
@@ -406,7 +441,7 @@ export const KANTO_AREAS: Area[] = [
         'Oh, you explored every corner of Route 11? My, you must love Pokémon as much as I do!',
         'I won this Bike Voucher in a raffle, but I never ride. Take it! The Bike Shop in Cerulean City will swap it for a Bicycle.',
       ],
-      keyItemId: 'bike-voucher',
+      gift: { kind: 'key-item', keyItemId: 'bike-voucher' },
     },
     ...mapAt(74, 70),
     mathDifficulty: 55,
@@ -426,6 +461,14 @@ export const KANTO_AREAS: Area[] = [
     requiredBadge: 'marsh-badge',
     requiredKeyItem: 'poke-flute',
     connectedAreaIds: ['lavender-town', 'route-11', 'route-13'],
+    completionReward: {
+      npcName: 'Fishing Guru’s Other Brother',
+      lines: [
+        'You’ve fished off every inch of this pier, haven’t you? You’re a real angler now!',
+        'I want you to have my Super Rod. Shellder and other sea Pokémon bite along the coast with this beauty.',
+      ],
+      gift: { kind: 'key-item', keyItemId: 'super-rod' },
+    },
     ...mapAt(87, 62),
     mathDifficulty: 76,
     encounters: [
@@ -434,6 +477,9 @@ export const KANTO_AREAS: Area[] = [
       { speciesId: 48, weight: 20, minLevel: 34, maxLevel: 38 }, // Venonat
       { speciesId: 17, weight: 20, minLevel: 34, maxLevel: 39 }, // Pidgeotto
       { speciesId: 79, weight: 10, minLevel: 34, maxLevel: 38 }, // Slowpoke
+      { speciesId: 129, weight: 10, minLevel: 30, maxLevel: 35, requiresKeyItem: 'old-rod' }, // Magikarp (old rod)
+      { speciesId: 61,  weight: 10, minLevel: 34, maxLevel: 38, requiresKeyItem: 'good-rod' }, // Poliwhirl (good rod)
+      { speciesId: 90,  weight: 15, minLevel: 34, maxLevel: 38, requiresKeyItem: 'super-rod' }, // Shellder (super rod)
     ],
   },
   {
@@ -451,6 +497,8 @@ export const KANTO_AREAS: Area[] = [
       { speciesId: 70,  weight: 20, minLevel: 35, maxLevel: 40 }, // Weepinbell
       { speciesId: 48,  weight: 20, minLevel: 35, maxLevel: 39 }, // Venonat
       { speciesId: 132, weight: 15, minLevel: 35, maxLevel: 39 }, // Ditto
+      { speciesId: 61,  weight: 10, minLevel: 35, maxLevel: 39, requiresKeyItem: 'good-rod' }, // Poliwhirl (good rod)
+      { speciesId: 90,  weight: 15, minLevel: 35, maxLevel: 39, requiresKeyItem: 'super-rod' }, // Shellder (super rod)
     ],
   },
   {
@@ -512,6 +560,14 @@ export const KANTO_AREAS: Area[] = [
     areaType: 'route',
     exploresToComplete: 10,
     connectedAreaIds: ['saffron-city', 'vermilion-city', 'route-5'],
+    completionReward: {
+      npcName: 'Fishing Guru',
+      lines: [
+        'Hello there! I see you’ve walked every step of Route 6. Do you like to fish?',
+        'Take this Old Rod! Cast it near the water and you might hook a Magikarp. Train it well, and it grows into something amazing!',
+      ],
+      gift: { kind: 'key-item', keyItemId: 'old-rod' },
+    },
     ...mapAt(62, 60),
     mathDifficulty: 53,
     encounters: [
@@ -521,6 +577,8 @@ export const KANTO_AREAS: Area[] = [
       { speciesId: 52, weight: 15, minLevel: 16, maxLevel: 20 }, // Meowth
       { speciesId: 54, weight: 10, minLevel: 17, maxLevel: 21 }, // Psyduck
       { speciesId: 17, weight: 10, minLevel: 19, maxLevel: 22 }, // Pidgeotto
+      { speciesId: 129, weight: 15, minLevel: 15, maxLevel: 20, requiresKeyItem: 'old-rod' }, // Magikarp (old rod)
+      { speciesId: 60,  weight: 15, minLevel: 16, maxLevel: 20, requiresKeyItem: 'good-rod' }, // Poliwag (good rod)
     ],
   },
   {
@@ -629,6 +687,8 @@ export const KANTO_AREAS: Area[] = [
       { speciesId: 116, weight: 15, minLevel: 38, maxLevel: 42 }, // Horsea
       { speciesId: 118, weight: 15, minLevel: 38, maxLevel: 42 }, // Goldeen
       { speciesId: 73,  weight: 15, minLevel: 40, maxLevel: 43 }, // Tentacruel
+      { speciesId: 129, weight: 10, minLevel: 35, maxLevel: 40, requiresKeyItem: 'old-rod' }, // Magikarp (old rod)
+      { speciesId: 90,  weight: 15, minLevel: 38, maxLevel: 42, requiresKeyItem: 'super-rod' }, // Shellder (super rod)
     ],
   },
   {
@@ -647,6 +707,7 @@ export const KANTO_AREAS: Area[] = [
       { speciesId: 120, weight: 15, minLevel: 40, maxLevel: 44 }, // Staryu
       { speciesId: 99,  weight: 15, minLevel: 40, maxLevel: 45 }, // Kingler
       { speciesId: 117, weight: 10, minLevel: 41, maxLevel: 45 }, // Seadra
+      { speciesId: 90,  weight: 15, minLevel: 40, maxLevel: 44, requiresKeyItem: 'super-rod' }, // Shellder (super rod)
     ],
   },
   {
@@ -665,6 +726,8 @@ export const KANTO_AREAS: Area[] = [
       { speciesId: 17,  weight: 20, minLevel: 40, maxLevel: 45 }, // Pidgeotto
       { speciesId: 120, weight: 15, minLevel: 40, maxLevel: 44 }, // Staryu
       { speciesId: 73,  weight: 15, minLevel: 41, maxLevel: 45 }, // Tentacruel
+      { speciesId: 129, weight: 10, minLevel: 35, maxLevel: 40, requiresKeyItem: 'old-rod' }, // Magikarp (old rod)
+      { speciesId: 90,  weight: 10, minLevel: 40, maxLevel: 44, requiresKeyItem: 'super-rod' }, // Shellder (super rod)
     ],
   },
   {
@@ -686,6 +749,14 @@ export const KANTO_AREAS: Area[] = [
     areaType: 'special',
     exploresToComplete: 10,
     connectedAreaIds: ['fuchsia-city'],
+    completionReward: {
+      npcName: 'Safari Warden',
+      lines: [
+        'Well, I’ll be! You’ve seen every corner of the Safari Zone.',
+        'This Lickitung followed me home from the grass one day. It loves new friends. Will you look after it?',
+      ],
+      gift: { kind: 'pokemon', speciesIds: [108], level: 40 },
+    },
     ...mapAt(54, 79),
     mathDifficulty: 80,
     encounters: [
@@ -695,6 +766,7 @@ export const KANTO_AREAS: Area[] = [
       { speciesId: 115, weight: 15, minLevel: 38, maxLevel: 45 }, // Kangaskhan
       { speciesId: 128, weight: 15, minLevel: 38, maxLevel: 45 }, // Tauros
       { speciesId: 113, weight: 5,  minLevel: 38, maxLevel: 45 }, // Chansey
+      { speciesId: 102, weight: 15, minLevel: 38, maxLevel: 43 }, // Exeggcute
     ],
   },
   {
@@ -713,6 +785,7 @@ export const KANTO_AREAS: Area[] = [
       { speciesId: 80,  weight: 20, minLevel: 40, maxLevel: 47 }, // Slowbro
       { speciesId: 124, weight: 15, minLevel: 40, maxLevel: 47 }, // Jynx
       { speciesId: 131, weight: 5,  minLevel: 42, maxLevel: 47 }, // Lapras
+      { speciesId: 90,  weight: 10, minLevel: 40, maxLevel: 45, requiresKeyItem: 'super-rod' }, // Shellder (super rod)
     ],
   },
   {
@@ -731,6 +804,8 @@ export const KANTO_AREAS: Area[] = [
       { speciesId: 126, weight: 15, minLevel: 40, maxLevel: 47 }, // Magmar
       { speciesId: 38,  weight: 15, minLevel: 42, maxLevel: 47 }, // Ninetales
       { speciesId: 59,  weight: 20, minLevel: 42, maxLevel: 47 }, // Arcanine
+      { speciesId: 109, weight: 15, minLevel: 40, maxLevel: 44 }, // Koffing
+      { speciesId: 110, weight: 5 , minLevel: 44, maxLevel: 47 }, // Weezing
     ],
   },
   {
@@ -792,9 +867,9 @@ export function meetsKeyItemRequirement(area: Area, keyItems: InventorySlot[], u
 /** The area's completion reward, if it's fully explored and the reward hasn't been handed out yet */
 export function unclaimedReward(
   area: Area,
-  trainer: Pick<Trainer, 'exploreProgress' | 'claimedRewardAreaIds'>,
+  trainer: Pick<Trainer, 'exploreProgress' | 'claimedRewardIds'>,
 ): AreaReward | null {
-  if (!area.completionReward || trainer.claimedRewardAreaIds.includes(area.id)) return null
+  if (!area.completionReward || trainer.claimedRewardIds.includes(area.id)) return null
   return isAreaExplored(area, trainer.exploreProgress) ? area.completionReward : null
 }
 

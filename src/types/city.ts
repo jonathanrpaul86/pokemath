@@ -1,3 +1,6 @@
+import type { BadgeId } from './items'
+import type { GiftDefinition } from './world'
+
 /** A house in a city whose NPC shares tips and Kanto lore */
 export interface NpcHouse {
   id: string
@@ -6,14 +9,23 @@ export interface NpcHouse {
   npcName: string
   /** Shown one at a time */
   lines: string[]
-  /** Trades one key item for another, if the player has the first */
+  /** Trades a key item for a gift, if the player has the key item */
   exchange?: KeyItemExchange
+  /** A one-time gift, once the player has the badge */
+  gift?: HouseGift
 }
 
 export interface KeyItemExchange {
   takesKeyItemId: string
-  givesKeyItemId: string
+  gives: GiftDefinition
   /** Shown instead of the usual lines when the trade happens */
+  lines: string[]
+}
+
+export interface HouseGift {
+  requiredBadge?: BadgeId
+  gift: GiftDefinition
+  /** Shown instead of the usual lines when the gift is handed over */
   lines: string[]
 }
 

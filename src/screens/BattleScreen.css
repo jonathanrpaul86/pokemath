@@ -584,6 +584,33 @@
   font-size: 1.1rem;
 }
 
+/* ── Branching evolution (Eevee) ── */
+
+.evolution-choice {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  overflow-y: auto;
+}
+
+.evolution-choice__prompt {
+  margin: 0;
+  font-size: 0.9rem;
+  font-weight: 800;
+  color: #ffd700;
+}
+
+.evolution-choice__options {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.evolution-choice .btn {
+  padding: 0.4rem 0.6rem;
+  font-size: 0.9rem;
+}
+
 /* ── Trainer send-next switch prompt ── */
 
 .trainer-send-prompt {
