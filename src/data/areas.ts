@@ -8,7 +8,7 @@ export const KANTO_AREAS: Area[] = [
     description: 'Your hometown: a quiet seaside town where every journey begins. Professor Oak’s lab sits at the edge of town.',
     areaType: 'town',
     exploresToComplete: 0,
-    connectedAreaIds: ['route-1'],
+    connectedAreaIds: ['route-1', 'route-21'],
     ...mapAt(18, 90),
     mathDifficulty: 3,
     encounters: [],
@@ -69,11 +69,11 @@ export const KANTO_AREAS: Area[] = [
     ...mapAt(4, 50),
     mathDifficulty: 95,
     encounters: [
-      { speciesId: 22,  weight: 25, minLevel: 40, maxLevel: 46 }, // Fearow
-      { speciesId: 24,  weight: 20, minLevel: 40, maxLevel: 45 }, // Arbok
-      { speciesId: 28,  weight: 20, minLevel: 40, maxLevel: 45 }, // Sandslash
-      { speciesId: 57,  weight: 20, minLevel: 40, maxLevel: 46 }, // Primeape
-      { speciesId: 132, weight: 15, minLevel: 40, maxLevel: 44 }, // Ditto
+      { speciesId: 22,  weight: 25, minLevel: 44, maxLevel: 50 }, // Fearow
+      { speciesId: 24,  weight: 20, minLevel: 44, maxLevel: 49 }, // Arbok
+      { speciesId: 28,  weight: 20, minLevel: 44, maxLevel: 49 }, // Sandslash
+      { speciesId: 57,  weight: 20, minLevel: 44, maxLevel: 50 }, // Primeape
+      { speciesId: 132, weight: 15, minLevel: 44, maxLevel: 48 }, // Ditto
     ],
   },
   {
@@ -527,7 +527,7 @@ export const KANTO_AREAS: Area[] = [
     description: "A lush city with a famous Department Store and Erika's Grass-type Gym.",
     areaType: 'city',
     exploresToComplete: 0,
-    connectedAreaIds: ['route-7', 'cycling-road'],
+    connectedAreaIds: ['route-7', 'route-16'],
     ...mapAt(40, 48),
     mathDifficulty: 70,
     martItems: ['poke-ball', 'great-ball', 'ultra-ball', 'potion', 'super-potion', 'hyper-potion', 'revive'],
@@ -549,18 +549,104 @@ export const KANTO_AREAS: Area[] = [
   {
     id: 'cycling-road',
     name: 'Cycling Road',
-    description: 'A long downhill road stretching south from Celadon City. Fast Pokémon race alongside trainers here.',
+    description: 'Route 17: a long downhill road from Route 16 to Route 18. Fast Pokémon race alongside trainers here.',
     areaType: 'route',
-    exploresToComplete: 14,
-    requiredBadge: 'marsh-badge',
-    connectedAreaIds: ['celadon-city', 'fuchsia-city'],
+    exploresToComplete: 10,
+    connectedAreaIds: ['route-16', 'route-18'],
     ...mapAt(30, 68),
     mathDifficulty: 73,
     encounters: [
-      { speciesId: 20,  weight: 30, minLevel: 26, maxLevel: 33 }, // Raticate
-      { speciesId: 22,  weight: 25, minLevel: 26, maxLevel: 32 }, // Fearow
-      { speciesId: 84,  weight: 25, minLevel: 26, maxLevel: 32 }, // Doduo
-      { speciesId: 49,  weight: 20, minLevel: 26, maxLevel: 33 }, // Venomoth
+      { speciesId: 20,  weight: 30, minLevel: 36, maxLevel: 43 }, // Raticate
+      { speciesId: 22,  weight: 25, minLevel: 36, maxLevel: 42 }, // Fearow
+      { speciesId: 84,  weight: 25, minLevel: 36, maxLevel: 42 }, // Doduo
+      { speciesId: 49,  weight: 20, minLevel: 36, maxLevel: 43 }, // Venomoth
+    ],
+  },
+  {
+    id: 'route-16',
+    name: 'Route 16',
+    description: 'The road west of Celadon City, and the gate to Cycling Road. A sleeping Snorlax blocked it for ages; only trainers with the Marsh Badge get past.',
+    areaType: 'route',
+    exploresToComplete: 8,
+    requiredBadge: 'marsh-badge',
+    connectedAreaIds: ['celadon-city', 'cycling-road'],
+    ...mapAt(30, 48),
+    mathDifficulty: 72,
+    encounters: [
+      { speciesId: 20, weight: 30, minLevel: 34, maxLevel: 39 }, // Raticate
+      { speciesId: 84, weight: 25, minLevel: 34, maxLevel: 38 }, // Doduo
+      { speciesId: 22, weight: 25, minLevel: 34, maxLevel: 39 }, // Fearow
+      { speciesId: 21, weight: 20, minLevel: 34, maxLevel: 37 }, // Spearow
+    ],
+  },
+  {
+    id: 'route-18',
+    name: 'Route 18',
+    description: 'The end of Cycling Road, where the downhill ride rolls east into Fuchsia City.',
+    areaType: 'route',
+    exploresToComplete: 8,
+    connectedAreaIds: ['cycling-road', 'fuchsia-city'],
+    ...mapAt(40, 86),
+    mathDifficulty: 76,
+    encounters: [
+      { speciesId: 85, weight: 25, minLevel: 37, maxLevel: 42 }, // Dodrio
+      { speciesId: 22, weight: 25, minLevel: 37, maxLevel: 42 }, // Fearow
+      { speciesId: 20, weight: 25, minLevel: 37, maxLevel: 41 }, // Raticate
+      { speciesId: 84, weight: 25, minLevel: 37, maxLevel: 41 }, // Doduo
+    ],
+  },
+  {
+    id: 'route-19',
+    name: 'Route 19',
+    description: 'A sea route south of Fuchsia City. Trainers need the Soul Badge to surf these waters.',
+    areaType: 'route',
+    exploresToComplete: 8,
+    requiredBadge: 'soul-badge',
+    connectedAreaIds: ['fuchsia-city', 'route-20'],
+    ...mapAt(54, 98),
+    mathDifficulty: 82,
+    encounters: [
+      { speciesId: 72,  weight: 35, minLevel: 38, maxLevel: 43 }, // Tentacool
+      { speciesId: 98,  weight: 20, minLevel: 38, maxLevel: 43 }, // Krabby
+      { speciesId: 116, weight: 15, minLevel: 38, maxLevel: 42 }, // Horsea
+      { speciesId: 118, weight: 15, minLevel: 38, maxLevel: 42 }, // Goldeen
+      { speciesId: 73,  weight: 15, minLevel: 40, maxLevel: 43 }, // Tentacruel
+    ],
+  },
+  {
+    id: 'route-20',
+    name: 'Route 20',
+    description: 'Open sea stretching west toward the Seafoam Islands. Strong currents swirl around the rocks.',
+    areaType: 'route',
+    exploresToComplete: 8,
+    connectedAreaIds: ['route-19', 'seafoam-islands'],
+    ...mapAt(42, 104),
+    mathDifficulty: 84,
+    encounters: [
+      { speciesId: 72,  weight: 30, minLevel: 40, maxLevel: 45 }, // Tentacool
+      { speciesId: 73,  weight: 15, minLevel: 41, maxLevel: 45 }, // Tentacruel
+      { speciesId: 119, weight: 15, minLevel: 40, maxLevel: 45 }, // Seaking
+      { speciesId: 120, weight: 15, minLevel: 40, maxLevel: 44 }, // Staryu
+      { speciesId: 99,  weight: 15, minLevel: 40, maxLevel: 45 }, // Kingler
+      { speciesId: 117, weight: 10, minLevel: 41, maxLevel: 45 }, // Seadra
+    ],
+  },
+  {
+    id: 'route-21',
+    name: 'Route 21',
+    description: 'A sea route linking Pallet Town to Cinnabar Island. Trainers need the Soul Badge to surf these waters.',
+    areaType: 'route',
+    exploresToComplete: 8,
+    requiredBadge: 'soul-badge',
+    connectedAreaIds: ['pallet-town', 'cinnabar-island'],
+    ...mapAt(18, 98),
+    mathDifficulty: 86,
+    encounters: [
+      { speciesId: 72,  weight: 30, minLevel: 40, maxLevel: 45 }, // Tentacool
+      { speciesId: 114, weight: 20, minLevel: 40, maxLevel: 45 }, // Tangela
+      { speciesId: 17,  weight: 20, minLevel: 40, maxLevel: 45 }, // Pidgeotto
+      { speciesId: 120, weight: 15, minLevel: 40, maxLevel: 44 }, // Staryu
+      { speciesId: 73,  weight: 15, minLevel: 41, maxLevel: 45 }, // Tentacruel
     ],
   },
   {
@@ -569,7 +655,7 @@ export const KANTO_AREAS: Area[] = [
     description: "Home of the Safari Zone and Koga's Poison-type Gym. The Safari Zone is open to explorers.",
     areaType: 'city',
     exploresToComplete: 0,
-    connectedAreaIds: ['cycling-road', 'route-15', 'safari-zone', 'seafoam-islands'],
+    connectedAreaIds: ['route-18', 'route-15', 'route-19', 'safari-zone'],
     ...mapAt(54, 89),
     mathDifficulty: 78,
     martItems: ['great-ball', 'ultra-ball', 'super-potion', 'hyper-potion', 'revive'],
@@ -585,48 +671,48 @@ export const KANTO_AREAS: Area[] = [
     ...mapAt(54, 79),
     mathDifficulty: 80,
     encounters: [
-      { speciesId: 111, weight: 25, minLevel: 28, maxLevel: 35 }, // Rhyhorn
-      { speciesId: 30,  weight: 20, minLevel: 28, maxLevel: 32 }, // Nidorina
-      { speciesId: 123, weight: 20, minLevel: 30, maxLevel: 35 }, // Scyther
-      { speciesId: 115, weight: 15, minLevel: 28, maxLevel: 35 }, // Kangaskhan
-      { speciesId: 128, weight: 15, minLevel: 28, maxLevel: 35 }, // Tauros
-      { speciesId: 113, weight: 5,  minLevel: 28, maxLevel: 35 }, // Chansey
+      { speciesId: 111, weight: 25, minLevel: 38, maxLevel: 45 }, // Rhyhorn
+      { speciesId: 30,  weight: 20, minLevel: 38, maxLevel: 42 }, // Nidorina
+      { speciesId: 123, weight: 20, minLevel: 40, maxLevel: 45 }, // Scyther
+      { speciesId: 115, weight: 15, minLevel: 38, maxLevel: 45 }, // Kangaskhan
+      { speciesId: 128, weight: 15, minLevel: 38, maxLevel: 45 }, // Tauros
+      { speciesId: 113, weight: 5,  minLevel: 38, maxLevel: 45 }, // Chansey
     ],
   },
   {
     id: 'seafoam-islands',
     name: 'Seafoam Islands',
-    description: 'Frozen sea caves west of Fuchsia City. Ice and Water types thrive in the frigid waters.',
+    description: 'Frozen sea caves between Route 20 and Cinnabar Island. Ice and Water types thrive in the frigid waters.',
     areaType: 'cave',
     exploresToComplete: 12,
     requiredBadge: 'soul-badge',
-    connectedAreaIds: ['fuchsia-city', 'cinnabar-island'],
+    connectedAreaIds: ['route-20', 'cinnabar-island'],
     ...mapAt(30, 106),
     mathDifficulty: 86,
     encounters: [
-      { speciesId: 86,  weight: 35, minLevel: 33, maxLevel: 40 }, // Seel
-      { speciesId: 87,  weight: 25, minLevel: 35, maxLevel: 40 }, // Dewgong
-      { speciesId: 80,  weight: 20, minLevel: 33, maxLevel: 40 }, // Slowbro
-      { speciesId: 124, weight: 15, minLevel: 33, maxLevel: 40 }, // Jynx
-      { speciesId: 131, weight: 5,  minLevel: 35, maxLevel: 40 }, // Lapras
+      { speciesId: 86,  weight: 35, minLevel: 40, maxLevel: 47 }, // Seel
+      { speciesId: 87,  weight: 25, minLevel: 42, maxLevel: 47 }, // Dewgong
+      { speciesId: 80,  weight: 20, minLevel: 40, maxLevel: 47 }, // Slowbro
+      { speciesId: 124, weight: 15, minLevel: 40, maxLevel: 47 }, // Jynx
+      { speciesId: 131, weight: 5,  minLevel: 42, maxLevel: 47 }, // Lapras
     ],
   },
   {
     id: 'cinnabar-island',
     name: 'Cinnabar Island',
-    description: 'A volcanic island. Fire-type Pokémon thrive in the scorching heat.',
+    description: 'A volcanic island. Fire-type Pokémon thrive in the scorching heat. Route 21 leads north across the sea to Pallet Town.',
     areaType: 'special',
     exploresToComplete: 10,
-    connectedAreaIds: ['seafoam-islands'],
+    connectedAreaIds: ['seafoam-islands', 'route-21'],
     ...mapAt(18, 106),
     mathDifficulty: 87,
     martItems: ['ultra-ball', 'hyper-potion', 'full-restore', 'max-revive'],
     encounters: [
-      { speciesId: 77,  weight: 25, minLevel: 33, maxLevel: 40 }, // Ponyta
-      { speciesId: 58,  weight: 25, minLevel: 33, maxLevel: 40 }, // Growlithe
-      { speciesId: 126, weight: 15, minLevel: 33, maxLevel: 40 }, // Magmar
-      { speciesId: 38,  weight: 15, minLevel: 35, maxLevel: 40 }, // Ninetales
-      { speciesId: 59,  weight: 20, minLevel: 35, maxLevel: 40 }, // Arcanine
+      { speciesId: 77,  weight: 25, minLevel: 40, maxLevel: 47 }, // Ponyta
+      { speciesId: 58,  weight: 25, minLevel: 40, maxLevel: 47 }, // Growlithe
+      { speciesId: 126, weight: 15, minLevel: 40, maxLevel: 47 }, // Magmar
+      { speciesId: 38,  weight: 15, minLevel: 42, maxLevel: 47 }, // Ninetales
+      { speciesId: 59,  weight: 20, minLevel: 42, maxLevel: 47 }, // Arcanine
     ],
   },
   {

@@ -57,7 +57,7 @@ describe('travelBlocker', () => {
 
 describe('meetsBadgeRequirement', () => {
   it('exempts areas already visited, so re-tuned gates never strand old saves', () => {
-    expect(meetsBadgeRequirement(area('cycling-road'), [], ['cycling-road'])).toBe(true)
-    expect(meetsBadgeRequirement(area('cycling-road'), [], [])).toBe(false)
+    expect(meetsBadgeRequirement(area('route-16'), [], ['route-16'])).toBe(true)
+    expect(meetsBadgeRequirement(area('route-16'), [], [])).toBe(false)
   })
 })

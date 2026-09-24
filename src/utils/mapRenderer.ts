@@ -49,6 +49,11 @@ const TERRAIN: Record<string, TerrainStyle> = {
   'route-24':         { blob: '#a8e080', node: '#48a030' },
   'route-25':         { blob: '#b0e8a0', node: '#40a060' },
   'cerulean-cave':    { blob: '#90a8f0', node: '#3048a8' },
+  'route-16':         { blob: '#c0e078', node: '#68a028' },
+  'route-18':         { blob: '#b8d880', node: '#5a9830' },
+  'route-19':         { blob: '#80d0f8', node: '#1878c8' },
+  'route-20':         { blob: '#80d0f8', node: '#1068b8' },
+  'route-21':         { blob: '#80d0f8', node: '#2080c0' },
   'indigo-plateau':   { blob: '#a8a0f0', node: '#4838b0' },
   'route-1':          { blob: '#a8e060', node: '#5ab828' },
   'viridian-city':    { blob: '#60d8b8', node: '#1a9a78' },
@@ -306,6 +311,7 @@ const SCATTER_TREES: [number, number][] = [
   [48, 76], [60, 82],                       // Safari Zone
   [81, 64], [92, 67], [78, 73], [69, 80],   // Routes 11–14
   [68, 14], [79, 12],                       // Routes 24–25
+  [25, 58], [35, 76],                       // Routes 16–18
 ]
 
 const SCATTER_PEAKS: [number, number][] = [
@@ -630,6 +636,8 @@ function drawTerrainIcon(
     case 'route-15':
     case 'route-24':
     case 'route-25':
+    case 'route-16':
+    case 'route-18':
     case 'route-3':
     case 'route-4':
     case 'route-7':
@@ -814,7 +822,10 @@ function drawTerrainIcon(
       break
     }
 
-    case 'cerulean-city': {
+    case 'cerulean-city':
+    case 'route-19':
+    case 'route-20':
+    case 'route-21': {
       // Water waves — 2 rows
       for (let row = 0; row < 2; row++) {
         const wy = cy - ts(4) + row * ts(8)

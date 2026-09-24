@@ -56,6 +56,12 @@ const AREA_BACKFILLS: { areaId: string; impliedBy: string[] }[] = [
   { areaId: 'route-8', impliedBy: ['route-7'] },
   // Rock Tunnel used to open straight onto Lavender Town
   { areaId: 'route-10', impliedBy: ['lavender-town'] },
+  // Cycling Road used to run straight from Celadon to Fuchsia
+  { areaId: 'route-16', impliedBy: ['cycling-road'] },
+  { areaId: 'route-18', impliedBy: ['cycling-road'] },
+  // Fuchsia used to link straight to the Seafoam Islands
+  { areaId: 'route-19', impliedBy: ['seafoam-islands'] },
+  { areaId: 'route-20', impliedBy: ['seafoam-islands'] },
 ]
 
 function backfillNewAreas(
