@@ -21,7 +21,7 @@ type Stage =
   | { kind: 'story' }
   | { kind: 'question' }
   | { kind: 'reward-rare'; rare: { speciesId: number; level: number } }
-  | { kind: 'reward-item'; itemId: string }
+  | { kind: 'reward-item'; itemId: string; firstTry: boolean }
 
 function readAloud(text: string) {
   if (!('speechSynthesis' in window)) return
@@ -68,14 +68,15 @@ export default function StorytellerModal({ area, storyteller, onRareEncounter, o
     }
     playCorrect()
     dispatch({ type: 'FINISH_STORY', payload: { cityId: area.id, storyId: story.id } })
-    // A first try earns the rare, when the Storyteller has one to offer
-    const rare = wrongPicks.length === 0 ? storytellerRare(storyteller, trainer) : null
+    // A first try earns the rare until the player has it, then the backup item
+    const firstTry = wrongPicks.length === 0
+    const rare = firstTry ? storytellerRare(storyteller, trainer) : null
     if (rare) {
       setStage({ kind: 'reward-rare', rare })
     } else {
-      const itemId = rollLootItem(area)
+      const itemId = firstTry ? storyteller.backupItemId : rollLootItem(area)
       dispatch({ type: 'ADD_ITEM', payload: { itemId, quantity: 1 } })
-      setStage({ kind: 'reward-item', itemId })
+      setStage({ kind: 'reward-item', itemId, firstTry })
     }
   }
 
@@ -178,7 +179,8 @@ export default function StorytellerModal({ area, storyteller, onRareEncounter, o
 
         {stage.kind === 'reward-item' && (
           <p className="city-dialog__line">
-            You got it! Here’s a {ITEM_MAP[stage.itemId]?.name ?? stage.itemId} for listening so well.
+            {stage.firstTry ? 'Wonderful — you got it on the first try!' : 'You got it!'}
+            {' '}Take this {ITEM_MAP[stage.itemId]?.name ?? stage.itemId} for listening so well.
           </p>
         )}
 

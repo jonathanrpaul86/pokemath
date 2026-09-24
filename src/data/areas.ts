@@ -875,9 +875,6 @@ export const KANTO_AREAS: Area[] = [
 
 export const STARTER_SPECIES_IDS = [4, 7, 1] as const // Charmander, Squirtle, Bulbasaur
 
-/** Bill gives a starter the player doesn't have for fully exploring this route */
-export const STARTER_GIFT_AREA_ID = 'route-25'
-
 export const AREA_MAP: Record<string, Area> = Object.fromEntries(
   KANTO_AREAS.map(area => [area.id, area])
 )
