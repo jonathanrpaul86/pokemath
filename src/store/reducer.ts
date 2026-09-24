@@ -32,8 +32,8 @@ export function createNewTrainer(name: string, starterSpecies: Parameters<typeof
     pokedex: {
       [starterSpecies.id]: { seen: true, caught: true },
     },
-    currentAreaId: 'route-1',
-    unlockedAreaIds: isDev ? KANTO_AREAS.map(a => a.id) : ['route-1'],
+    currentAreaId: 'pallet-town',
+    unlockedAreaIds: isDev ? KANTO_AREAS.map(a => a.id) : ['pallet-town'],
     exploreProgress: isDev
       ? Object.fromEntries(KANTO_AREAS.map(a => [a.id, a.exploresToComplete]))
       : {},

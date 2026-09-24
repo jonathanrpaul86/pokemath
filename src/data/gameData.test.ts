@@ -8,6 +8,7 @@ import { KANTO_GYMS, BADGE_NAMES } from './gyms'
 import { CITY_HUBS, hasCityHub } from './cities'
 import { STORIES } from './stories'
 import { ITEM_MAP } from './items'
+import { WORLD_BOUNDS } from './mapGrid'
 
 describe('areas', () => {
   it('have unique ids', () => {
@@ -29,9 +30,9 @@ describe('areas', () => {
     }
   })
 
-  it('are all reachable from Route 1', () => {
-    const seen = new Set(['route-1'])
-    const queue = ['route-1']
+  it('are all reachable from Pallet Town', () => {
+    const seen = new Set(['pallet-town'])
+    const queue = ['pallet-town']
     while (queue.length) {
       for (const id of AREA_MAP[queue.shift()!].connectedAreaIds) {
         if (!seen.has(id)) { seen.add(id); queue.push(id) }
@@ -64,12 +65,21 @@ describe('areas', () => {
     }
   })
 
-  it('stay inside the map canvas', () => {
+  it('stay inside the world map', () => {
     for (const a of KANTO_AREAS) {
       expect(a.mapX, a.id).toBeGreaterThan(0)
-      expect(a.mapX, a.id).toBeLessThan(600)
+      expect(a.mapX, a.id).toBeLessThan(WORLD_BOUNDS.width)
       expect(a.mapY, a.id).toBeGreaterThan(0)
-      expect(a.mapY, a.id).toBeLessThan(380)
+      expect(a.mapY, a.id).toBeLessThan(WORLD_BOUNDS.height)
+    }
+  })
+
+  it('sit far enough apart that their map nodes do not overlap', () => {
+    for (const a of KANTO_AREAS) {
+      for (const b of KANTO_AREAS) {
+        if (a.id >= b.id) continue
+        expect(Math.hypot(a.mapX - b.mapX, a.mapY - b.mapY), `${a.id} / ${b.id}`).toBeGreaterThanOrEqual(90)
+      }
     }
   })
 })

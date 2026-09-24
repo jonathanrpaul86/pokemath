@@ -1,14 +1,26 @@
 import type { Area, BadgeId, Trainer } from '../types'
+import { mapAt } from './mapGrid'
 
 export const KANTO_AREAS: Area[] = [
   {
+    id: 'pallet-town',
+    name: 'Pallet Town',
+    description: 'Your hometown: a quiet seaside town where every journey begins. Professor Oak’s lab sits at the edge of town.',
+    areaType: 'town',
+    exploresToComplete: 0,
+    connectedAreaIds: ['route-1'],
+    ...mapAt(18, 90),
+    mathDifficulty: 3,
+    encounters: [],
+  },
+  {
     id: 'route-1',
     name: 'Route 1',
-    description: 'A grassy path outside Pallet Town. Weak wild Pokémon roam here.',
+    description: 'A grassy path between Pallet Town and Viridian City. Weak wild Pokémon roam here.',
     areaType: 'route',
     exploresToComplete: 8,
-    connectedAreaIds: ['viridian-city'],
-    mapX: 200, mapY: 320,
+    connectedAreaIds: ['pallet-town', 'viridian-city'],
+    ...mapAt(18, 78),
     mathDifficulty: 5,
     encounters: [
       { speciesId: 16, weight: 35, minLevel: 2, maxLevel: 4 },  // Pidgey
@@ -20,14 +32,65 @@ export const KANTO_AREAS: Area[] = [
   {
     id: 'viridian-city',
     name: 'Viridian City',
-    description: "The first city on your journey. Heal up before pushing north through Viridian Forest. The city's Gym stays locked until a trainer has earned seven badges.",
+    description: "The first city on your journey. Route 2 leads north toward Viridian Forest, and Route 22 heads west toward the Pokémon League. The city's Gym stays locked until a trainer has earned seven badges.",
     areaType: 'city',
     exploresToComplete: 0,
-    connectedAreaIds: ['route-1', 'viridian-forest', 'victory-road'],
-    mapX: 200, mapY: 260,
+    connectedAreaIds: ['route-1', 'route-2', 'route-22'],
+    ...mapAt(18, 66),
     mathDifficulty: 13,
     martItems: ['poke-ball', 'potion'],
     encounters: [],
+  },
+  {
+    id: 'route-22',
+    name: 'Route 22',
+    description: 'A quiet trail west of Viridian City where new trainers test their Pokémon. Farther west, the road to the Pokémon League begins.',
+    areaType: 'route',
+    exploresToComplete: 6,
+    connectedAreaIds: ['viridian-city', 'route-23'],
+    ...mapAt(9, 66),
+    mathDifficulty: 10,
+    encounters: [
+      { speciesId: 19, weight: 35, minLevel: 3, maxLevel: 6 },  // Rattata
+      { speciesId: 21, weight: 30, minLevel: 3, maxLevel: 6 },  // Spearow
+      { speciesId: 29, weight: 15, minLevel: 3, maxLevel: 5 },  // Nidoran♀
+      { speciesId: 32, weight: 15, minLevel: 3, maxLevel: 5 },  // Nidoran♂
+      { speciesId: 56, weight: 5,  minLevel: 4, maxLevel: 6 },  // Mankey
+    ],
+  },
+  {
+    id: 'route-23',
+    name: 'Route 23',
+    description: 'The long road to the Pokémon League. Guards at the gate only let trainers with the Volcano Badge pass.',
+    areaType: 'route',
+    exploresToComplete: 12,
+    requiredBadge: 'volcano-badge',
+    connectedAreaIds: ['route-22', 'victory-road'],
+    ...mapAt(4, 50),
+    mathDifficulty: 95,
+    encounters: [
+      { speciesId: 22,  weight: 25, minLevel: 40, maxLevel: 46 }, // Fearow
+      { speciesId: 24,  weight: 20, minLevel: 40, maxLevel: 45 }, // Arbok
+      { speciesId: 28,  weight: 20, minLevel: 40, maxLevel: 45 }, // Sandslash
+      { speciesId: 57,  weight: 20, minLevel: 40, maxLevel: 46 }, // Primeape
+      { speciesId: 132, weight: 15, minLevel: 40, maxLevel: 44 }, // Ditto
+    ],
+  },
+  {
+    id: 'route-2',
+    name: 'Route 2',
+    description: 'A leafy road north of Viridian City. Bug Pokémon wander out of the forest ahead.',
+    areaType: 'route',
+    exploresToComplete: 6,
+    connectedAreaIds: ['viridian-city', 'viridian-forest'],
+    ...mapAt(18, 54),
+    mathDifficulty: 16,
+    encounters: [
+      { speciesId: 16, weight: 35, minLevel: 3, maxLevel: 5 },  // Pidgey
+      { speciesId: 19, weight: 35, minLevel: 3, maxLevel: 5 },  // Rattata
+      { speciesId: 10, weight: 15, minLevel: 3, maxLevel: 5 },  // Caterpie
+      { speciesId: 13, weight: 15, minLevel: 3, maxLevel: 5 },  // Weedle
+    ],
   },
   {
     id: 'viridian-forest',
@@ -35,8 +98,8 @@ export const KANTO_AREAS: Area[] = [
     description: 'A dense forest full of Bug-type Pokémon — and a rare Pikachu!',
     areaType: 'forest',
     exploresToComplete: 14,
-    connectedAreaIds: ['viridian-city', 'pewter-city'],
-    mapX: 200, mapY: 196,
+    connectedAreaIds: ['route-2', 'pewter-city'],
+    ...mapAt(18, 44),
     mathDifficulty: 22,
     encounters: [
       { speciesId: 10, weight: 35, minLevel: 3, maxLevel: 7 },  // Caterpie
@@ -53,7 +116,7 @@ export const KANTO_AREAS: Area[] = [
     areaType: 'city',
     exploresToComplete: 0,
     connectedAreaIds: ['viridian-forest', 'route-3'],
-    mapX: 200, mapY: 136,
+    ...mapAt(18, 32),
     mathDifficulty: 30,
     martItems: ['poke-ball', 'potion', 'super-potion'],
     encounters: [],
@@ -66,7 +129,7 @@ export const KANTO_AREAS: Area[] = [
     exploresToComplete: 10,
     requiredBadge: 'boulder-badge',
     connectedAreaIds: ['pewter-city', 'mt-moon'],
-    mapX: 253, mapY: 121,
+    ...mapAt(29, 27),
     mathDifficulty: 34,
     encounters: [
       { speciesId: 21, weight: 30, minLevel: 8,  maxLevel: 13 }, // Spearow
@@ -83,7 +146,7 @@ export const KANTO_AREAS: Area[] = [
     areaType: 'cave',
     exploresToComplete: 12,
     connectedAreaIds: ['route-3', 'route-4'],
-    mapX: 306, mapY: 106,
+    ...mapAt(40, 23),
     mathDifficulty: 39,
     encounters: [
       { speciesId: 41, weight: 45, minLevel: 8,  maxLevel: 12 }, // Zubat
@@ -99,7 +162,7 @@ export const KANTO_AREAS: Area[] = [
     areaType: 'route',
     exploresToComplete: 10,
     connectedAreaIds: ['mt-moon', 'cerulean-city'],
-    mapX: 358, mapY: 113,
+    ...mapAt(51, 21),
     mathDifficulty: 44,
     encounters: [
       { speciesId: 54, weight: 30, minLevel: 12, maxLevel: 17 }, // Psyduck
@@ -116,7 +179,7 @@ export const KANTO_AREAS: Area[] = [
     areaType: 'city',
     exploresToComplete: 0,
     connectedAreaIds: ['route-4', 'route-9'],
-    mapX: 410, mapY: 120,
+    ...mapAt(62, 22),
     mathDifficulty: 47,
     martItems: ['poke-ball', 'great-ball', 'potion', 'super-potion'],
     encounters: [],
@@ -129,7 +192,7 @@ export const KANTO_AREAS: Area[] = [
     exploresToComplete: 10,
     requiredBadge: 'cascade-badge',
     connectedAreaIds: ['cerulean-city', 'rock-tunnel'],
-    mapX: 438, mapY: 156,
+    ...mapAt(73, 22),
     mathDifficulty: 51,
     encounters: [
       { speciesId: 19, weight: 30, minLevel: 16, maxLevel: 22 }, // Rattata
@@ -145,7 +208,7 @@ export const KANTO_AREAS: Area[] = [
     areaType: 'cave',
     exploresToComplete: 12,
     connectedAreaIds: ['route-9', 'lavender-town'],
-    mapX: 466, mapY: 192,
+    ...mapAt(84, 26),
     mathDifficulty: 55,
     encounters: [
       { speciesId: 74, weight: 30, minLevel: 16, maxLevel: 20 }, // Geodude
@@ -162,7 +225,7 @@ export const KANTO_AREAS: Area[] = [
     areaType: 'town',
     exploresToComplete: 0,
     connectedAreaIds: ['rock-tunnel', 'route-7', 'pokemon-tower', 'vermilion-city'],
-    mapX: 466, mapY: 262,
+    ...mapAt(87, 48),
     mathDifficulty: 63,
     martItems: ['poke-ball', 'great-ball', 'potion', 'super-potion', 'revive'],
     encounters: [],
@@ -174,7 +237,7 @@ export const KANTO_AREAS: Area[] = [
     areaType: 'city',
     exploresToComplete: 0,
     connectedAreaIds: ['lavender-town'],
-    mapX: 430, mapY: 316,
+    ...mapAt(62, 70),
     mathDifficulty: 64,
     martItems: ['poke-ball', 'great-ball', 'potion', 'super-potion', 'revive'],
     encounters: [],
@@ -186,7 +249,7 @@ export const KANTO_AREAS: Area[] = [
     areaType: 'special',
     exploresToComplete: 10,
     connectedAreaIds: ['lavender-town'],
-    mapX: 534, mapY: 262,
+    ...mapAt(95, 48),
     mathDifficulty: 67,
     encounters: [
       { speciesId: 92,  weight: 40, minLevel: 22, maxLevel: 28 }, // Gastly
@@ -203,7 +266,7 @@ export const KANTO_AREAS: Area[] = [
     exploresToComplete: 14,
     requiredBadge: 'thunder-badge',
     connectedAreaIds: ['lavender-town', 'celadon-city', 'saffron-city'],
-    mapX: 400, mapY: 250,
+    ...mapAt(51, 48),
     mathDifficulty: 65,
     encounters: [
       { speciesId: 37, weight: 25, minLevel: 22, maxLevel: 27 }, // Vulpix
@@ -220,7 +283,7 @@ export const KANTO_AREAS: Area[] = [
     areaType: 'city',
     exploresToComplete: 0,
     connectedAreaIds: ['route-7', 'cycling-road'],
-    mapX: 340, mapY: 238,
+    ...mapAt(40, 48),
     mathDifficulty: 70,
     martItems: ['poke-ball', 'great-ball', 'ultra-ball', 'potion', 'super-potion', 'hyper-potion', 'revive'],
     encounters: [],
@@ -233,7 +296,7 @@ export const KANTO_AREAS: Area[] = [
     exploresToComplete: 0,
     requiredBadge: 'rainbow-badge',
     connectedAreaIds: ['route-7'],
-    mapX: 398, mapY: 190,
+    ...mapAt(62, 48),
     mathDifficulty: 72,
     martItems: ['great-ball', 'ultra-ball', 'super-potion', 'hyper-potion', 'revive'],
     encounters: [],
@@ -246,7 +309,7 @@ export const KANTO_AREAS: Area[] = [
     exploresToComplete: 14,
     requiredBadge: 'marsh-badge',
     connectedAreaIds: ['celadon-city', 'fuchsia-city'],
-    mapX: 323, mapY: 283,
+    ...mapAt(30, 68),
     mathDifficulty: 73,
     encounters: [
       { speciesId: 20,  weight: 30, minLevel: 26, maxLevel: 33 }, // Raticate
@@ -262,7 +325,7 @@ export const KANTO_AREAS: Area[] = [
     areaType: 'city',
     exploresToComplete: 0,
     connectedAreaIds: ['cycling-road', 'safari-zone', 'seafoam-islands'],
-    mapX: 306, mapY: 328,
+    ...mapAt(54, 89),
     mathDifficulty: 78,
     martItems: ['great-ball', 'ultra-ball', 'super-potion', 'hyper-potion', 'revive'],
     encounters: [],
@@ -274,7 +337,7 @@ export const KANTO_AREAS: Area[] = [
     areaType: 'special',
     exploresToComplete: 10,
     connectedAreaIds: ['fuchsia-city'],
-    mapX: 362, mapY: 345,
+    ...mapAt(54, 79),
     mathDifficulty: 80,
     encounters: [
       { speciesId: 111, weight: 25, minLevel: 28, maxLevel: 35 }, // Rhyhorn
@@ -293,7 +356,7 @@ export const KANTO_AREAS: Area[] = [
     exploresToComplete: 12,
     requiredBadge: 'soul-badge',
     connectedAreaIds: ['fuchsia-city', 'cinnabar-island'],
-    mapX: 227, mapY: 343,
+    ...mapAt(30, 106),
     mathDifficulty: 86,
     encounters: [
       { speciesId: 86,  weight: 35, minLevel: 33, maxLevel: 40 }, // Seel
@@ -309,8 +372,8 @@ export const KANTO_AREAS: Area[] = [
     description: 'A volcanic island. Fire-type Pokémon thrive in the scorching heat.',
     areaType: 'special',
     exploresToComplete: 10,
-    connectedAreaIds: ['seafoam-islands', 'victory-road'],
-    mapX: 148, mapY: 358,
+    connectedAreaIds: ['seafoam-islands'],
+    ...mapAt(18, 106),
     mathDifficulty: 87,
     martItems: ['ultra-ball', 'hyper-potion', 'full-restore', 'max-revive'],
     encounters: [
@@ -324,21 +387,33 @@ export const KANTO_AREAS: Area[] = [
   {
     id: 'victory-road',
     name: 'Victory Road',
-    description: 'A treacherous cave linking Cinnabar Island back to Viridian City. Only the strongest survive.',
+    description: 'A treacherous cave on the way to the Pokémon League. Only trainers with all eight badges may enter.',
     areaType: 'special',
     exploresToComplete: 15,
-    requiredBadge: 'volcano-badge',
-    connectedAreaIds: ['cinnabar-island', 'viridian-city'],
-    mapX: 96, mapY: 240,
+    requiredBadge: 'earth-badge',
+    connectedAreaIds: ['route-23', 'indigo-plateau'],
+    ...mapAt(4, 38),
     mathDifficulty: 100,
     encounters: [
-      { speciesId: 67,  weight: 25, minLevel: 38, maxLevel: 45 }, // Machoke
-      { speciesId: 95,  weight: 20, minLevel: 38, maxLevel: 45 }, // Onix
-      { speciesId: 105, weight: 20, minLevel: 38, maxLevel: 45 }, // Marowak
-      { speciesId: 49,  weight: 15, minLevel: 38, maxLevel: 45 }, // Venomoth
-      { speciesId: 147, weight: 10, minLevel: 38, maxLevel: 45 }, // Dratini
-      { speciesId: 42,  weight: 10, minLevel: 38, maxLevel: 45 }, // Golbat
+      { speciesId: 67,  weight: 25, minLevel: 45, maxLevel: 52 }, // Machoke
+      { speciesId: 95,  weight: 20, minLevel: 45, maxLevel: 52 }, // Onix
+      { speciesId: 105, weight: 20, minLevel: 45, maxLevel: 52 }, // Marowak
+      { speciesId: 49,  weight: 15, minLevel: 45, maxLevel: 52 }, // Venomoth
+      { speciesId: 147, weight: 10, minLevel: 45, maxLevel: 50 }, // Dratini
+      { speciesId: 42,  weight: 10, minLevel: 45, maxLevel: 52 }, // Golbat
     ],
+  },
+  {
+    id: 'indigo-plateau',
+    name: 'Indigo Plateau',
+    description: 'Home of the Pokémon League, where the Elite Four wait for the best trainers in Kanto. The League’s doors open soon!',
+    areaType: 'city',
+    exploresToComplete: 0,
+    connectedAreaIds: ['victory-road'],
+    ...mapAt(4, 26),
+    mathDifficulty: 100,
+    martItems: ['ultra-ball', 'hyper-potion', 'full-restore', 'max-revive'],
+    encounters: [],
   },
 ]
 

@@ -10,7 +10,8 @@
 }
 
 .full-map {
-  width: min(960px, 94vw);
+  /* The map is square; leave room for the header and info rows */
+  width: min(760px, 94vw, calc(100vh - 170px));
   background: #0f3460;
   border: 3px solid #1a3c8c;
   border-radius: 18px;
@@ -36,7 +37,7 @@
 .full-map__canvas {
   display: block;
   width: 100%;
-  aspect-ratio: 600 / 380;
+  aspect-ratio: 1;
   border-radius: 12px;
   cursor: crosshair;
 }

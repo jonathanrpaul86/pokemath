@@ -40,6 +40,34 @@ function migrateExploreProgress(unlockedAreaIds: string[] = []): Record<string, 
   )
 }
 
+/**
+ * Areas added to the map between places an older save had already been. A save
+ * that reached any `impliedBy` area gets the new area as visited and explored,
+ * so it can still walk back the way it came.
+ */
+const AREA_BACKFILLS: { areaId: string; impliedBy: string[] }[] = [
+  { areaId: 'pallet-town', impliedBy: ['route-1'] },
+  { areaId: 'route-2', impliedBy: ['viridian-forest'] },
+  { areaId: 'route-22', impliedBy: ['victory-road'] },
+  { areaId: 'route-23', impliedBy: ['victory-road'] },
+]
+
+function backfillNewAreas(
+  unlockedAreaIds: string[],
+  exploreProgress: Record<string, number>,
+): Pick<Trainer, 'unlockedAreaIds' | 'exploreProgress'> {
+  const added = AREA_BACKFILLS
+    .filter(b => !unlockedAreaIds.includes(b.areaId) && b.impliedBy.some(id => unlockedAreaIds.includes(id)))
+    .map(b => AREA_MAP[b.areaId])
+  return {
+    unlockedAreaIds: [...unlockedAreaIds, ...added.map(a => a.id)],
+    exploreProgress: {
+      ...exploreProgress,
+      ...Object.fromEntries(added.filter(a => a.exploresToComplete > 0).map(a => [a.id, a.exploresToComplete])),
+    },
+  }
+}
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function migrateTrainer(raw: any): Trainer {
   // Trainer level/XP were removed; drop them from older saves
@@ -62,7 +90,10 @@ function migrateTrainer(raw: any): Trainer {
     gymProgress: {},
     storyteller: { heardStoryIds: [], nextStoryAt: {} },
     ...rest,
-    exploreProgress: raw.exploreProgress ?? migrateExploreProgress(raw.unlockedAreaIds),
+    ...backfillNewAreas(
+      raw.unlockedAreaIds ?? [],
+      raw.exploreProgress ?? migrateExploreProgress(raw.unlockedAreaIds),
+    ),
     party: (raw.party ?? []).map(migratePokemon),
     pc:    (raw.pc    ?? []).map(migratePokemon),
     mathStats,

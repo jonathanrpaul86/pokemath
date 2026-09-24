@@ -1,12 +1,18 @@
 import type { Area } from '../types'
 import { fitView, makeTransform, type MapView } from './mapCamera'
+import { WORLD_BOUNDS, MAP_GRID_UNIT, gridToWorld } from '../data/mapGrid'
 
-const INTERNAL_W = 600
-const INTERNAL_H = 380
+export { WORLD_BOUNDS }
 
-/** The world's size in map coordinates (Area.mapX / mapY) */
-export const WORLD_BOUNDS = { width: INTERNAL_W, height: INTERNAL_H }
+/**
+ * Node art (sizes, icons, line widths) is drawn in design units: a node is the
+ * size it would be if a 600×380 map filled the canvas, whatever the zoom
+ */
+const NODE_DESIGN_SIZE = { width: 600, height: 380 }
 const NODE_RADIUS = 18
+
+/** Areas out at sea: drawn as islands, and reached by sea lanes instead of roads */
+const SEA_AREA_IDS = new Set(['seafoam-islands', 'cinnabar-island', 'route-19', 'route-20', 'route-21'])
 
 // ---- Terrain palette --------------------------------------------------------
 
@@ -16,6 +22,11 @@ interface TerrainStyle {
 }
 
 const TERRAIN: Record<string, TerrainStyle> = {
+  'pallet-town':      { blob: '#f0f0f0', node: '#8898a8' },
+  'route-2':          { blob: '#a8e060', node: '#48a828' },
+  'route-22':         { blob: '#b8e070', node: '#62a830' },
+  'route-23':         { blob: '#d8d070', node: '#8a8a20' },
+  'indigo-plateau':   { blob: '#a8a0f0', node: '#4838b0' },
   'route-1':          { blob: '#a8e060', node: '#5ab828' },
   'viridian-city':    { blob: '#60d8b8', node: '#1a9a78' },
   'viridian-forest':  { blob: '#38c050', node: '#1a7a28' },
@@ -70,7 +81,7 @@ export class MapRenderer {
 
   private transform(view?: MapView) {
     const { width, height } = this.ctx.canvas
-    return makeTransform(view ?? fitView(WORLD_BOUNDS, width, height), width, height, WORLD_BOUNDS)
+    return makeTransform(view ?? fitView(WORLD_BOUNDS, width, height), width, height, NODE_DESIGN_SIZE)
   }
 
   render(state: MapRenderState, options: RenderOptions = {}): void {
@@ -79,25 +90,25 @@ export class MapRenderer {
     if (width === 0 || height === 0) return
 
     const { tx, ty, ts, scale } = this.transform(options.view)
-    // Terrain (the island) scales with zoom; node art keeps its size
+    // Terrain (land and islands) scales with zoom; node art keeps its size
     const worldSize = (s: number) => s * scale
 
     ctx.clearRect(0, 0, width, height)
 
     if (options.mini) {
       drawOcean(ctx, width, height, null)
-      drawLandmass(ctx, tx, ty)
-      drawCinnabarIsland(ctx, tx, ty, worldSize)
-      drawPaths(ctx, state, tx, ty, worldSize)
-      drawMiniNodes(ctx, state, tx, ty, Math.max(2.5, worldSize(NODE_RADIUS * 0.55)))
+      drawLandmass(ctx, tx, ty, worldSize)
+      drawIslands(ctx, tx, ty, worldSize)
+      drawPaths(ctx, state, tx, ty, ts)
+      drawMiniNodes(ctx, state, tx, ty, Math.max(2.5, ts(NODE_RADIUS * 0.55)))
       if (options.viewportRect) drawViewportRect(ctx, options.viewportRect, tx, ty)
       return
     }
 
     drawOcean(ctx, width, height, state.pulse)
-    drawLandmass(ctx, tx, ty)
-    drawCinnabarIsland(ctx, tx, ty, worldSize)
-    drawScatter(ctx, state.areas, tx, ty, ts)
+    drawLandmass(ctx, tx, ty, worldSize)
+    drawIslands(ctx, tx, ty, worldSize)
+    drawScatter(ctx, tx, ty, ts)
     drawPaths(ctx, state, tx, ty, ts)
     drawTerrainBlobs(ctx, state, tx, ty, ts)
     drawNodes(ctx, state, tx, ty, ts)
@@ -154,28 +165,44 @@ function drawOcean(
 
 // ---- Layer: landmass --------------------------------------------------------
 
+/**
+ * The mainland coastline on the 0–100 grid, clockwise from the north-west
+ * corner. The land runs well past the world's west and north edges, so a
+ * letterboxed map shows land there, not sea.
+ */
+const COASTLINE: [number, number][] = [
+  [-40, -40], [50, -40], [52, -6], [55, 1], [64, 0], [76, 1], [86, 4], [94, 9], [100, 17],
+  [101, 30], [100, 42], [101, 53], [97, 62], [93, 70], [90, 78], [86, 85],
+  [80, 90], [71, 92.5], [62, 94], [54, 93.5], [46, 92], [38, 91.5], [30, 92.5],
+  [23, 93.5], [14, 93], [8, 90], [2, 85], [-6, 82], [-40, 82],
+]
+
+/** Offshore islands: grid position and radius in grid units */
+const ISLANDS: { gx: number; gy: number; r: number; rock: [string, string] }[] = [
+  { gx: 30, gy: 106, r: 4.2, rock: ['#e8f8ff', '#88c8e8'] }, // Seafoam Islands
+  { gx: 18, gy: 106, r: 4.8, rock: ['#f89050', '#c02808'] }, // Cinnabar Island
+]
+
+/** A smooth closed curve through the midpoints of the coastline's segments */
 function traceLandmass(
   ctx: CanvasRenderingContext2D,
   tx: (x: number) => number,
   ty: (y: number) => number,
-  expand: number,
 ): void {
-  const e = expand
-  // Clockwise bezier outline of the Kanto mainland
+  const pts = COASTLINE.map(([gx, gy]) => [tx(gridToWorld(gx)), ty(gridToWorld(gy))])
+  const mid = (i: number) => {
+    const [ax, ay] = pts[i % pts.length]
+    const [bx, by] = pts[(i + 1) % pts.length]
+    return [(ax + bx) / 2, (ay + by) / 2]
+  }
   ctx.beginPath()
-  ctx.moveTo(tx(88 - e), ty(118 - e))
-  ctx.bezierCurveTo(tx(120), ty(72 - e), tx(165), ty(62 - e), tx(205), ty(66 - e))
-  ctx.bezierCurveTo(tx(255), ty(56 - e), tx(300), ty(54 - e), tx(345), ty(60 - e))
-  ctx.bezierCurveTo(tx(385), ty(60 - e), tx(425), ty(70 - e), tx(465), ty(86 - e))
-  ctx.bezierCurveTo(tx(505 + e), ty(102), tx(522 + e), ty(138), tx(518 + e), ty(178))
-  ctx.bezierCurveTo(tx(522 + e), ty(218), tx(516 + e), ty(258), tx(506 + e), ty(296))
-  ctx.bezierCurveTo(tx(498 + e), ty(336), tx(474 + e), ty(364), tx(442), ty(374 + e))
-  ctx.bezierCurveTo(tx(396), ty(384 + e), tx(346), ty(386 + e), tx(288), ty(378 + e))
-  ctx.bezierCurveTo(tx(248), ty(372 + e), tx(218), ty(360 + e), tx(196), ty(346 + e))
-  ctx.bezierCurveTo(tx(178), ty(334), tx(162), ty(318), tx(148), ty(304))
-  ctx.bezierCurveTo(tx(128), ty(292), tx(60 - e), ty(278), tx(56 - e), ty(244))
-  ctx.bezierCurveTo(tx(50 - e), ty(202), tx(56 - e), ty(162), tx(66 - e), ty(142))
-  ctx.bezierCurveTo(tx(70 - e), ty(124), tx(82 - e), ty(118 - e), tx(88 - e), ty(118 - e))
+  const [sx, sy] = mid(0)
+  ctx.moveTo(sx, sy)
+  for (let i = 1; i <= pts.length; i++) {
+    const [cx, cy] = pts[i % pts.length]
+    const [mx, my] = mid(i)
+    ctx.quadraticCurveTo(cx, cy, mx, my)
+  }
   ctx.closePath()
 }
 
@@ -183,15 +210,22 @@ function drawLandmass(
   ctx: CanvasRenderingContext2D,
   tx: (x: number) => number,
   ty: (y: number) => number,
+  worldSize: (s: number) => number,
 ): void {
+  ctx.save()
+  ctx.lineJoin = 'round'
+
   // Sandy beach border
-  traceLandmass(ctx, tx, ty, 10)
+  traceLandmass(ctx, tx, ty)
   ctx.fillStyle = '#e8d478'
   ctx.fill()
+  ctx.strokeStyle = '#e8d478'
+  ctx.lineWidth = worldSize(MAP_GRID_UNIT * 1.6)
+  ctx.stroke()
 
   // Green interior with subtle gradient
-  traceLandmass(ctx, tx, ty, 0)
-  const g = ctx.createLinearGradient(tx(80), ty(70), tx(520), ty(380))
+  traceLandmass(ctx, tx, ty)
+  const g = ctx.createLinearGradient(tx(0), ty(0), tx(WORLD_BOUNDS.width), ty(WORLD_BOUNDS.height))
   g.addColorStop(0,   '#98d858')
   g.addColorStop(0.5, '#80c840')
   g.addColorStop(1,   '#60a828')
@@ -199,81 +233,74 @@ function drawLandmass(
   ctx.fill()
 
   // Soft inner border
-  traceLandmass(ctx, tx, ty, 0)
   ctx.strokeStyle = 'rgba(0,80,0,0.18)'
-  ctx.lineWidth = 3
+  ctx.lineWidth = worldSize(3)
   ctx.stroke()
+  ctx.restore()
 }
 
-// ---- Layer: Cinnabar Island --------------------------------------------------
+// ---- Layer: islands ----------------------------------------------------------
 
-function drawCinnabarIsland(
+function drawIslands(
   ctx: CanvasRenderingContext2D,
   tx: (x: number) => number,
   ty: (y: number) => number,
-  ts: (s: number) => number,
+  worldSize: (s: number) => number,
 ): void {
-  const cx = tx(148)
-  const cy = ty(358)
-  const r  = ts(26)
+  for (const island of ISLANDS) {
+    const cx = tx(gridToWorld(island.gx))
+    const cy = ty(gridToWorld(island.gy))
+    const r = worldSize(island.r * MAP_GRID_UNIT)
 
-  // Beach ring
-  ctx.beginPath()
-  ctx.arc(cx, cy, r + ts(7), 0, Math.PI * 2)
-  ctx.fillStyle = '#e8d478'
-  ctx.fill()
+    // Beach ring
+    ctx.beginPath()
+    ctx.arc(cx, cy, r + worldSize(MAP_GRID_UNIT * 0.8), 0, Math.PI * 2)
+    ctx.fillStyle = '#e8d478'
+    ctx.fill()
 
-  // Volcanic rock island
-  ctx.beginPath()
-  ctx.arc(cx, cy, r, 0, Math.PI * 2)
-  const ig = ctx.createRadialGradient(cx - ts(6), cy - ts(6), ts(4), cx, cy, r)
-  ig.addColorStop(0, '#f89050')
-  ig.addColorStop(1, '#c02808')
-  ctx.fillStyle = ig
-  ctx.fill()
-  ctx.strokeStyle = 'rgba(0,0,0,0.22)'
-  ctx.lineWidth = 2
-  ctx.stroke()
+    // Rock
+    ctx.beginPath()
+    ctx.arc(cx, cy, r, 0, Math.PI * 2)
+    const ig = ctx.createRadialGradient(cx - r * 0.25, cy - r * 0.25, r * 0.15, cx, cy, r)
+    ig.addColorStop(0, island.rock[0])
+    ig.addColorStop(1, island.rock[1])
+    ctx.fillStyle = ig
+    ctx.fill()
+    ctx.strokeStyle = 'rgba(0,0,0,0.22)'
+    ctx.lineWidth = worldSize(2)
+    ctx.stroke()
+  }
 }
 
 // ---- Layer: decorative scatter ----------------------------------------------
 
+/** Decorative trees and peaks, on the 0–100 grid, kept clear of area nodes */
+const SCATTER_TREES: [number, number][] = [
+  [13, 40], [23, 42], [13, 48], [23, 48],   // Viridian Forest
+  [12, 58], [24, 60], [12, 74], [24, 82],   // Routes 1 and 2
+  [9, 60], [14, 71],                        // Route 22
+  [35, 54], [46, 54], [36, 42],             // Celadon
+  [48, 76], [60, 82],                       // Safari Zone
+]
+
+const SCATTER_PEAKS: [number, number][] = [
+  [12, 28], [24, 36],                       // Pewter
+  [36, 18], [44, 17], [40, 29],             // Mt. Moon
+  [80, 31], [89, 21],                       // Rock Tunnel
+  [9, 34], [0, 30], [9, 44], [0, 20],       // Victory Road and Indigo Plateau
+]
+
 function drawScatter(
   ctx: CanvasRenderingContext2D,
-  areas: Area[],
   tx: (x: number) => number,
   ty: (y: number) => number,
   ts: (s: number) => number,
 ): void {
-  // Small trees scattered near forest / route areas
-  const treePts: [number, number][] = [
-    [168, 210], [178, 230], [160, 250],
-    [220, 210], [230, 230],
-    [168, 300], [180, 310], [175, 330],
-    [360, 260], [375, 250], [385, 270],
-  ]
-  for (const [x, y] of treePts) {
-    const ax = areas.find(a => a.id === 'viridian-forest' || a.id === 'route-1' || a.id === 'celadon-city')
-    if (!ax) break
-    drawMiniTree(ctx, tx(x), ty(y), ts(7))
+  for (const [gx, gy] of SCATTER_TREES) {
+    drawMiniTree(ctx, tx(gridToWorld(gx)), ty(gridToWorld(gy)), ts(7))
   }
-
-  // Small mountain bumps near pewter / mt-moon / victory-road
-  const mtnPts: [number, number][] = [
-    [170, 150], [140, 170], [132, 210],
-    [280, 116], [330, 100],
-    [440, 200], [460, 220],
-  ]
-  for (const [x, y] of mtnPts) {
-    drawMiniMountain(ctx, tx(x), ty(y), ts(8))
-  }
-
-  // Small wave accents near cerulean
-  const wavePts: [number, number][] = [
-    [430, 140], [445, 155], [460, 145],
-  ]
-  for (const [x, y] of wavePts) {
-    drawMiniWave(ctx, tx(x), ty(y), ts(6))
+  for (const [gx, gy] of SCATTER_PEAKS) {
+    drawMiniMountain(ctx, tx(gridToWorld(gx)), ty(gridToWorld(gy)), ts(8))
   }
 }
 
@@ -315,19 +342,6 @@ function drawMiniMountain(ctx: CanvasRenderingContext2D, cx: number, cy: number,
   ctx.restore()
 }
 
-function drawMiniWave(ctx: CanvasRenderingContext2D, cx: number, cy: number, r: number): void {
-  ctx.save()
-  ctx.globalAlpha = 0.4
-  ctx.strokeStyle = '#1868c8'
-  ctx.lineWidth = r * 0.3
-  ctx.lineCap = 'round'
-  ctx.beginPath()
-  ctx.moveTo(cx - r, cy)
-  ctx.bezierCurveTo(cx - r * 0.5, cy - r * 0.6, cx + r * 0.5, cy + 0.6 * r, cx + r, cy)
-  ctx.stroke()
-  ctx.restore()
-}
-
 // ---- Layer: paths -----------------------------------------------------------
 
 function drawPaths(
@@ -348,11 +362,22 @@ function drawPaths(
       const x1 = tx(area.mapX), y1 = ty(area.mapY)
       const x2 = tx(other.mapX), y2 = ty(other.mapY)
       const bothUnlocked = unlockedSet.has(area.id) && unlockedSet.has(connId)
+      const seaLane = SEA_AREA_IDS.has(area.id) || SEA_AREA_IDS.has(connId)
 
       ctx.save()
       ctx.lineCap = 'round'
 
-      if (bothUnlocked) {
+      if (seaLane) {
+        // Dotted surf route across the water
+        ctx.beginPath()
+        ctx.moveTo(x1, y1)
+        ctx.lineTo(x2, y2)
+        ctx.strokeStyle = bothUnlocked ? 'rgba(255,255,255,0.8)' : 'rgba(255,255,255,0.3)'
+        ctx.lineWidth = ts(bothUnlocked ? 3 : 2.5)
+        ctx.setLineDash([ts(1), ts(6)])
+        ctx.stroke()
+        ctx.setLineDash([])
+      } else if (bothUnlocked) {
         // Shadow
         ctx.beginPath()
         ctx.moveTo(x1, y1 + ts(2))
@@ -403,7 +428,7 @@ function drawTerrainBlobs(
   const unlockedSet = new Set(state.unlockedAreaIds)
 
   for (const area of state.areas) {
-    if (area.id === 'cinnabar-island') continue
+    if (SEA_AREA_IDS.has(area.id)) continue
     const cx = tx(area.mapX)
     const cy = ty(area.mapY)
     const r = ts(44)
@@ -552,6 +577,9 @@ function drawTerrainIcon(
 
   switch (id) {
     case 'route-1':
+    case 'route-2':
+    case 'route-22':
+    case 'route-23':
     case 'route-3':
     case 'route-4':
     case 'route-7':
@@ -648,6 +676,41 @@ function drawTerrainIcon(
       for (const [bx, by, bw, bh] of bldgs) {
         ctx.fillRect(cx + bx, cy + by, bw, bh)
       }
+      break
+    }
+
+    case 'pallet-town': {
+      // Little house with a door
+      ctx.beginPath()
+      ctx.moveTo(cx - ts(10), cy - ts(1))
+      ctx.lineTo(cx,          cy - ts(10))
+      ctx.lineTo(cx + ts(10), cy - ts(1))
+      ctx.closePath()
+      ctx.fill()
+      ctx.fillRect(cx - ts(7), cy - ts(1), ts(14), ts(10))
+      ctx.fillStyle = 'rgba(40,50,70,0.75)'
+      ctx.fillRect(cx - ts(2), cy + ts(3), ts(4), ts(6))
+      break
+    }
+
+    case 'indigo-plateau': {
+      // Trophy cup
+      ctx.beginPath()
+      ctx.moveTo(cx - ts(8), cy - ts(9))
+      ctx.lineTo(cx + ts(8), cy - ts(9))
+      ctx.quadraticCurveTo(cx + ts(8), cy + ts(2), cx, cy + ts(3))
+      ctx.quadraticCurveTo(cx - ts(8), cy + ts(2), cx - ts(8), cy - ts(9))
+      ctx.fill()
+      ctx.fillRect(cx - ts(1.5), cy + ts(2), ts(3), ts(5))
+      ctx.fillRect(cx - ts(6), cy + ts(7), ts(12), ts(2.5))
+      // Handles
+      ctx.lineWidth = ts(1.8)
+      ctx.beginPath()
+      ctx.arc(cx - ts(8), cy - ts(5), ts(3), Math.PI * 0.5, Math.PI * 1.5)
+      ctx.stroke()
+      ctx.beginPath()
+      ctx.arc(cx + ts(8), cy - ts(5), ts(3), -Math.PI * 0.5, Math.PI * 0.5)
+      ctx.stroke()
       break
     }
 

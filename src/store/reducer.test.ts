@@ -141,8 +141,8 @@ describe('createNewTrainer', () => {
   it('starts a normal game on Route 1 with nothing explored', () => {
     const t = createNewTrainer('Ash', makeSpecies())
     expect(t.name).toBe('Ash')
-    expect(t.currentAreaId).toBe('route-1')
-    expect(t.unlockedAreaIds).toEqual(['route-1'])
+    expect(t.currentAreaId).toBe('pallet-town')
+    expect(t.unlockedAreaIds).toEqual(['pallet-town'])
     expect(t.exploreProgress).toEqual({})
     expect(t.party[0].level).toBe(5)
     expect(t.party[0].baseStats).toEqual(CHARMANDER_BASE)

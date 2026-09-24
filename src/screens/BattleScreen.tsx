@@ -74,6 +74,9 @@ interface BattleData {
 // Each entry: [sky-top, sky-bottom, ground-top, ground-bottom]
 const FIELD_THEMES: Record<string, [string, string, string, string]> = {
   'route-1':         ['#87ceeb', '#b8e4f8', '#78c840', '#3a7a18'],
+  'route-2':         ['#87ceeb', '#b8e4f8', '#68b838', '#2a6a18'],
+  'route-22':        ['#90d0f0', '#c0e8f8', '#88c048', '#4a7a20'],
+  'route-23':        ['#d8b878', '#f0d8a0', '#a89048', '#605020'],
   'viridian-city':   ['#6ab0c0', '#3a8898', '#5a7060', '#283830'],
   'viridian-forest': ['#1a4028', '#0d2818', '#2a4a18', '#0a1c08'],
   'pewter-city':     ['#8090a8', '#5a6890', '#808888', '#505858'],
@@ -85,6 +88,7 @@ const FIELD_THEMES: Record<string, [string, string, string, string]> = {
   'fuchsia-city':    ['#780848', '#b83080', '#400820', '#200408'],
   'cinnabar-island': ['#280408', '#681008', '#b83008', '#c04808'],
   'victory-road':    ['#080c10', '#101820', '#181820', '#080810'],
+  'indigo-plateau':  ['#302070', '#5040a8', '#403860', '#201838'],
 }
 
 function getBattleFieldStyle(areaId: string): CSSProperties {

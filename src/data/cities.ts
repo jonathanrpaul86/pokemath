@@ -3,6 +3,32 @@ import { gymForCity } from './gyms'
 
 /** Houses and Storytellers per city. Center, Mart, and Gym come from area and gym data. */
 export const CITY_HUBS: Record<string, CityHubData> = {
+  'pallet-town': {
+    houses: [{
+      id: 'oaks-lab',
+      name: 'Professor Oak’s Lab',
+      icon: '🧪',
+      npcName: 'Professor Oak',
+      lines: [
+        'Ah, there you are! The world is full of Pokémon, and you’re about to meet lots of them.',
+        'Head north on Route 1. Explore it fully and you’ll find the way to Viridian City.',
+        'Every Pokémon you catch fills a page in your Pokédex. See if you can complete it!',
+      ],
+    }],
+  },
+  'indigo-plateau': {
+    houses: [{
+      id: 'league-gate',
+      name: 'Pokémon League',
+      icon: '🏆',
+      npcName: 'League Guard',
+      lines: [
+        'Welcome to the Indigo Plateau, home of the Pokémon League!',
+        'Only trainers with all eight badges make it this far. Well done!',
+        'The Elite Four are still getting ready. Come back soon to challenge them!',
+      ],
+    }],
+  },
   'viridian-city': {
     houses: [{
       id: 'trainer-school',

@@ -98,12 +98,29 @@ describe('migrating older saves', () => {
 
   it('marks visited wild areas as explored, but not cities', () => {
     const old: Partial<Trainer> = makeTrainer({
-      unlockedAreaIds: ['route-1', 'viridian-city', 'viridian-forest'],
+      unlockedAreaIds: ['route-1', 'viridian-city'],
     })
     delete old.exploreProgress
     storeRaw(0, old)
     const loaded = loadSave(0)!
-    expect(loaded.exploreProgress).toEqual({ 'route-1': 8, 'viridian-forest': 14 })
+    expect(loaded.exploreProgress).toEqual({ 'route-1': 8 })
+  })
+
+  it('adds areas that were inserted on paths the save already walked', () => {
+    storeRaw(0, makeTrainer({
+      unlockedAreaIds: ['route-1', 'viridian-city', 'viridian-forest', 'victory-road'],
+      exploreProgress: { 'route-1': 8, 'viridian-forest': 5 },
+    }))
+    const loaded = loadSave(0)!
+    expect(loaded.unlockedAreaIds).toEqual(expect.arrayContaining(['pallet-town', 'route-2', 'route-22', 'route-23']))
+    expect(loaded.exploreProgress).toEqual({
+      'route-1': 8, 'viridian-forest': 5, 'route-2': 6, 'route-22': 6, 'route-23': 12,
+    })
+  })
+
+  it('does not add new areas a save has not reached', () => {
+    storeRaw(0, makeTrainer({ unlockedAreaIds: ['route-1', 'viridian-city'] }))
+    expect(loadSave(0)!.unlockedAreaIds).toEqual(['route-1', 'viridian-city', 'pallet-town'])
   })
 
   it('keeps existing explore progress untouched', () => {

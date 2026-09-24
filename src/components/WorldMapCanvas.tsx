@@ -4,8 +4,8 @@ import { MapRenderer, WORLD_BOUNDS, type MapRenderState } from '../utils/mapRend
 import { followView, viewRect, easeToward, type MapView } from '../utils/mapCamera'
 import { travelBlocker } from '../data/areas'
 
-/** How much of the world the local map shows across its width (the world is 600 wide) */
-const LOCAL_VIEW_WIDTH = 360
+/** How much of the world the local map shows across its width (see WORLD_BOUNDS) */
+const LOCAL_VIEW_WIDTH = 760
 /** Fraction of the remaining distance the camera covers each frame */
 const CAMERA_EASE = 0.12
 
