@@ -18,6 +18,8 @@ export interface GymLeader {
   badge: BadgeId
   quote: string
   winQuote: string
+  /** A stronger team for a rematch once the player has every badge */
+  rematch?: { team: TrainerPokemon[]; quote: string }
 }
 
 export interface GymDefinition {

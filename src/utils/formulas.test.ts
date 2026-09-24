@@ -82,3 +82,10 @@ describe('updatedMoveset', () => {
     expect(updatedMoveset(makePokemon({ level: 20, moves: [SCRATCH] }), makeSpecies({ levelUpMoves: {} }))).toBeNull()
   })
 })
+
+describe('battleXpReward', () => {
+  it('gives trainers’ Pokémon half again as much XP as wild ones', () => {
+    expect(battleXpReward(20)).toBe(75)
+    expect(battleXpReward(20, true)).toBe(Math.round(75 * 1.5))
+  })
+})

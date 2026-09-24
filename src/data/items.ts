@@ -131,6 +131,14 @@ export const ITEM_DEFS: ItemDefinition[] = [
     howToGet: 'Explore all of the Pokémon Tower in Lavender Town, and Mr. Fuji will give you one.',
   },
   {
+    id: 'exp-all',
+    name: 'Exp. All',
+    description: 'A device that shares battle XP with every Pokémon in your party, not just the one that fought.',
+    pocket: 'key-item',
+    buyPrice: 0,
+    sellPrice: 0,
+  },
+  {
     id: 'old-rod',
     name: 'Old Rod',
     description: 'A battered old fishing rod. Magikarp will bite in areas near the water.',

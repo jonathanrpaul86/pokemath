@@ -26,6 +26,15 @@ export const KANTO_GYMS: GymDefinition[] = [
       badge: 'boulder-badge',
       quote: "I'm Brock! My Pokémon are rock-solid and will crush anything! Defeat me if you can!",
       winQuote: "You're tough! The Boulder Badge is yours — now head east through the mountains!",
+      rematch: {
+        team: [
+          { speciesId: 95,  level: 50 }, // Onix
+          { speciesId: 141, level: 50 }, // Kabutops
+          { speciesId: 139, level: 51 }, // Omastar
+          { speciesId: 76,  level: 52 }, // Golem
+        ],
+        quote: "You've come a long way since your first badge! My Rock Pokémon have been training too. Let's see who's stronger now!",
+      },
     },
   },
   {
@@ -60,7 +69,16 @@ export const KANTO_GYMS: GymDefinition[] = [
       ],
       badge: 'cascade-badge',
       quote: "My name's Misty! I'm an expert on Water-type Pokémon. You'd better be strong!",
-      winQuote: "Incredible! You've earned the Cascade Badge. Rock Tunnel to the east is now open!",
+      winQuote: "Incredible! You've earned the Cascade Badge. Route 5 is open now, and the harbor city of Vermilion lies beyond it!",
+      rematch: {
+        team: [
+          { speciesId: 119, level: 51 }, // Seaking
+          { speciesId: 131, level: 51 }, // Lapras
+          { speciesId: 91,  level: 52 }, // Cloyster
+          { speciesId: 121, level: 53 }, // Starmie
+        ],
+        quote: "A rematch? You bet! My Water Pokémon have grown so much. Get ready to be splashed!",
+      },
     },
   },
   {
@@ -96,7 +114,16 @@ export const KANTO_GYMS: GymDefinition[] = [
       ],
       badge: 'thunder-badge',
       quote: "Hey, kid! I'm Lt. Surge! My Electric Pokémon are lightning fast — they'll zap you before you can blink!",
-      winQuote: "Whoa, you're the real deal, kid! The Thunder Badge is yours. Head back through Lavender Town and take Route 7 west!",
+      winQuote: "Whoa, you're the real deal, kid! The Thunder Badge is yours. Route 9, east of Cerulean City, is open now, and so is Diglett's Cave!",
+      rematch: {
+        team: [
+          { speciesId: 101, level: 52 }, // Electrode
+          { speciesId: 82,  level: 52 }, // Magneton
+          { speciesId: 125, level: 53 }, // Electabuzz
+          { speciesId: 26,  level: 54 }, // Raichu
+        ],
+        quote: "Back for more, kid? My Electric Pokémon are charged to the max. This time you'll really feel the shock!",
+      },
     },
   },
   {
@@ -142,6 +169,15 @@ export const KANTO_GYMS: GymDefinition[] = [
       badge: 'rainbow-badge',
       quote: "I'm Erika, the Grass-type master! My Pokémon are nurtured with tender care. Face their wrath!",
       winQuote: "Wonderful! You've earned the Rainbow Badge. The golden gates of Saffron City will now open for you!",
+      rematch: {
+        team: [
+          { speciesId: 114, level: 52 }, // Tangela
+          { speciesId: 103, level: 53 }, // Exeggutor
+          { speciesId: 71,  level: 54 }, // Victreebel
+          { speciesId: 45,  level: 55 }, // Vileplume
+        ],
+        quote: "Oh, welcome back! My garden has bloomed beautifully since you last visited. Shall we battle among the flowers?",
+      },
     },
   },
   {
@@ -188,7 +224,16 @@ export const KANTO_GYMS: GymDefinition[] = [
       ],
       badge: 'marsh-badge',
       quote: "I am Sabrina. I knew you would come... My psychic Pokémon have already seen how this battle ends.",
-      winQuote: "I did not foresee this... The Marsh Badge is yours. Cycling Road, south of Celadon City, is now open!",
+      winQuote: "I did not foresee this... The Marsh Badge is yours. With a Bicycle or a Poké Flute, the roads to Fuchsia City will open for you.",
+      rematch: {
+        team: [
+          { speciesId: 122, level: 53 }, // Mr. Mime
+          { speciesId: 97,  level: 53 }, // Hypno
+          { speciesId: 80,  level: 54 }, // Slowbro
+          { speciesId: 65,  level: 56 }, // Alakazam
+        ],
+        quote: "I knew you would return. I have seen this battle in my mind many times... but I still don't know how it ends.",
+      },
     },
   },
   {
@@ -235,7 +280,16 @@ export const KANTO_GYMS: GymDefinition[] = [
       ],
       badge: 'soul-badge',
       quote: "I am Koga of the Fuchsia Gym! My Pokémon use poison to wear down opponents. You will not escape!",
-      winQuote: "You are skilled... The Soul Badge is yours. The Seafoam Islands lie to the south!",
+      winQuote: "You are skilled... The Soul Badge is yours. You can surf now, so the sea routes south of Fuchsia will take you to the Seafoam Islands!",
+      rematch: {
+        team: [
+          { speciesId: 49,  level: 54 }, // Venomoth
+          { speciesId: 89,  level: 54 }, // Muk
+          { speciesId: 42,  level: 55 }, // Golbat
+          { speciesId: 110, level: 57 }, // Weezing
+        ],
+        quote: "Fwahaha! A ninja never stops training. My poisons are deadlier than ever. Can you keep up?",
+      },
     },
   },
   {
@@ -281,7 +335,16 @@ export const KANTO_GYMS: GymDefinition[] = [
       ],
       badge: 'volcano-badge',
       quote: "I'm Blaine! I'm burning with a passion for battling! My Fire-type Pokémon will incinerate you!",
-      winQuote: "You're hot stuff! You've earned the Volcano Badge. Cross Victory Road to Viridian City — the final Gym awaits!",
+      winQuote: "You're hot stuff! You've earned the Volcano Badge. Surf Route 21 home to Pallet Town. The final Gym awaits in Viridian City, and Route 23 to its west is open now too!",
+      rematch: {
+        team: [
+          { speciesId: 38,  level: 55 }, // Ninetales
+          { speciesId: 78,  level: 55 }, // Rapidash
+          { speciesId: 126, level: 56 }, // Magmar
+          { speciesId: 59,  level: 58 }, // Arcanine
+        ],
+        quote: "Hah! Here's a riddle: what burns hotter the second time around? My Fire Pokémon, of course! Let's go!",
+      },
     },
   },
   {
@@ -330,7 +393,16 @@ export const KANTO_GYMS: GymDefinition[] = [
       ],
       badge: 'earth-badge',
       quote: "So, you've collected seven badges. I am Giovanni, the strongest Gym Leader in Kanto. Show me what you've got!",
-      winQuote: "Remarkable... The Earth Badge is yours. You've conquered every Gym in Kanto — you are a true Pokémon Master in the making!",
+      winQuote: "Remarkable... The Earth Badge is yours. You've conquered every Gym in Kanto. Victory Road is open, and the Pokémon League awaits at Indigo Plateau!",
+      rematch: {
+        team: [
+          { speciesId: 51,  level: 55 }, // Dugtrio
+          { speciesId: 31,  level: 56 }, // Nidoqueen
+          { speciesId: 34,  level: 57 }, // Nidoking
+          { speciesId: 112, level: 59 }, // Rhydon
+        ],
+        quote: "So, you want to face me again? Very well. I won't hold back this time. Prepare yourself!",
+      },
     },
   },
 ]

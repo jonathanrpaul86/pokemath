@@ -537,6 +537,14 @@ export const KANTO_AREAS: Area[] = [
     areaType: 'route',
     exploresToComplete: 8,
     connectedAreaIds: ['route-14', 'fuchsia-city'],
+    completionReward: {
+      npcName: 'Professor Oak’s Aide',
+      lines: [
+        'Hi! I work for Professor Oak. He asked me to find trainers who explore every corner of Kanto.',
+        'This is the Exp. All! With it, every Pokémon in your party learns from each battle, not just the one fighting.',
+      ],
+      gift: { kind: 'key-item', keyItemId: 'exp-all' },
+    },
     ...mapAt(64, 89),
     mathDifficulty: 79,
     encounters: [

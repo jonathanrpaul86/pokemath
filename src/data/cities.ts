@@ -157,6 +157,7 @@ export const CITY_HUBS: Record<string, CityHubData> = {
       lines: [
         'Ah, a young trainer! The Safari Zone is full of rare Pokémon.',
         'Koga’s Poison Pokémon wear you down slowly. Carry plenty of Potions!',
+        'Oh, and one of Professor Oak’s aides is on Route 15, just east of town. He has a gift for trainers who explore all of it!',
       ],
     }],
     storyteller: { npcName: 'Ranger Kit', rareEncounter: { speciesId: 127, level: 34 } }, // Pinsir

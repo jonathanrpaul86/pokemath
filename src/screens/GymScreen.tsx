@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useTrainer, useGameStore } from '../store'
 import { AREA_MAP } from '../data/areas'
-import { GYM_MAP, BADGE_NAMES } from '../data/gyms'
+import { GYM_MAP, BADGE_NAMES, KANTO_GYMS } from '../data/gyms'
 import BattleScreen from './BattleScreen'
 import type { TrainerBattle } from '../types'
 import './GymScreen.css'
@@ -46,6 +46,7 @@ export default function GymScreen({ gymId, onExit }: Props) {
   const { dispatch } = useGameStore()
   const [activeBattle, setActiveBattle] = useState<TrainerBattle | null>(null)
   const [badgeFanfare, setBadgeFanfare] = useState(false)
+  const [rematchWon, setRematchWon] = useState(false)
 
   const gym = GYM_MAP[gymId]
   if (!gym) return null
@@ -55,6 +56,8 @@ export default function GymScreen({ gymId, onExit }: Props) {
   const allTrainersDefeated = gym.trainers.every(t => progress.defeatedTrainerIds.includes(t.id))
   const leaderDefeated = trainer.badges.includes(gym.leader.badge)
   const gymClosed = !leaderDefeated && trainer.badges.length < (gym.requiredBadgeCount ?? 0)
+  // Once every badge is earned, leaders offer a rematch with a stronger team
+  const rematch = leaderDefeated && trainer.badges.length >= KANTO_GYMS.length ? gym.leader.rematch : undefined
 
   function startTrainerBattle(trainerId: string) {
     const t = gym.trainers.find(t => t.id === trainerId)!
@@ -95,6 +98,20 @@ export default function GymScreen({ gymId, onExit }: Props) {
     })
   }
 
+  function startRematch() {
+    if (!rematch) return
+    setActiveBattle({
+      trainerName: gym.leader.name,
+      isLeader: true,
+      team: rematch.team,
+      quote: rematch.quote,
+      onComplete: (won) => {
+        setActiveBattle(null)
+        if (won) setRematchWon(true)
+      },
+    })
+  }
+
   if (activeBattle) {
     return (
       <div className="gym-battle-fullscreen">
@@ -117,6 +134,22 @@ export default function GymScreen({ gymId, onExit }: Props) {
           <p className="gym-fanfare__quote">"{gym.leader.winQuote}"</p>
           <p className="gym-fanfare__sub">— {gym.leader.name}</p>
           <button className="btn btn-primary gym-fanfare__btn" onClick={onExit}>
+            Continue
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  if (rematchWon) {
+    return (
+      <div className="gym-battle-fullscreen gym-screen--fanfare">
+        <div className="gym-fanfare">
+          <BadgeIcon badgeId={gym.leader.badge} earned />
+          <h2 className="gym-fanfare__title">Rematch Won!</h2>
+          <p className="gym-fanfare__quote">"You're even stronger than I remembered. Come back and train with me anytime!"</p>
+          <p className="gym-fanfare__sub">— {gym.leader.name}</p>
+          <button className="btn btn-primary gym-fanfare__btn" onClick={() => setRematchWon(false)}>
             Continue
           </button>
         </div>
@@ -202,7 +235,11 @@ export default function GymScreen({ gymId, onExit }: Props) {
                 </span>
               )}
             </div>
-            {leaderDefeated ? (
+            {rematch ? (
+              <button className="btn btn-primary gym-leader-row__challenge" onClick={startRematch}>
+                Rematch! (Lv.{Math.min(...rematch.team.map(p => p.level))}–{Math.max(...rematch.team.map(p => p.level))})
+              </button>
+            ) : leaderDefeated ? (
               <span className="gym-trainer-row__status gym-trainer-row__status--beaten">Badge earned ✓</span>
             ) : (
               <button

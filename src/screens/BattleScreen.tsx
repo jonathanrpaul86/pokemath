@@ -4,7 +4,8 @@ import { fetchPokemonSpecies } from '../services/pokeApi'
 import { spawnWildPokemon, calcDamage, calcCatchDifficulty, isBattleOutcome, damagingMoves, moveMenuOptions, battleProblem, moveMathTier } from '../utils/battle'
 import { pickEncounter, pickLevel } from '../utils/encounter'
 import { generateProblem, checkAnswer } from '../utils/math'
-import { battleXpReward, trainerMoneyReward, pokemonXpToNextLevel } from '../utils/formulas'
+import { battleXpReward, trainerMoneyReward, pokemonXpToNextLevel, EXP_ALL_SHARE } from '../utils/formulas'
+import { hasKeyItem } from '../data/areas'
 import { playCorrect, playWrong, playCatch, playVictory, playLevelUp, isMuted, setMuted } from '../utils/sound'
 import { EVOLUTIONS } from '../data/evolutions'
 import { KANTO_NAMES } from '../data/pokedex'
@@ -357,10 +358,23 @@ export default function BattleScreen({ area, onBattleEnd, trainerBattle, wildOve
     })
   }
 
+  /**
+   * XP for the Pokémon that fought; with the Exp. All, the rest of the party
+   * (if they haven't fainted) shares some too. Returns a note for the log.
+   */
+  function awardXp(b: BattleData, amount: number): string {
+    dispatch({ type: 'GAIN_POKEMON_XP', payload: { uid: trainer.party[b.activeIdx].uid, amount } })
+    if (!hasKeyItem(trainer.keyItems, 'exp-all')) return ''
+    const shared = Math.round(amount * EXP_ALL_SHARE)
+    const others = trainer.party.filter((p, i) => i !== b.activeIdx && (b.partyHps[i] ?? p.currentHp) > 0)
+    for (const p of others) dispatch({ type: 'GAIN_POKEMON_XP', payload: { uid: p.uid, amount: shared } })
+    return others.length ? ` The Exp. All shared ${shared} XP with the team!` : ''
+  }
+
   function handleVictory(b: BattleData) {
-    const pkmnXp = battleXpReward(b.wild.level)
+    const pkmnXp = battleXpReward(b.wild.level, !!trainerBattle)
     persistHps(b)
-    dispatch({ type: 'GAIN_POKEMON_XP', payload: { uid: trainer.party[b.activeIdx].uid, amount: pkmnXp } })
+    const sharedNote = awardXp(b, pkmnXp)
 
     if (trainerBattle && b.trainerTeam && b.trainerTeamIdx !== undefined) {
       const nextIdx = b.trainerTeamIdx + 1
@@ -410,7 +424,7 @@ export default function BattleScreen({ area, onBattleEnd, trainerBattle, wildOve
     setBattle(prev => prev ? {
       ...prev,
       phase: 'victory',
-      log: [`Wild ${capitalize(b.wild.name)} fainted! ${capitalize(trainer.party[b.activeIdx].name)} gained ${pkmnXp} XP!`],
+      log: [`Wild ${capitalize(b.wild.name)} fainted! ${capitalize(trainer.party[b.activeIdx].name)} gained ${pkmnXp} XP!${sharedNote}`],
     } : prev)
   }
 
@@ -1010,7 +1024,7 @@ export default function BattleScreen({ area, onBattleEnd, trainerBattle, wildOve
       playCatch()
       persistHps(b)
       dispatch({ type: 'CATCH_POKEMON', payload: { pokemon: caught } })
-      dispatch({ type: 'GAIN_POKEMON_XP', payload: { uid: trainer.party[b.activeIdx].uid, amount: battleXpReward(b.wild.level) } })
+      awardXp(b, battleXpReward(b.wild.level))
       setBattle(prev => prev ? {
         ...prev,
         phase: 'caught',

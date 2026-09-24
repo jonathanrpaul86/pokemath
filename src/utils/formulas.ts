@@ -48,8 +48,14 @@ export function pokemonLevelCap(badgeCount: number): number {
 }
 
 /** XP rewarded to the active Pokemon after winning a battle */
-export function battleXpReward(wildLevel: number): number {
-  return wildLevel * 3 + 15
+/** Trainers' Pokémon are worth more XP than wild ones, as in the original games */
+export const TRAINER_XP_MULTIPLIER = 1.5
+/** With the Exp. All, the rest of the (conscious) party shares this much of the XP */
+export const EXP_ALL_SHARE = 0.5
+
+export function battleXpReward(level: number, fromTrainer = false): number {
+  const base = level * 3 + 15
+  return fromTrainer ? Math.round(base * TRAINER_XP_MULTIPLIER) : base
 }
 
 /** Money rewarded for defeating a trainer, based on their highest-level Pokémon */

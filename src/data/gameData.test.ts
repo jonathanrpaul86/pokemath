@@ -276,6 +276,18 @@ describe('badges and gyms', () => {
     }
   })
 
+  it('every leader has a post-game rematch that is tougher than the first battle', () => {
+    const aces = KANTO_GYMS.map(g => {
+      const rematch = g.leader.rematch
+      expect(rematch, g.id).toBeDefined()
+      for (const p of rematch!.team) expect(KANTO_NAMES[p.speciesId], g.id).toBeDefined()
+      const ace = Math.max(...rematch!.team.map(p => p.level))
+      expect(ace, g.id).toBeGreaterThan(Math.max(...g.leader.team.map(p => p.level)))
+      return ace
+    })
+    expect([...aces].sort((a, b) => a - b)).toEqual(aces) // tougher in gym order
+  })
+
   it('gym Pokémon are real Kanto species with sensible levels', () => {
     for (const g of KANTO_GYMS) {
       for (const p of [...g.trainers.flatMap(t => t.team), ...g.leader.team]) {
