@@ -152,16 +152,10 @@ export default function OverworldScreen({ onStartBattle, cityView, onCityViewCha
   const currentArea: Area = AREA_MAP[trainer.currentAreaId]
   const selectedArea: Area = AREA_MAP[selectedAreaId] ?? currentArea
 
-  // Keep selectedAreaId pointing at currentAreaId if it drifts (e.g. after travel)
-  useEffect(() => {
-    setSelectedAreaId(trainer.currentAreaId)
-  }, [trainer.currentAreaId])
-
   // Preload species sprites for current area so battles start instantly
   useEffect(() => {
-    const ids = currentArea.encounters.map(e => e.speciesId)
-    preloadAreaSpecies(ids)
-  }, [currentArea.id])
+    preloadAreaSpecies(currentArea.encounters.map(e => e.speciesId))
+  }, [currentArea])
 
   // Pokémon from older saves lack base stats, so they can't grow on level-up.
   // Look them up once (PokéAPI responses are cached) and recalculate.
@@ -199,6 +193,8 @@ export default function OverworldScreen({ onStartBattle, cityView, onCityViewCha
 
   function handleTravel(areaId: string) {
     setRewardPutOffFor(null)
+    // The side panel follows the player to their new area
+    setSelectedAreaId(areaId)
     dispatch({ type: 'UNLOCK_AREA', payload: { areaId } })
     dispatch({ type: 'SET_CURRENT_AREA', payload: { areaId } })
     // Arriving in a city opens its hub

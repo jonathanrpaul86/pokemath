@@ -1,4 +1,5 @@
-export { GameProvider, useGameStore, useTrainer } from './GameContext'
+export { GameProvider } from './GameContext'
+export { useGameStore, useTrainer } from './hooks'
 export { createNewTrainer } from './reducer'
 export { loadSave, writeSave, deleteSave, listSaves, migrateLegacySave } from './localStorage'
 export type { GameAction } from './actions'

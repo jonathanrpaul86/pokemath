@@ -234,6 +234,22 @@ interface Props {
   wildOverride?: WildOverride
 }
 
+/**
+ * Counts a battle timer down once a second while `running`: `onTick` takes a
+ * second off, and `onExpire` runs instead when the last second is up.
+ */
+function useBattleCountdown(running: boolean, remaining: number, onTick: () => void, onExpire: () => void) {
+  // The callbacks change every render; read the latest ones when the second is up
+  const callbacks = useRef({ onTick, onExpire })
+  useEffect(() => { callbacks.current = { onTick, onExpire } })
+
+  useEffect(() => {
+    if (!running || remaining <= 0) return
+    const t = setTimeout(() => (remaining > 1 ? callbacks.current.onTick() : callbacks.current.onExpire()), 1000)
+    return () => clearTimeout(t)
+  }, [running, remaining])
+}
+
 export default function BattleScreen({ area, onBattleEnd, trainerBattle, wildOverride }: Props) {
   const trainer = useTrainer()
   const { dispatch } = useGameStore()
@@ -429,7 +445,7 @@ export default function BattleScreen({ area, onBattleEnd, trainerBattle, wildOve
     } : prev)
   }
 
-  function handleBlackout(_b: BattleData) {
+  function handleBlackout() {
     dispatch({ type: 'HEAL_PARTY' })
     setBattle(prev => prev ? {
       ...prev,
@@ -461,7 +477,7 @@ export default function BattleScreen({ area, onBattleEnd, trainerBattle, wildOve
       if (b.phase === 'resolving-wrong') {
         if (b.partyHps[b.activeIdx] <= 0) {
           const nextIdx = b.partyHps.findIndex((hp, i) => i !== b.activeIdx && hp > 0)
-          if (nextIdx === -1) { handleBlackout(b); return }
+          if (nextIdx === -1) { handleBlackout(); return }
           // Forced switch after faint — pause at choose-action so player can react
           setBattle(prev => prev ? {
             ...prev, phase: 'choose-action', activeIdx: nextIdx, problem: null,
@@ -478,77 +494,54 @@ export default function BattleScreen({ area, onBattleEnd, trainerBattle, wildOve
     return () => clearTimeout(t)
   }, [battle?.phase])  // eslint-disable-line
 
-  // Player-turn timer tick (paused while switch or move menu is open)
-  useEffect(() => {
-    if (!battle || battle.phase !== 'player-turn' || battle.timeRemaining <= 0 || showSwitch || showMoveMenu || showBallMenu || showItemMenu || !!usingItemInBattle) return
-    const t = setTimeout(() => {
-      setBattle(prev => prev?.phase === 'player-turn' ? { ...prev, timeRemaining: prev.timeRemaining - 1 } : prev)
-    }, 1000)
-    return () => clearTimeout(t)
-  }, [battle?.phase, battle?.timeRemaining, showSwitch, showMoveMenu])
+  // ---- Timers ---------------------------------------------------------------
 
-  // Player-turn timer expired → wrong answer
-  useEffect(() => {
-    if (!battle || battle.phase !== 'player-turn' || battle.timeRemaining > 0) return
+  const battlePhase = battle?.phase
+  const timeLeft = battle?.timeRemaining ?? 0
+  const catchTimeLeft = battle?.catchTimeRemaining ?? 0
+  // The answer timer waits while a menu is open
+  const menuOpen = showSwitch || showMoveMenu || showBallMenu || showItemMenu || !!usingItemInBattle
+
+  /** Take a second off the timer, but only while the battle is still in that phase */
+  function tick(phase: BattlePhase, field: 'timeRemaining' | 'catchTimeRemaining') {
+    setBattle(prev => prev?.phase === phase ? { ...prev, [field]: prev[field] - 1 } : prev)
+  }
+
+  /** Runs the handler for a timer that ran out, if the battle is still in that phase */
+  function whenStill(phase: BattlePhase, handler: (b: BattleData) => void) {
     const b = battleRef.current
-    if (!b || b.phase !== 'player-turn') return
-    processWrongAnswer(b)
-  }, [battle?.phase, battle?.timeRemaining])  // eslint-disable-line
+    if (b?.phase === phase) handler(b)
+  }
 
-  // Catch-attempt timer tick
-  useEffect(() => {
-    if (!battle || battle.phase !== 'catch-attempt' || battle.catchTimeRemaining <= 0) return
-    const t = setTimeout(() => {
-      setBattle(prev => prev?.phase === 'catch-attempt' ? { ...prev, catchTimeRemaining: prev.catchTimeRemaining - 1 } : prev)
-    }, 1000)
-    return () => clearTimeout(t)
-  }, [battle?.phase, battle?.catchTimeRemaining])
+  // Out of time to answer → counts as a wrong answer
+  useBattleCountdown(battlePhase === 'player-turn' && !menuOpen, timeLeft,
+    () => tick('player-turn', 'timeRemaining'),
+    () => whenStill('player-turn', processWrongAnswer))
 
-  // Catch-attempt timer expired → fail
-  useEffect(() => {
-    if (!battle || battle.phase !== 'catch-attempt' || battle.catchTimeRemaining > 0) return
-    const p = nextProblem(undefined, chosenMoveFor(battle))
+  // Out of time while catching → the Pokémon breaks free
+  useBattleCountdown(battlePhase === 'catch-attempt', catchTimeLeft,
+    () => tick('catch-attempt', 'catchTimeRemaining'),
+    () => whenStill('catch-attempt', processCatchTimeout))
+
+  // Out of time while running → the escape fails
+  useBattleCountdown(battlePhase === 'run-attempt', timeLeft,
+    () => tick('run-attempt', 'timeRemaining'),
+    () => whenStill('run-attempt', processRunFailure))
+
+  // Out of time while switching → the switch happens, but the enemy attacks
+  useBattleCountdown(battlePhase === 'switch-attempt', timeLeft,
+    () => tick('switch-attempt', 'timeRemaining'),
+    () => whenStill('switch-attempt', processSwitchFailure))
+
+  function processCatchTimeout(b: BattleData) {
+    const p = nextProblem(undefined, chosenMoveFor(b))
     setBattle(prev => prev ? {
       ...prev, phase: 'player-turn', problem: p, timeRemaining: p.timeLimit,
       catchProgress: null, catchProblem: null,
       log: [...prev.log.slice(-3), `${capitalize(prev.wild.name)} broke free!`],
     } : prev)
     setAnswer('')
-  }, [battle?.phase, battle?.catchTimeRemaining])  // eslint-disable-line
-
-  // Run-attempt timer tick
-  useEffect(() => {
-    if (!battle || battle.phase !== 'run-attempt' || battle.timeRemaining <= 0) return
-    const t = setTimeout(() => {
-      setBattle(prev => prev?.phase === 'run-attempt' ? { ...prev, timeRemaining: prev.timeRemaining - 1 } : prev)
-    }, 1000)
-    return () => clearTimeout(t)
-  }, [battle?.phase, battle?.timeRemaining])
-
-  // Run-attempt timer expired → failure
-  useEffect(() => {
-    if (!battle || battle.phase !== 'run-attempt' || battle.timeRemaining > 0) return
-    const b = battleRef.current
-    if (!b || b.phase !== 'run-attempt') return
-    processRunFailure(b)
-  }, [battle?.phase, battle?.timeRemaining])  // eslint-disable-line
-
-  // Switch-attempt timer tick
-  useEffect(() => {
-    if (!battle || battle.phase !== 'switch-attempt' || battle.timeRemaining <= 0) return
-    const t = setTimeout(() => {
-      setBattle(prev => prev?.phase === 'switch-attempt' ? { ...prev, timeRemaining: prev.timeRemaining - 1 } : prev)
-    }, 1000)
-    return () => clearTimeout(t)
-  }, [battle?.phase, battle?.timeRemaining])
-
-  // Switch-attempt timer expired → failure (switch happens but enemy attacks)
-  useEffect(() => {
-    if (!battle || battle.phase !== 'switch-attempt' || battle.timeRemaining > 0) return
-    const b = battleRef.current
-    if (!b || b.phase !== 'switch-attempt') return
-    processSwitchFailure(b)
-  }, [battle?.phase, battle?.timeRemaining])  // eslint-disable-line
+  }
 
   // ---- Level-up sound --------------------------------------------------------
 

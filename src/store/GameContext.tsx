@@ -1,24 +1,9 @@
-import {
-  createContext, useContext, useEffect, useCallback,
-  useState, type ReactNode,
-} from 'react'
+import { useEffect, useCallback, useState, type ReactNode } from 'react'
 import type { Trainer, PokemonSpecies } from '../types'
 import { gameReducer, createNewTrainer } from './reducer'
 import { loadSave, writeSave, deleteSave, listSaves, migrateLegacySave, purgeOutdatedApiCache } from './localStorage'
 import type { GameAction } from './actions'
-
-interface GameContextValue {
-  trainer: Trainer | null
-  currentSlot: number | null
-  saves: (Trainer | null)[]
-  dispatch: (action: GameAction) => void
-  startNewGame: (name: string, starterSpecies: PokemonSpecies, slot: number) => void
-  loadSlot: (slot: number) => void
-  deleteSlot: (slot: number) => void
-  goToTitle: () => void
-}
-
-const GameContext = createContext<GameContextValue | null>(null)
+import { GameContext } from './context'
 
 export function GameProvider({ children }: { children: ReactNode }) {
   const [currentSlot, setCurrentSlot] = useState<number | null>(null)
@@ -30,17 +15,10 @@ export function GameProvider({ children }: { children: ReactNode }) {
     return listSaves()
   })
 
-  // Auto-save whenever trainer state changes while a slot is active
+  // Auto-save whenever trainer state changes while a slot is active. The saves
+  // list only shows on the title screen, and goToTitle re-reads it from storage.
   useEffect(() => {
-    if (currentSlot !== null && trainer !== null) {
-      writeSave(currentSlot, trainer)
-      // Refresh the saves list so TitleScreen shows up-to-date info
-      setSaves(prev => {
-        const next = [...prev]
-        next[currentSlot] = trainer
-        return next
-      })
-    }
+    if (currentSlot !== null && trainer !== null) writeSave(currentSlot, trainer)
   }, [trainer, currentSlot])
 
   const dispatch = useCallback((action: GameAction) => {
@@ -83,16 +61,4 @@ export function GameProvider({ children }: { children: ReactNode }) {
       {children}
     </GameContext.Provider>
   )
-}
-
-export function useGameStore(): GameContextValue {
-  const ctx = useContext(GameContext)
-  if (!ctx) throw new Error('useGameStore must be used inside <GameProvider>')
-  return ctx
-}
-
-export function useTrainer(): Trainer {
-  const { trainer } = useGameStore()
-  if (!trainer) throw new Error('useTrainer called before a game has started')
-  return trainer
 }
