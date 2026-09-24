@@ -1,4 +1,4 @@
-import type { Area, AreaReward, BadgeId, InventorySlot, Trainer } from '../types'
+import type { Area, AreaReward, BadgeId, InventorySlot, LegendaryEncounter, Trainer } from '../types'
 import { mapAt } from './mapGrid'
 
 export const KANTO_AREAS: Area[] = [
@@ -247,6 +247,12 @@ export const KANTO_AREAS: Area[] = [
     exploresToComplete: 15,
     requiredBadge: 'earth-badge',
     connectedAreaIds: ['cerulean-city'],
+    legendary: {
+      speciesId: 150, // Mewtwo
+      level: 70,
+      teaser: 'Deep in the cave, the air feels strange, as if someone is watching you think. An incredibly powerful Pokémon lives here…',
+      intro: 'A voice echoes in your mind… The legendary Mewtwo appeared!',
+    },
     ...mapAt(53, 12),
     mathDifficulty: 100,
     encounters: [
@@ -415,6 +421,12 @@ export const KANTO_AREAS: Area[] = [
     exploresToComplete: 10,
     requiredBadge: 'soul-badge',
     connectedAreaIds: ['route-10'],
+    legendary: {
+      speciesId: 145, // Zapdos
+      level: 50,
+      teaser: 'Every light in the Power Plant is flickering, and the air crackles with electricity. Something powerful is hiding in the generator room…',
+      intro: 'A blinding flash! The legendary Zapdos appeared!',
+    },
     ...mapAt(95, 33),
     mathDifficulty: 84,
     encounters: [
@@ -777,6 +789,12 @@ export const KANTO_AREAS: Area[] = [
     exploresToComplete: 12,
     requiredBadge: 'soul-badge',
     connectedAreaIds: ['route-20', 'cinnabar-island'],
+    legendary: {
+      speciesId: 144, // Articuno
+      level: 50,
+      teaser: 'An icy wind is blowing up from the deepest cave, colder than anything else in Seafoam. Something is stirring down there…',
+      intro: 'Snow swirls through the cave… The legendary Articuno appeared!',
+    },
     ...mapAt(30, 106),
     mathDifficulty: 86,
     encounters: [
@@ -816,6 +834,12 @@ export const KANTO_AREAS: Area[] = [
     exploresToComplete: 15,
     requiredBadge: 'earth-badge',
     connectedAreaIds: ['route-23', 'indigo-plateau'],
+    legendary: {
+      speciesId: 146, // Moltres
+      level: 55,
+      teaser: 'The rocks near the top of Victory Road are glowing hot, and a flicker of flame dances in the dark. Something is waiting up there…',
+      intro: 'Flames light up the cave! The legendary Moltres appeared!',
+    },
     ...mapAt(4, 38),
     mathDifficulty: 100,
     encounters: [
@@ -871,6 +895,16 @@ export function unclaimedReward(
 ): AreaReward | null {
   if (!area.completionReward || trainer.claimedRewardIds.includes(area.id)) return null
   return isAreaExplored(area, trainer.exploreProgress) ? area.completionReward : null
+}
+
+/** The area's legendary, if the area is fully explored and it hasn't been caught yet */
+export function legendaryAvailable(
+  area: Area,
+  trainer: Pick<Trainer, 'exploreProgress' | 'pokedex'>,
+): LegendaryEncounter | null {
+  const legendary = area.legendary
+  if (!legendary || trainer.pokedex[legendary.speciesId]?.caught) return null
+  return isAreaExplored(area, trainer.exploreProgress) ? legendary : null
 }
 
 export function exploresDone(area: Area, exploreProgress: Record<string, number>): number {

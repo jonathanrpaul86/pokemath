@@ -163,6 +163,34 @@
   text-align: center;
 }
 
+/* Legendary Pokémon waiting in a fully explored area */
+.legendary-teaser {
+  margin: 0.6rem 0;
+  padding: 0.7rem 0.8rem;
+  border: 2px solid #b794f4;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #2d1b69cc, #1a1a2ecc);
+  box-shadow: 0 0 14px #9f7aea55;
+}
+
+.legendary-teaser p {
+  margin: 0 0 0.6rem;
+  font-size: 0.9rem;
+  line-height: 1.4;
+  color: #e9d8fd;
+}
+
+.btn-legendary {
+  width: 100%;
+  background: linear-gradient(135deg, #805ad5, #d53f8c);
+  color: #fff;
+  font-weight: 800;
+}
+
+.btn-legendary:hover:not(:disabled) {
+  filter: brightness(1.12);
+}
+
 /* ── Side panel ── */
 
 .side-panel {

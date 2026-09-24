@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { battleProblem, moveMathTier, moveMenuOptions } from './battle'
+import { battleProblem, calcCatchDifficulty, moveMathTier, moveMenuOptions } from './battle'
 import type { Move } from '../types'
 
 const SCRATCH: Move = { id: 10, name: 'scratch', type: 'normal', power: 40, accuracy: 100, damageClass: 'physical' }
@@ -51,5 +51,17 @@ describe('battleProblem', () => {
     expect(hard.some(p => p.operator === '÷')).toBe(false)
     expect(sample(5, FLAMETHROWER).every(p => p.operator === '+')).toBe(true)
     expect(new Set(hard.map(p => p.timeLimit))).toEqual(new Set([battleProblem(60).timeLimit]))
+  })
+})
+
+describe('calcCatchDifficulty', () => {
+  it('asks for two more problems to catch a legendary', () => {
+    const normal = calcCatchDifficulty(0.5, 50, 'ultra-ball')
+    const legendary = calcCatchDifficulty(0.5, 50, 'ultra-ball', true)
+    expect(legendary.problemsRequired).toBe(normal.problemsRequired + 2)
+  })
+
+  it('still catches a legendary with one problem using a Master Ball', () => {
+    expect(calcCatchDifficulty(1, 70, 'master-ball', true).problemsRequired).toBe(1)
   })
 })

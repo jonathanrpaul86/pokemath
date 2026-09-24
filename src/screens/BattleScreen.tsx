@@ -902,7 +902,7 @@ export default function BattleScreen({ area, onBattleEnd, trainerBattle, wildOve
     if (!b) return
     setShowBallMenu(false)
     dispatch({ type: 'REMOVE_ITEM', payload: { itemId: ballId, quantity: 1 } })
-    const { problemsRequired, timePerProblem } = calcCatchDifficulty(b.wildHp / b.wild.maxHp, b.wild.level, ballId)
+    const { problemsRequired, timePerProblem } = calcCatchDifficulty(b.wildHp / b.wild.maxHp, b.wild.level, ballId, wildOverride?.legendary)
     const p = nextProblem()
     setBattle(prev => prev ? {
       ...prev,

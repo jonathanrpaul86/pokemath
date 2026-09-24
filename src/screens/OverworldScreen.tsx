@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useTrainer, useGameStore } from '../store'
 import { isMuted, setMuted } from '../utils/sound'
-import { AREA_MAP, KANTO_AREAS, meetsBadgeRequirement, meetsKeyItemRequirement, travelBlocker, exploresDone, isAreaExplored, unclaimedReward } from '../data/areas'
+import { AREA_MAP, KANTO_AREAS, meetsBadgeRequirement, meetsKeyItemRequirement, travelBlocker, exploresDone, isAreaExplored, unclaimedReward, legendaryAvailable } from '../data/areas'
 import { ITEM_MAP } from '../data/items'
 import { availableEncounters } from '../utils/encounter'
 import { KANTO_NAMES } from '../data/pokedex'
@@ -227,6 +227,9 @@ export default function OverworldScreen({ onStartBattle, cityView, onCityViewCha
   const selectedIsLocked = !selectedIsUnknown && (!meetsBadgeReq || !meetsKeyItemReq || needsExploring)
   const selectedExploresDone = exploresDone(selectedArea, trainer.exploreProgress)
   const selectedExplored = isAreaExplored(selectedArea, trainer.exploreProgress)
+  const legendary = selectedIsCurrent ? legendaryAvailable(currentArea, trainer) : null
+  const legendaryName = legendary ? KANTO_NAMES[legendary.speciesId] : ''
+  const legendaryMet = legendary ? !!trainer.pokedex[legendary.speciesId]?.seen : false
   // Finishing an area can earn a gift, handed over once the explore is done
   const pendingReward = !exploring && !showCity && rewardPutOffFor !== currentArea.id
     ? unclaimedReward(currentArea, trainer)
@@ -319,6 +322,23 @@ export default function OverworldScreen({ onStartBattle, cityView, onCityViewCha
                 {meetsBadgeReq && meetsKeyItemReq && needsExploring && (
                   <p>🧭 Finish exploring {currentArea.name} to travel here ({exploresDone(currentArea, trainer.exploreProgress)}/{currentArea.exploresToComplete})</p>
                 )}
+              </div>
+            )}
+
+            {legendary && (
+              <div className="legendary-teaser">
+                <p>✨ {legendaryMet ? `${legendaryName} is still here, waiting for a worthy trainer. Heal up and try again!` : legendary.teaser}</p>
+                <button
+                  className="btn btn-legendary"
+                  onClick={() => onStartBattle({
+                    kind: 'rare',
+                    encounter: { speciesId: legendary.speciesId, level: legendary.level, intro: legendary.intro, legendary: true },
+                  })}
+                  disabled={!partyHasLiveMember}
+                  title={!partyHasLiveMember ? 'All your Pokémon have fainted!' : undefined}
+                >
+                  {legendaryMet ? `⚔ Challenge ${legendaryName}` : '✨ Investigate'}
+                </button>
               </div>
             )}
 

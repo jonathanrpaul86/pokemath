@@ -97,6 +97,7 @@ export function calcCatchDifficulty(
   wildHpPct: number,
   wildLevel: number,
   ballId = 'poke-ball',
+  legendary = false,
 ): CatchDifficulty {
   // Score 0–1: blend of remaining HP and level (levels cap at 60 for Kanto)
   const hpFactor = wildHpPct                       // 0 = near-fainted, 1 = full
@@ -104,7 +105,9 @@ export function calcCatchDifficulty(
   const score = hpFactor * 0.6 + levelFactor * 0.4
 
   const mult = ITEM_MAP[ballId]?.catchMultiplier ?? 1.0
-  const problemsRequired = Math.max(1, Math.round(score * 4 * mult) + 1) // 1–5
+  // Legendaries need two extra problems, unless it's a Master Ball
+  const legendaryExtra = legendary && mult >= 0.1 ? 2 : 0
+  const problemsRequired = Math.max(1, Math.round(score * 4 * mult) + 1) + legendaryExtra // 1–7
   const timePerProblem   = Math.round(20 - score * 12)                   // 8–20s
 
   return { problemsRequired, timePerProblem }

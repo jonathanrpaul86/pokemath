@@ -19,6 +19,16 @@ export type GiftDefinition =
   /** More than one species lets the player pick (from ones they haven't caught yet) */
   | { kind: 'pokemon'; speciesIds: number[]; level: number }
 
+/** A legendary Pokémon that waits in a fully explored area until it's caught */
+export interface LegendaryEncounter {
+  speciesId: number
+  level: number
+  /** Hint shown before the player has met it */
+  teaser: string
+  /** Replaces the usual "A wild X appeared!" opener */
+  intro: string
+}
+
 /** A one-time gift from an NPC once an area is fully explored */
 export interface AreaReward {
   npcName: string
@@ -53,4 +63,6 @@ export interface Area {
   requiredKeyItem?: string
   /** Given out once the area is fully explored */
   completionReward?: AreaReward
+  /** Appears once the area is fully explored, and stays until caught */
+  legendary?: LegendaryEncounter
 }

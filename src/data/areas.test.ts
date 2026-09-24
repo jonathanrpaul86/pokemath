@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { AREA_MAP, travelBlocker, isAreaExplored, exploresDone, meetsBadgeRequirement, unclaimedReward } from './areas'
+import { AREA_MAP, travelBlocker, isAreaExplored, exploresDone, meetsBadgeRequirement, unclaimedReward, legendaryAvailable } from './areas'
 import { makeTrainer } from '../test/fixtures'
 
 const area = (id: string) => AREA_MAP[id]
@@ -93,5 +93,24 @@ describe('meetsBadgeRequirement', () => {
   it('exempts areas already visited, so re-tuned gates never strand old saves', () => {
     expect(meetsBadgeRequirement(area('route-16'), [], ['route-16'])).toBe(true)
     expect(meetsBadgeRequirement(area('route-16'), [], [])).toBe(false)
+  })
+})
+
+describe('legendaryAvailable', () => {
+  const plant = area('power-plant')
+
+  it('waits until the area is fully explored', () => {
+    expect(legendaryAvailable(plant, makeTrainer({ exploreProgress: { 'power-plant': 9 } }))).toBeNull()
+    expect(legendaryAvailable(plant, makeTrainer({ exploreProgress: { 'power-plant': 10 } }))?.speciesId).toBe(145)
+  })
+
+  it('stays after a battle that did not catch it', () => {
+    const t = makeTrainer({ exploreProgress: { 'power-plant': 10 }, pokedex: { 145: { seen: true, caught: false } } })
+    expect(legendaryAvailable(plant, t)).not.toBeNull()
+  })
+
+  it('is gone once caught', () => {
+    const t = makeTrainer({ exploreProgress: { 'power-plant': 10 }, pokedex: { 145: { seen: true, caught: true } } })
+    expect(legendaryAvailable(plant, t)).toBeNull()
   })
 })

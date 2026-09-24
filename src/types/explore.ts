@@ -23,6 +23,8 @@ export interface WildOverride {
   level: number
   /** Replaces the usual "A wild X appeared!" opener */
   intro?: string
+  /** Legendaries take more problems to catch */
+  legendary?: boolean
 }
 
 /** Everything that can start a battle from the overworld or a city */

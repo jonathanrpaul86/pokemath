@@ -202,9 +202,20 @@ describe('Pokédex', () => {
       ...KANTO_AREAS.flatMap(a => a.encounters.map(e => e.speciesId)),
       ...Object.values(CITY_HUBS).flatMap(c => c.storyteller ? [c.storyteller.rareEncounter.speciesId] : []),
       ...ALL_GIFTS.flatMap(({ gift }) => gift.kind === 'pokemon' ? gift.speciesIds : []),
+      ...KANTO_AREAS.flatMap(a => a.legendary ? [a.legendary.speciesId] : []),
     ].flatMap(evolutionLine))
     const missing = Object.keys(KANTO_NAMES).map(Number).filter(id => !obtainable.has(id))
-    expect(missing).toEqual([144, 145, 146, 150, 151]) // Articuno, Zapdos, Moltres, Mewtwo, Mew
+    expect(missing).toEqual([151]) // Mew
+  })
+
+  it('has each legendary in exactly one explorable area, and never in the wild', () => {
+    const legendaries = KANTO_AREAS.flatMap(a => a.legendary ? [a.legendary.speciesId] : [])
+    expect(legendaries.sort((a, b) => a - b)).toEqual([144, 145, 146, 150])
+    const wild = new Set(KANTO_AREAS.flatMap(a => a.encounters.map(e => e.speciesId)))
+    for (const a of KANTO_AREAS.filter(a => a.legendary)) {
+      expect(a.exploresToComplete, a.id).toBeGreaterThan(0)
+      expect(wild.has(a.legendary!.speciesId), a.id).toBe(false)
+    }
   })
 
   it('offers evolution choices that are real species', () => {
