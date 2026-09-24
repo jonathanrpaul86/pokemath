@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useTrainer } from '../store'
-import { KANTO_AREAS, AREA_MAP, exploresDone, isAreaExplored, meetsBadgeRequirement, meetsKeyItemRequirement } from '../data/areas'
+import { KANTO_AREAS, AREA_MAP, exploresDone, isAreaExplored, meetsBadgeRequirement, meetsKeyItemRequirement, openNewAreaIds } from '../data/areas'
 import { ITEM_MAP } from '../data/items'
 import { BADGE_NAMES } from '../data/gyms'
 import { MapRenderer } from '../utils/mapRenderer'
@@ -43,6 +43,7 @@ export default function FullMapModal({ onClose }: Props) {
         areas: KANTO_AREAS,
         currentAreaId: t.currentAreaId,
         unlockedAreaIds: t.unlockedAreaIds,
+        openAreaIds: openNewAreaIds(t.currentAreaId, t),
         selectedAreaId: sel,
         pulse,
       })
@@ -86,6 +87,7 @@ export default function FullMapModal({ onClose }: Props) {
       ? `🏅 Needs the ${BADGE_NAMES[area.requiredBadge] ?? area.requiredBadge}`
     : !meetsKeyItemRequirement(area, trainer.keyItems, trainer.unlockedAreaIds) && area.requiredKeyItem
       ? `🎒 Needs the ${ITEM_MAP[area.requiredKeyItem]?.name ?? area.requiredKeyItem}`
+    : !visited && openNewAreaIds(trainer.currentAreaId, trainer).includes(area.id) ? '🧭 Not visited yet, but you can travel here now'
     : !visited ? 'Not visited yet'
     : area.exploresToComplete === 0 ? '🏙 Visited'
     : isAreaExplored(area, trainer.exploreProgress) ? '✓ Fully explored'

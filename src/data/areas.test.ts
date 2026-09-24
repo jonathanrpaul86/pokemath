@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { AREA_MAP, travelBlocker, isAreaExplored, exploresDone, meetsBadgeRequirement, unclaimedReward, legendaryAvailable } from './areas'
+import { AREA_MAP, travelBlocker, isAreaExplored, exploresDone, meetsBadgeRequirement, unclaimedReward, legendaryAvailable, openNewAreaIds } from './areas'
 import { makeTrainer } from '../test/fixtures'
 
 const area = (id: string) => AREA_MAP[id]
@@ -112,5 +112,19 @@ describe('legendaryAvailable', () => {
   it('is gone once caught', () => {
     const t = makeTrainer({ exploreProgress: { 'power-plant': 10 }, pokedex: { 145: { seen: true, caught: true } } })
     expect(legendaryAvailable(plant, t)).toBeNull()
+  })
+})
+
+describe('openNewAreaIds', () => {
+  it('lists unvisited neighbours the player can travel to now', () => {
+    const t = makeTrainer({ currentAreaId: 'viridian-city', unlockedAreaIds: ['pallet-town', 'route-1', 'viridian-city'] })
+    expect(openNewAreaIds('viridian-city', t).sort()).toEqual(['route-2', 'route-22'])
+  })
+
+  it('leaves out neighbours behind a badge gate or an unfinished explore', () => {
+    const gated = makeTrainer({ unlockedAreaIds: ['viridian-forest', 'pewter-city'] })
+    expect(openNewAreaIds('pewter-city', gated)).toEqual([])
+    const unexplored = makeTrainer({ unlockedAreaIds: ['route-1'], exploreProgress: { 'route-1': 3 } })
+    expect(openNewAreaIds('route-1', unexplored)).toEqual([])
   })
 })

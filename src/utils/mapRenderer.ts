@@ -85,6 +85,8 @@ export interface MapRenderState {
   areas: Area[]
   currentAreaId: string
   unlockedAreaIds: string[]
+  /** Unvisited areas the player can travel to right now: drawn as a greyed-out icon, not a padlock */
+  openAreaIds?: string[]
   selectedAreaId: string
   pulse: number
 }
@@ -505,6 +507,7 @@ function drawNodes(
   ts: (s: number) => number,
 ): void {
   const unlockedSet = new Set(state.unlockedAreaIds)
+  const openSet = new Set(state.openAreaIds ?? [])
   const currentArea = state.areas.find(a => a.id === state.currentAreaId)
   const adjacentIds = new Set(currentArea?.connectedAreaIds ?? [])
 
@@ -513,6 +516,7 @@ function drawNodes(
     const cy = ty(area.mapY)
     const r = ts(NODE_RADIUS)
     const unlocked  = unlockedSet.has(area.id)
+    const open = !unlocked && openSet.has(area.id)
     const isCurrent = area.id === state.currentAreaId
     const isSelected = area.id === state.selectedAreaId
     const style = TERRAIN[area.id] ?? { blob: '#4a7aa8', node: '#1a4a7a' }
@@ -548,10 +552,12 @@ function drawNodes(
 
     // Node fill
     ctx.save()
-    ctx.globalAlpha = unlocked ? 1 : 0.6
+    ctx.globalAlpha = unlocked ? 1 : open ? 0.9 : 0.6
     ctx.beginPath()
     ctx.arc(cx, cy, r, 0, Math.PI * 2)
-    if (unlocked) {
+    if (open) {
+      ctx.fillStyle = '#9a9cb4'
+    } else if (unlocked) {
       const ng = ctx.createRadialGradient(cx - ts(5), cy - ts(5), ts(2), cx, cy, r)
       ng.addColorStop(0, lighten(style.node, 55))
       ng.addColorStop(1, style.node)
@@ -562,13 +568,17 @@ function drawNodes(
     ctx.fill()
     ctx.restore()
 
-    // Node border
+    // Node border (dashed for places you can go but haven't been yet)
     ctx.beginPath()
     ctx.arc(cx, cy, r, 0, Math.PI * 2)
-    ctx.globalAlpha = unlocked ? 1 : 0.6
+    ctx.globalAlpha = unlocked || open ? 1 : 0.6
     if (isCurrent) {
       ctx.strokeStyle = '#ffe030'
       ctx.lineWidth = ts(3.5)
+    } else if (open) {
+      ctx.strokeStyle = 'rgba(255,255,255,0.9)'
+      ctx.lineWidth = ts(2)
+      ctx.setLineDash([ts(4), ts(3)])
     } else if (unlocked) {
       ctx.strokeStyle = 'rgba(255,255,255,0.65)'
       ctx.lineWidth = ts(2)
@@ -577,11 +587,19 @@ function drawNodes(
       ctx.lineWidth = ts(1.5)
     }
     ctx.stroke()
+    ctx.setLineDash([])
     ctx.globalAlpha = 1
 
     // Icon or lock
     if (unlocked) {
       drawTerrainIcon(ctx, area.id, cx, cy, ts)
+    } else if (open) {
+      // The area's own icon, faded and without colour until it's visited
+      ctx.save()
+      ctx.globalAlpha = 0.6
+      ctx.filter = 'grayscale(1)'
+      drawTerrainIcon(ctx, area.id, cx, cy, ts)
+      ctx.restore()
     } else {
       drawLock(ctx, cx, cy, ts(13))
     }
@@ -591,13 +609,13 @@ function drawNodes(
       const isUnknown = !unlocked && !adjacentIds.has(area.id)
       const rawLabel = isUnknown ? '???' : area.name
       const label = rawLabel.length > 13 ? rawLabel.slice(0, 12) + '…' : rawLabel
-      const fz = Math.round(ts(unlocked ? 10 : 8.5))
+      const fz = Math.round(ts(unlocked || open ? 10 : 8.5))
       ctx.font = `bold ${fz}px 'Segoe UI', system-ui, sans-serif`
       ctx.textAlign = 'center'
       ctx.textBaseline = 'top'
       ctx.fillStyle = 'rgba(0,0,0,0.65)'
       ctx.fillText(label, cx + 1, cy + r + ts(4) + 1)
-      ctx.fillStyle = isCurrent ? '#ffe030' : (unlocked ? '#ffffff' : 'rgba(200,205,230,0.55)')
+      ctx.fillStyle = isCurrent ? '#ffe030' : (unlocked || open ? '#ffffff' : 'rgba(200,205,230,0.55)')
       ctx.fillText(label, cx, cy + r + ts(4))
     }
   }
@@ -969,13 +987,17 @@ function drawMiniNodes(
   r: number,
 ): void {
   const unlockedSet = new Set(state.unlockedAreaIds)
+  const openSet = new Set(state.openAreaIds ?? [])
   for (const area of state.areas) {
     const isCurrent = area.id === state.currentAreaId
     const unlocked = unlockedSet.has(area.id)
     const style = TERRAIN[area.id] ?? { blob: '#4a7aa8', node: '#1a4a7a' }
     ctx.beginPath()
     ctx.arc(tx(area.mapX), ty(area.mapY), isCurrent ? r * 1.5 : r, 0, Math.PI * 2)
-    ctx.fillStyle = isCurrent ? '#ffe030' : unlocked ? style.node : 'rgba(120,120,160,0.7)'
+    ctx.fillStyle = isCurrent ? '#ffe030'
+      : unlocked ? style.node
+      : openSet.has(area.id) ? 'rgba(220,222,235,0.95)'
+      : 'rgba(120,120,160,0.7)'
     ctx.fill()
     if (isCurrent) {
       ctx.strokeStyle = '#1a1a2e'

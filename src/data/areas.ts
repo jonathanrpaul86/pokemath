@@ -942,3 +942,14 @@ export function travelBlocker(
   if (!isAreaExplored(from, trainer.exploreProgress)) return 'explore'
   return null
 }
+
+/** Unvisited areas next to `fromId` that the player could travel to right now */
+export function openNewAreaIds(
+  fromId: string,
+  trainer: Pick<Trainer, 'badges' | 'keyItems' | 'unlockedAreaIds' | 'exploreProgress'>,
+): string[] {
+  const from = AREA_MAP[fromId]
+  if (!from) return []
+  return from.connectedAreaIds.filter(id =>
+    !trainer.unlockedAreaIds.includes(id) && travelBlocker(from, AREA_MAP[id], trainer) === null)
+}

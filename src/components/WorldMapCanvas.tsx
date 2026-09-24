@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react'
 import type { Area, BadgeId, InventorySlot } from '../types'
 import { MapRenderer, WORLD_BOUNDS, type MapRenderState } from '../utils/mapRenderer'
 import { followView, viewRect, easeToward, type MapView } from '../utils/mapCamera'
-import { travelBlocker } from '../data/areas'
+import { travelBlocker, openNewAreaIds } from '../data/areas'
 
 /** How much of the world the local map shows across its width (see WORLD_BOUNDS) */
 const LOCAL_VIEW_WIDTH = 760
@@ -45,8 +45,9 @@ export function WorldMapCanvas(props: Props) {
   const viewRef = useRef<MapView | undefined>(undefined)
 
   function renderState(pulse: number): MapRenderState {
-    const { areas, currentAreaId, unlockedAreaIds, selectedAreaId } = latest.current
-    return { areas, currentAreaId, unlockedAreaIds, selectedAreaId, pulse }
+    const { areas, currentAreaId, unlockedAreaIds, selectedAreaId, badges, keyItems, exploreProgress } = latest.current
+    const openAreaIds = openNewAreaIds(currentAreaId, { badges, keyItems, unlockedAreaIds, exploreProgress })
+    return { areas, currentAreaId, unlockedAreaIds, openAreaIds, selectedAreaId, pulse }
   }
 
   useEffect(() => {
