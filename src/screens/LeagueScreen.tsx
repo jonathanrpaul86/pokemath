@@ -8,6 +8,7 @@ import {
 import { fetchPokemonSpecies } from '../services/pokeApi'
 import BattleScreen from './BattleScreen'
 import GiftDialog from '../components/GiftDialog'
+import { playHallOfFame } from '../utils/sound'
 import type { HallOfFameEntry, TrainerBattle } from '../types'
 import './GymScreen.css'
 import './LeagueScreen.css'
@@ -67,6 +68,7 @@ export default function LeagueScreen({ onExit }: Props) {
         if (!won) { setStage({ kind: 'defeated', index }); return }
         if (index < opponents.length - 1) { setStage({ kind: 'between', index }); return }
         dispatch({ type: 'ENTER_HALL_OF_FAME', payload: { date: Date.now() } })
+        playHallOfFame()
         setStage({ kind: 'hall-of-fame' })
       },
     }

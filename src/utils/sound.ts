@@ -38,6 +38,30 @@ function tone(
   osc.stop(startTime + duration + 0.02)
 }
 
+/** A tone that glides from one pitch to another, fading in and out */
+function sweep(
+  ac: AudioContext,
+  from: number,
+  to: number,
+  startTime: number,
+  duration: number,
+  type: OscillatorType = 'sine',
+  gainPeak = 0.2,
+) {
+  const osc = ac.createOscillator()
+  const gain = ac.createGain()
+  osc.connect(gain)
+  gain.connect(ac.destination)
+  osc.type = type
+  osc.frequency.setValueAtTime(from, startTime)
+  osc.frequency.exponentialRampToValueAtTime(to, startTime + duration)
+  gain.gain.setValueAtTime(0.001, startTime)
+  gain.gain.exponentialRampToValueAtTime(gainPeak, startTime + duration * 0.4)
+  gain.gain.exponentialRampToValueAtTime(0.001, startTime + duration)
+  osc.start(startTime)
+  osc.stop(startTime + duration + 0.02)
+}
+
 /** Short ascending two-note chime — correct answer */
 export function playCorrect() {
   if (_muted) return
@@ -91,4 +115,46 @@ export function playLevelUp() {
   tone(ac, 880,  t + 0.5,  0.1, 'square', 0.14)  // A5
   tone(ac, 988,  t + 0.6,  0.1, 'square', 0.14)  // B5
   tone(ac, 1047, t + 0.7,  0.3, 'square', 0.18)  // C6
+}
+
+/** Bright "item get" jingle — an NPC hands over a gift */
+export function playGift() {
+  if (_muted) return
+  const ac = getCtx()
+  const t = ac.currentTime
+  tone(ac, 784,  t,        0.1,  'triangle', 0.26)  // G5
+  tone(ac, 988,  t + 0.09, 0.1,  'triangle', 0.26)  // B5
+  tone(ac, 1175, t + 0.18, 0.1,  'triangle', 0.26)  // D6
+  tone(ac, 1568, t + 0.27, 0.45, 'triangle', 0.3)   // G6
+  tone(ac, 1175, t + 0.27, 0.45, 'sine',     0.14)  // D6 harmony
+}
+
+/** Low rumbling swell rising into a shimmer — a legendary Pokémon appears */
+export function playLegendary() {
+  if (_muted) return
+  const ac = getCtx()
+  const t = ac.currentTime
+  sweep(ac, 55,  110, t,       1.4, 'sawtooth', 0.12)  // rumble
+  sweep(ac, 82,  165, t,       1.4, 'triangle', 0.16)
+  tone(ac, 220, t + 0.9,  0.5, 'square', 0.1)          // A3
+  tone(ac, 311, t + 1.05, 0.5, 'square', 0.1)          // Eb4: an eerie tritone
+  sweep(ac, 880, 1760, t + 1.2, 0.8, 'sine', 0.14)     // shimmer
+}
+
+/** Two-part fanfare — entering the Hall of Fame */
+export function playHallOfFame() {
+  if (_muted) return
+  const ac = getCtx()
+  const t = ac.currentTime
+  const melody: [number, number, number][] = [
+    // [frequency, start, length]
+    [523, 0,    0.14], [659, 0.15, 0.14], [784, 0.3,  0.14], [1047, 0.45, 0.4],   // C E G C
+    [880, 0.9,  0.14], [988, 1.05, 0.14], [1047, 1.2, 0.14], [1319, 1.35, 0.8],  // A B C E
+  ]
+  for (const [f, start, len] of melody) tone(ac, f, t + start, len, 'square', 0.13)
+  // Harmony underneath
+  tone(ac, 262, t,        0.9, 'triangle', 0.16)  // C4
+  tone(ac, 349, t + 0.9,  0.5, 'triangle', 0.16)  // F4
+  tone(ac, 392, t + 1.35, 0.9, 'triangle', 0.18)  // G4
+  tone(ac, 523, t + 1.35, 0.9, 'triangle', 0.14)  // C5
 }

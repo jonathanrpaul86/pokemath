@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useTrainer, useGameStore } from '../store'
-import { isMuted, setMuted } from '../utils/sound'
+import { isMuted, setMuted, playLegendary } from '../utils/sound'
 import { AREA_MAP, KANTO_AREAS, meetsBadgeRequirement, meetsKeyItemRequirement, travelBlocker, exploresDone, isAreaExplored, unclaimedReward, legendaryAvailable } from '../data/areas'
 import { ITEM_MAP } from '../data/items'
 import { availableEncounters } from '../utils/encounter'
@@ -326,10 +326,13 @@ export default function OverworldScreen({ onStartBattle, cityView, onCityViewCha
                 <p>✨ {legendaryMet ? `${legendaryName} is still here, waiting for a worthy trainer. Heal up and try again!` : legendary.teaser}</p>
                 <button
                   className="btn btn-legendary"
-                  onClick={() => onStartBattle({
-                    kind: 'rare',
-                    encounter: { speciesId: legendary.speciesId, level: legendary.level, intro: legendary.intro, legendary: true },
-                  })}
+                  onClick={() => {
+                    playLegendary()
+                    onStartBattle({
+                      kind: 'rare',
+                      encounter: { speciesId: legendary.speciesId, level: legendary.level, intro: legendary.intro, legendary: true },
+                    })
+                  }}
                   disabled={!partyHasLiveMember}
                   title={!partyHasLiveMember ? 'All your Pokémon have fainted!' : undefined}
                 >

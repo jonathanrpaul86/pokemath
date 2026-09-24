@@ -6,6 +6,7 @@ import { fetchPokemonSpecies } from '../services/pokeApi'
 import { createOwnedPokemon } from '../utils/formulas'
 import { giftChoices } from '../utils/gifts'
 import { PARTY_MAX } from '../store/reducer'
+import { playGift } from '../utils/sound'
 import type { GiftDefinition, OwnedPokemon } from '../types'
 
 interface Props {
@@ -47,6 +48,7 @@ export default function GiftDialog({ place, icon, npcName, lines, gift, claimId,
         const pokemon = createOwnedPokemon(species, level)
         const toPc = trainer.party.length >= PARTY_MAX
         const name = KANTO_NAMES[speciesId] ?? species.name
+        playGift()
         setStep({
           kind: 'received',
           pokemon,
@@ -58,6 +60,7 @@ export default function GiftDialog({ place, icon, npcName, lines, gift, claimId,
 
   function handOver() {
     if (gift.kind === 'key-item') {
+      playGift()
       setStep({ kind: 'received', message: `🎁 You got the ${ITEM_MAP[gift.keyItemId]?.name ?? gift.keyItemId}!` })
       return
     }
