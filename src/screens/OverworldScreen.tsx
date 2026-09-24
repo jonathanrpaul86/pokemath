@@ -11,6 +11,7 @@ import { WorldMapCanvas } from '../components/WorldMapCanvas'
 import ExploreModal from '../components/ExploreModal'
 import FullMapModal from '../components/FullMapModal'
 import { canExplore } from '../utils/explore'
+import { updatedMoveset } from '../utils/formulas'
 import type { Area, OwnedPokemon, EncounterEntry, BattleRequest } from '../types'
 import './OverworldScreen.css'
 
@@ -173,6 +174,23 @@ export default function OverworldScreen({ onStartBattle, cityView, onCityViewCha
     return () => { cancelled = true }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [missingKey])
+
+  // Pokémon learn moves as they level up and evolve. Check the party whenever a
+  // level or species changes; this also fills in moves missing from older saves.
+  const movesKey = trainer.party.map(p => `${p.uid}:${p.speciesId}:${p.level}`).join(',')
+  useEffect(() => {
+    let cancelled = false
+    for (const p of trainer.party) {
+      fetchPokemonSpecies(p.speciesId)
+        .then(species => {
+          const moves = updatedMoveset(p, species)
+          if (!cancelled && moves) dispatch({ type: 'SET_MOVES', payload: { uid: p.uid, moves } })
+        })
+        .catch(() => { /* offline: retry on next visit */ })
+    }
+    return () => { cancelled = true }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [movesKey])
 
   function handleTravel(areaId: string) {
     dispatch({ type: 'UNLOCK_AREA', payload: { areaId } })

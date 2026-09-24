@@ -129,6 +129,13 @@ export function gameReducer(trainer: Trainer, action: GameAction): Trainer {
       break
     }
 
+    case 'SET_MOVES': {
+      const { uid, moves } = action.payload
+      const learn = (list: OwnedPokemon[]) => list.map(p => p.uid === uid ? { ...p, moves } : p)
+      next = { ...trainer, party: learn(trainer.party), pc: learn(trainer.pc) }
+      break
+    }
+
     case 'GAIN_POKEMON_XP': {
       const { uid, amount } = action.payload
       const cap = pokemonLevelCap(trainer.badges.length)

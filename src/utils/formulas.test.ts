@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest'
-import { pokemonLevelCap, pokemonXpToNextLevel, battleXpReward, calcStats } from './formulas'
+import { pokemonLevelCap, pokemonXpToNextLevel, battleXpReward, calcStats, updatedMoveset } from './formulas'
 import { KANTO_GYMS } from '../data/gyms'
-import { CHARMANDER_BASE } from '../test/fixtures'
+import { CHARMANDER_BASE, makePokemon, makeSpecies } from '../test/fixtures'
+import type { Move } from '../types'
 
 describe('pokemonLevelCap', () => {
   it('sits just above the next gym leader’s strongest Pokémon', () => {
@@ -38,5 +39,39 @@ describe('calcStats', () => {
     for (const key of Object.keys(low) as (keyof typeof low)[]) {
       expect(high[key], key).toBeGreaterThan(low[key])
     }
+  })
+})
+
+describe('updatedMoveset', () => {
+  const move = (id: number, name: string, power: number | null): Move =>
+    ({ id, name, type: 'normal', power, accuracy: 100, damageClass: power ? 'physical' : 'status' })
+  const SCRATCH = move(10, 'scratch', 40)
+  const GROWL = move(45, 'growl', null)
+  const EMBER = move(52, 'ember', 40)
+  const LEER = move(43, 'leer', null)
+  const RAGE = move(99, 'rage', 20)
+  const SLASH = move(163, 'slash', 70)
+  const species = makeSpecies({
+    levelUpMoves: { 1: [SCRATCH, GROWL], 9: [EMBER], 15: [LEER], 22: [RAGE], 30: [SLASH] },
+  })
+
+  it('leaves moves alone when they are already current', () => {
+    expect(updatedMoveset(makePokemon({ level: 8, moves: [SCRATCH, GROWL] }), species)).toBeNull()
+  })
+
+  it('learns the moves a level-up unlocks', () => {
+    expect(updatedMoveset(makePokemon({ level: 9, moves: [SCRATCH, GROWL] }), species)).toEqual([EMBER, SCRATCH, GROWL])
+  })
+
+  it('keeps the four newest moves once there are more than four', () => {
+    expect(updatedMoveset(makePokemon({ level: 30, moves: [SCRATCH, GROWL] }), species)).toEqual([SLASH, RAGE, LEER, EMBER])
+  })
+
+  it('fills in moves for Pokémon from older saves', () => {
+    expect(updatedMoveset(makePokemon({ level: 5, moves: [] }), species)).toEqual([SCRATCH, GROWL])
+  })
+
+  it('keeps known moves when the learnset is missing', () => {
+    expect(updatedMoveset(makePokemon({ level: 20, moves: [SCRATCH] }), makeSpecies({ levelUpMoves: {} }))).toBeNull()
   })
 })
