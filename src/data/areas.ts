@@ -178,11 +178,66 @@ export const KANTO_AREAS: Area[] = [
     description: "A pretty waterside city with Misty's Water Gym. Pokémon Center is open to all trainers.",
     areaType: 'city',
     exploresToComplete: 0,
-    connectedAreaIds: ['route-4', 'route-5', 'route-9'],
+    connectedAreaIds: ['route-4', 'route-5', 'route-9', 'route-24', 'cerulean-cave'],
     ...mapAt(62, 22),
     mathDifficulty: 47,
     martItems: ['poke-ball', 'great-ball', 'potion', 'super-potion'],
     encounters: [],
+  },
+  {
+    id: 'route-24',
+    name: 'Route 24',
+    description: 'The famous Nugget Bridge north of Cerulean City. Trainers line up to battle anyone who tries to cross.',
+    areaType: 'route',
+    exploresToComplete: 8,
+    connectedAreaIds: ['cerulean-city', 'route-25'],
+    ...mapAt(62, 12),
+    mathDifficulty: 45,
+    encounters: [
+      { speciesId: 43, weight: 25, minLevel: 12, maxLevel: 16 }, // Oddish
+      { speciesId: 69, weight: 25, minLevel: 12, maxLevel: 16 }, // Bellsprout
+      { speciesId: 16, weight: 20, minLevel: 12, maxLevel: 16 }, // Pidgey
+      { speciesId: 63, weight: 15, minLevel: 12, maxLevel: 15 }, // Abra
+      { speciesId: 14, weight: 15, minLevel: 12, maxLevel: 15 }, // Kakuna
+    ],
+  },
+  {
+    id: 'route-25',
+    name: 'Route 25',
+    description: 'A seaside path leading to the Sea Cottage, where a Pokémon researcher named Bill lives.',
+    areaType: 'route',
+    exploresToComplete: 8,
+    connectedAreaIds: ['route-24'],
+    ...mapAt(73, 8),
+    mathDifficulty: 46,
+    encounters: [
+      { speciesId: 16, weight: 25, minLevel: 13, maxLevel: 17 }, // Pidgey
+      { speciesId: 43, weight: 20, minLevel: 13, maxLevel: 17 }, // Oddish
+      { speciesId: 69, weight: 20, minLevel: 13, maxLevel: 17 }, // Bellsprout
+      { speciesId: 48, weight: 20, minLevel: 13, maxLevel: 17 }, // Venonat
+      { speciesId: 63, weight: 15, minLevel: 13, maxLevel: 16 }, // Abra
+    ],
+  },
+  {
+    id: 'cerulean-cave',
+    name: 'Cerulean Cave',
+    description: 'A mysterious cave full of the strongest wild Pokémon in Kanto. Only trainers with all eight badges are allowed inside.',
+    areaType: 'cave',
+    exploresToComplete: 15,
+    requiredBadge: 'earth-badge',
+    connectedAreaIds: ['cerulean-city'],
+    ...mapAt(53, 12),
+    mathDifficulty: 100,
+    encounters: [
+      { speciesId: 42,  weight: 20, minLevel: 50, maxLevel: 58 }, // Golbat
+      { speciesId: 47,  weight: 15, minLevel: 50, maxLevel: 58 }, // Parasect
+      { speciesId: 64,  weight: 15, minLevel: 50, maxLevel: 58 }, // Kadabra
+      { speciesId: 26,  weight: 15, minLevel: 52, maxLevel: 60 }, // Raichu
+      { speciesId: 82,  weight: 10, minLevel: 52, maxLevel: 60 }, // Magneton
+      { speciesId: 112, weight: 10, minLevel: 54, maxLevel: 60 }, // Rhydon
+      { speciesId: 40,  weight: 10, minLevel: 52, maxLevel: 60 }, // Wigglytuff
+      { speciesId: 113, weight: 5,  minLevel: 54, maxLevel: 60 }, // Chansey
+    ],
   },
   {
     id: 'route-9',

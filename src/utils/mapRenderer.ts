@@ -46,6 +46,9 @@ const TERRAIN: Record<string, TerrainStyle> = {
   'route-13':         { blob: '#a8d880', node: '#50a030' },
   'route-14':         { blob: '#b0d878', node: '#5a9828' },
   'route-15':         { blob: '#b8e080', node: '#62a030' },
+  'route-24':         { blob: '#a8e080', node: '#48a030' },
+  'route-25':         { blob: '#b0e8a0', node: '#40a060' },
+  'cerulean-cave':    { blob: '#90a8f0', node: '#3048a8' },
   'indigo-plateau':   { blob: '#a8a0f0', node: '#4838b0' },
   'route-1':          { blob: '#a8e060', node: '#5ab828' },
   'viridian-city':    { blob: '#60d8b8', node: '#1a9a78' },
@@ -302,12 +305,14 @@ const SCATTER_TREES: [number, number][] = [
   [35, 54], [46, 54], [36, 42],             // Celadon
   [48, 76], [60, 82],                       // Safari Zone
   [81, 64], [92, 67], [78, 73], [69, 80],   // Routes 11–14
+  [68, 14], [79, 12],                       // Routes 24–25
 ]
 
 const SCATTER_PEAKS: [number, number][] = [
   [12, 28], [24, 36],                       // Pewter
   [36, 18], [44, 17], [40, 29],             // Mt. Moon
   [80, 31], [89, 21],                       // Rock Tunnel
+  [48, 9], [57, 6],                         // Cerulean Cave
   [9, 34], [0, 30], [9, 44], [0, 20],       // Victory Road and Indigo Plateau
 ]
 
@@ -623,6 +628,8 @@ function drawTerrainIcon(
     case 'route-13':
     case 'route-14':
     case 'route-15':
+    case 'route-24':
+    case 'route-25':
     case 'route-3':
     case 'route-4':
     case 'route-7':
@@ -820,7 +827,8 @@ function drawTerrainIcon(
       break
     }
 
-    case 'rock-tunnel': {
+    case 'rock-tunnel':
+    case 'cerulean-cave': {
       // Cave arch opening
       ctx.beginPath()
       ctx.arc(cx, cy + ts(3), ts(9), Math.PI, 0)
