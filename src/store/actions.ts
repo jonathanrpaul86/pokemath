@@ -19,6 +19,7 @@ export type GameAction =
   | { type: 'UPDATE_POKEMON_HP'; payload: { uid: string; currentHp: number } }
   | { type: 'RENAME_TRAINER'; payload: { name: string } }
   | { type: 'SET_TIMER_MULTIPLIER'; payload: { multiplier: number } }
+  | { type: 'SET_CHOOSE_MOVES'; payload: { enabled: boolean } }
   | { type: 'GAIN_MONEY';  payload: { amount: number } }
   | { type: 'SPEND_MONEY'; payload: { amount: number } }
   | { type: 'ADD_ITEM';    payload: { itemId: string; quantity: number } }

@@ -309,6 +309,11 @@ export function gameReducer(trainer: Trainer, action: GameAction): Trainer {
       break
     }
 
+    case 'SET_CHOOSE_MOVES': {
+      next = { ...trainer, chooseMoves: action.payload.enabled }
+      break
+    }
+
     case 'GAIN_MONEY': {
       next = { ...trainer, money: trainer.money + action.payload.amount }
       break

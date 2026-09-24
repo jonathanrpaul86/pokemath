@@ -38,6 +38,24 @@ export function calcDamage(
   return base
 }
 
+// ---- Moves ------------------------------------------------------------------
+
+/** Moves that deal damage. Status moves (Growl, Tail Whip…) have no effect in this game. */
+export function damagingMoves(moves: Move[] = []): Move[] {
+  return moves.filter(m => (m.power ?? 0) > 0)
+}
+
+/**
+ * Moves to offer in the move menu when the player hits Fight. Empty when the
+ * "choose moves" setting is off or there's only one attack to pick, so Fight
+ * goes straight to the problem.
+ */
+export function moveMenuOptions(moves: Move[] | undefined, chooseMoves: boolean | undefined): Move[] {
+  if (!chooseMoves) return []
+  const options = damagingMoves(moves)
+  return options.length > 1 ? options : []
+}
+
 // ---- Catch difficulty -------------------------------------------------------
 
 export interface CatchDifficulty {
