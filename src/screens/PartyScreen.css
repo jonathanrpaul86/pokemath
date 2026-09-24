@@ -1,5 +1,6 @@
 .party-screen {
   min-height: 100vh;
+  min-height: 100dvh;
   display: flex;
   flex-direction: column;
   background: #1a1a2e;
@@ -107,9 +108,11 @@
   width: 100%;
 }
 
-.pm-card:hover {
-  background: #ffffff12;
-  transform: translateY(-1px);
+@media (hover: hover) {
+  .pm-card:hover {
+    background: #ffffff12;
+    transform: translateY(-1px);
+  }
 }
 
 .pm-card--selected {
@@ -417,4 +420,79 @@
   font-size: 0.78rem;
   color: #f56565;
   font-weight: 600;
+}
+
+/* ── Phones: party, then the selected Pokémon, then the PC, one under another ── */
+
+@media (max-width: 640px) {
+  .pm-header {
+    padding: 0.6rem 0.75rem;
+    gap: 0.6rem;
+  }
+
+  .pm-title {
+    font-size: 1.15rem;
+  }
+
+  .pm-counts {
+    gap: 0.6rem;
+    font-size: 0.78rem;
+  }
+
+  .pm-body {
+    flex-direction: column;
+    overflow: visible;
+  }
+
+  .pm-panel {
+    flex: none;
+    overflow: visible;
+    padding: 0.75rem;
+  }
+
+  .pm-panel--party {
+    max-width: none;
+    border-right: none;
+    border-bottom: 2px solid #1a3c8c;
+  }
+
+  .pm-panel__list {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .pm-card--empty {
+    min-height: 56px;
+  }
+
+  .pm-panel__empty {
+    padding: 1rem;
+  }
+
+  .pm-detail {
+    order: 1;
+    width: auto;
+    border-left: none;
+    border-bottom: 2px solid #1a3c8c;
+  }
+
+  /* Nothing selected yet: the hint in the action bar says what to do */
+  .pm-detail--empty {
+    display: none;
+  }
+
+  .pm-panel--pc {
+    order: 2;
+  }
+
+  /* Keep the move buttons in reach while scrolling */
+  .pm-action-bar {
+    position: sticky;
+    bottom: 0;
+    padding: 0.6rem 0.75rem;
+  }
+
+  .pm-action-bar__row {
+    gap: 0.5rem 0.75rem;
+  }
 }

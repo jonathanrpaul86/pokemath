@@ -176,6 +176,16 @@ const ACTION_BUTTONS = [
   ['run',    'Run'],
 ] as const
 
+/** "(F) ight" where there's a keyboard; just "Fight" on a touch screen */
+function ActionLabel({ label }: { label: string }) {
+  return (
+    <span className="numpad-btn__label">
+      <span className="numpad-btn__label--keys">({label[0]}){' '}{label.slice(1)}</span>
+      <span className="numpad-btn__label--touch">{label}</span>
+    </span>
+  )
+}
+
 function NumberPad({ mode = 'digits', onDigit, onDelete, onSubmit, onAction, switchableCount, disabled }: {
   mode?: 'digits' | 'actions'
   onDigit?: (d: string) => void
@@ -196,7 +206,7 @@ function NumberPad({ mode = 'digits', onDigit, onDelete, onSubmit, onAction, swi
             onClick={() => onAction?.(action)}
           >
             <span className="numpad-btn__bg-icon"><BattleActionIcon action={action} /></span>
-            <span className="numpad-btn__label">({label[0]}){' '}{label.slice(1)}</span>
+            <ActionLabel label={label} />
           </button>
         ))}
       </div>
@@ -1328,7 +1338,7 @@ export default function BattleScreen({ area, onBattleEnd, trainerBattle, wildOve
                         onClick={() => handleAction(action)}
                       >
                         <span className="numpad-btn__bg-icon"><BattleActionIcon action={action} /></span>
-                        <span className="numpad-btn__label">({label[0]}){' '}{label.slice(1)}</span>
+                        <ActionLabel label={label} />
                       </button>
                     )
                   })}

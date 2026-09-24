@@ -240,7 +240,7 @@ export default function OverworldScreen({ onStartBattle, cityView, onCityViewCha
           🏠
         </button>
         <button className="trainer-bar__name" onClick={onOpenProfile} title="View profile">{trainer.name}</button>
-        <div className="trainer-bar__level" title="Gym Badges earned">🏅 {trainer.badges.length}/{KANTO_GYMS.length} Badges</div>
+        <div className="trainer-bar__level" title="Gym Badges earned">🏅 {trainer.badges.length}/{KANTO_GYMS.length}<span className="trainer-bar__label"> Badges</span></div>
         <button className="btn btn-secondary pokedex-btn" onClick={onOpenPokedex}>
           <PokedexIcon /> Pokédex
         </button>

@@ -6,6 +6,15 @@ import { travelBlocker, openNewAreaIds } from '../data/areas'
 
 /** How much of the world the local map shows across its width (see WORLD_BOUNDS) */
 const LOCAL_VIEW_WIDTH = 760
+/** On a narrow screen it zooms in, down to this, so the icons and names stay readable */
+const MIN_LOCAL_VIEW_WIDTH = 380
+/** World units per screen pixel before it starts zooming in */
+const VIEW_UNITS_PER_PIXEL = 1.05
+
+/** How much of the world to show on a map this many CSS pixels wide */
+function localViewWidth(cssWidth: number): number {
+  return Math.min(LOCAL_VIEW_WIDTH, Math.max(MIN_LOCAL_VIEW_WIDTH, cssWidth * VIEW_UNITS_PER_PIXEL))
+}
 /** Fraction of the remaining distance the camera covers each frame */
 const CAMERA_EASE = 0.12
 
@@ -79,7 +88,7 @@ export function WorldMapCanvas(props: Props) {
       }
       const state = renderState(pulse)
       const view = camera
-        ? followView(WORLD_BOUNDS, camera, LOCAL_VIEW_WIDTH, canvas.width, canvas.height)
+        ? followView(WORLD_BOUNDS, camera, localViewWidth(canvas.width / (window.devicePixelRatio || 1)), canvas.width, canvas.height)
         : undefined
       viewRef.current = view
       main.render(state, { view })

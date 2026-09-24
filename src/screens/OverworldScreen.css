@@ -102,9 +102,59 @@
   align-items: start;
 }
 
-@media (max-width: 760px) {
+/* Tablets in portrait and phones: the map on top, the area panel under it */
+@media (max-width: 900px) {
   .overworld__main {
     grid-template-columns: 1fr;
+    gap: 1rem;
+    padding: 1rem;
+  }
+
+  /* A wide screen doesn't need a square map (it would push the panel off screen) */
+  .map-section {
+    aspect-ratio: 4 / 3;
+  }
+}
+
+@media (max-width: 600px) {
+  .overworld__main {
+    gap: 0.75rem;
+    padding: 0.75rem;
+  }
+
+  .map-section {
+    aspect-ratio: 1;
+  }
+
+  /* Two rows: home, name and sound on top; badges, money, Pokédex and Bag below */
+  .trainer-bar {
+    gap: 0.5rem 0.75rem;
+    padding: 0.5rem 0.75rem;
+  }
+
+  .trainer-bar::after {
+    content: '';
+    flex-basis: 100%;
+    order: 1;
+  }
+
+  .mute-toggle-btn {
+    margin-left: auto;
+  }
+
+  .trainer-bar__level,
+  .trainer-bar__money,
+  .pokedex-btn,
+  .bag-btn {
+    order: 2;
+  }
+
+  .trainer-bar__money {
+    margin-right: auto;
+  }
+
+  .trainer-bar__label {
+    display: none;
   }
 }
 
@@ -924,4 +974,33 @@
 .mart-row__sell:active {
   transform: translateY(1px);
   box-shadow: 0 1px 0 #5c3a0d;
+}
+
+/* Phones: the Mart is narrow, so let item descriptions wrap instead of cutting them off */
+
+@media (max-width: 600px) {
+  .mart-row__desc {
+    white-space: normal;
+  }
+}
+
+/* Phones held sideways: map and panel side by side, with the map fitted to the screen's height */
+
+@media (max-height: 500px) and (orientation: landscape) {
+  .overworld__main {
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+    padding: 0.75rem;
+  }
+
+  .map-section {
+    aspect-ratio: auto;
+    height: calc(100vh - 5.5rem);
+    height: calc(100dvh - 5.5rem);
+  }
+
+  .trainer-bar {
+    gap: 0.75rem;
+    padding: 0.4rem 0.75rem;
+  }
 }

@@ -60,10 +60,12 @@
   transition: transform 0.1s ease, border-color 0.15s ease, box-shadow 0.1s ease;
 }
 
-.city-building:hover:not(:disabled) {
-  transform: translateY(-3px);
-  border-color: #ffd700;
-  box-shadow: 0 7px 0 #0a1f40;
+@media (hover: hover) {
+  .city-building:hover:not(:disabled) {
+    transform: translateY(-3px);
+    border-color: #ffd700;
+    box-shadow: 0 7px 0 #0a1f40;
+  }
 }
 
 .city-building:active:not(:disabled) {
@@ -312,4 +314,51 @@
   height: 120px;
   image-rendering: pixelated;
   animation: explore-bounce 0.5s ease-out;
+}
+
+/* ── Touch screens: no keys to press, so no key numbers on the buildings ── */
+
+@media (hover: none) {
+  .city-building__key {
+    display: none;
+  }
+}
+
+/* ── Phones: the description gets the full width, buildings go two across ── */
+
+@media (max-width: 600px) {
+  .city-screen {
+    padding: 0.9rem;
+    gap: 0.75rem;
+  }
+
+  .city-screen__header {
+    flex-wrap: wrap;
+    gap: 0.6rem;
+  }
+
+  .city-screen__header > :first-child {
+    flex: 1 1 12rem;
+  }
+
+  .city-screen__name {
+    font-size: 1.35rem;
+  }
+
+  .city-screen__grid {
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+    gap: 0.6rem;
+  }
+
+  .city-building {
+    padding: 0.8rem 0.5rem 0.7rem;
+  }
+
+  .city-building__icon {
+    font-size: 2rem;
+  }
+
+  .city-building__name {
+    font-size: 0.88rem;
+  }
 }
