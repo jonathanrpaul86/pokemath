@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback, type CSSProperties } from 'react'
 import { useTrainer, useGameStore } from '../store'
 import { fetchPokemonSpecies } from '../services/pokeApi'
-import { spawnWildPokemon, calcDamage, calcCatchDifficulty, isBattleOutcome } from '../utils/battle'
+import { spawnWildPokemon, calcDamage, calcCatchDifficulty, isBattleOutcome, damagingMoves, moveMenuOptions } from '../utils/battle'
 import { pickEncounter, pickLevel } from '../utils/encounter'
 import { generateProblem, checkAnswer } from '../utils/math'
 import { battleXpReward, trainerMoneyReward, pokemonXpToNextLevel } from '../utils/formulas'
@@ -21,13 +21,15 @@ const TACKLE: Move = {
 }
 
 function pickEnemyMove(wild: WildPokemon): Move {
-  const damaging = wild.moves.filter(m => m.power !== null && (m.power ?? 0) > 0)
+  const damaging = damagingMoves(wild.moves)
   if (damaging.length === 0) return TACKLE
   return damaging[Math.floor(Math.random() * damaging.length)]
 }
 
-function pickPlayerMove(pokemon: OwnedPokemon): Move {
-  const damaging = (pokemon.moves ?? []).filter(m => m.power !== null && (m.power ?? 0) > 0)
+/** The move picked in the move menu, otherwise a random attack */
+function pickPlayerMove(pokemon: OwnedPokemon, chosen?: Move): Move {
+  if (chosen) return chosen
+  const damaging = damagingMoves(pokemon.moves)
   if (damaging.length === 0) return MATH_ATTACK
   return damaging[Math.floor(Math.random() * damaging.length)]
 }
@@ -59,6 +61,8 @@ interface BattleData {
   log: string[]
   wildSprite: string
   playerSprites: string[]
+  /** Move picked in the move menu, and the Pokémon it was picked for */
+  chosenMove?: { uid: string; move: Move }
   // Trainer battle only:
   trainerTeam?: WildPokemon[]
   trainerTeamIdx?: number
@@ -225,6 +229,7 @@ export default function BattleScreen({ area, onBattleEnd, trainerBattle, wildOve
   const [showBallMenu, setShowBallMenu] = useState(false)
   const [showItemMenu, setShowItemMenu] = useState(false)
   const [usingItemInBattle, setUsingItemInBattle] = useState<string | null>(null)
+  const [showMoveMenu, setShowMoveMenu] = useState(false)
   const battleRef = useRef<BattleData | null>(null)
   const evolvedRef = useRef<Set<string>>(new Set())
   const prevLevelRef = useRef<Record<string, number>>({})
@@ -314,6 +319,17 @@ export default function BattleScreen({ area, onBattleEnd, trainerBattle, wildOve
     )))
     return { ...base, timeLimit: adjusted }
   }, [area.mathDifficulty, trainer.party, trainer.timerMultiplier])
+
+  /** Moves the Fight menu offers the active Pokémon; empty means Fight goes straight to a problem */
+  function moveOptionsFor(b: BattleData): Move[] {
+    return moveMenuOptions(trainer.party[b.activeIdx]?.moves, trainer.chooseMoves)
+  }
+
+  /** The move picked for the active Pokémon, if one was picked */
+  function chosenMoveFor(b: BattleData): Move | undefined {
+    const chosen = b.chosenMove
+    return chosen && chosen.uid === trainer.party[b.activeIdx]?.uid ? chosen.move : undefined
+  }
 
   function persistHps(b: BattleData) {
     trainer.party.forEach((member, i) => {
@@ -430,14 +446,14 @@ export default function BattleScreen({ area, onBattleEnd, trainerBattle, wildOve
     return () => clearTimeout(t)
   }, [battle?.phase])  // eslint-disable-line
 
-  // Player-turn timer tick (paused while switch menu is open)
+  // Player-turn timer tick (paused while switch or move menu is open)
   useEffect(() => {
-    if (!battle || battle.phase !== 'player-turn' || battle.timeRemaining <= 0 || showSwitch || showBallMenu || showItemMenu || !!usingItemInBattle) return
+    if (!battle || battle.phase !== 'player-turn' || battle.timeRemaining <= 0 || showSwitch || showMoveMenu || showBallMenu || showItemMenu || !!usingItemInBattle) return
     const t = setTimeout(() => {
       setBattle(prev => prev?.phase === 'player-turn' ? { ...prev, timeRemaining: prev.timeRemaining - 1 } : prev)
     }, 1000)
     return () => clearTimeout(t)
-  }, [battle?.phase, battle?.timeRemaining, showSwitch])
+  }, [battle?.phase, battle?.timeRemaining, showSwitch, showMoveMenu])
 
   // Player-turn timer expired → wrong answer
   useEffect(() => {
@@ -580,6 +596,15 @@ export default function BattleScreen({ area, onBattleEnd, trainerBattle, wildOve
         if (usingItemInBattle) { e.preventDefault(); setUsingItemInBattle(null); return }
       }
 
+      // Move menu: a number picks that move, Escape closes it
+      if (showMoveMenu) {
+        const options = moveOptionsFor(b)
+        const n = parseInt(e.key, 10)
+        if (e.key === 'Escape') { e.preventDefault(); setShowMoveMenu(false) }
+        else if (n >= 1 && n <= options.length) { e.preventDefault(); handleChooseMove(options[n - 1]) }
+        return
+      }
+
       // Trainer send-next prompt: only n/Enter (no) or s (switch) valid
       if (pendingTrainerSend && !showSwitch) {
         if (e.key === 'Enter' || e.key.toLowerCase() === 'n') { e.preventDefault(); handleNoSwitchBeforeTrainerSend(); return }
@@ -641,6 +666,8 @@ export default function BattleScreen({ area, onBattleEnd, trainerBattle, wildOve
       // Battle option hotkeys available during player-turn
       if (b.phase === 'player-turn') {
         const switchable = trainer.party.filter((_, i) => i !== b.activeIdx && (b.partyHps[i] ?? 0) > 0)
+        const noMenuOpen = !showBallMenu && !showItemMenu && !usingItemInBattle
+        if (e.key === 'f' && noMenuOpen && moveOptionsFor(b).length > 0) { e.preventDefault(); setShowMoveMenu(true); return }
         if (!trainerBattle && e.key === 'c') { e.preventDefault(); handleStartCatch(); return }
         if (e.key === 's' && switchable.length > 0) { e.preventDefault(); openSwitchMenu(); return }
         if (!trainerBattle && e.key === 'r') { e.preventDefault(); handleFlee(); return }
@@ -660,14 +687,14 @@ export default function BattleScreen({ area, onBattleEnd, trainerBattle, wildOve
     }
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
-  }, [answer, showSwitch, switchHighlight, showBallMenu, showItemMenu, usingItemInBattle, pendingTrainerSend]) // eslint-disable-line
+  }, [answer, showSwitch, switchHighlight, showBallMenu, showItemMenu, usingItemInBattle, pendingTrainerSend, showMoveMenu]) // eslint-disable-line
 
   // ---- Action handlers -------------------------------------------------------
 
   function processCorrectAnswer(b: BattleData, fast: boolean) {
     playCorrect()
     const attacker = trainer.party[b.activeIdx]
-    const move = pickPlayerMove(attacker)
+    const move = pickPlayerMove(attacker, chosenMoveFor(b))
     const playerDmg = Math.max(1, calcDamage(move, attacker, b.wild))
     const newWildHp = Math.max(0, b.wildHp - playerDmg)
     const logLines = [`${capitalize(attacker.name)} used ${capitalize(move.name)} for ${playerDmg} damage!`]
@@ -700,11 +727,13 @@ export default function BattleScreen({ area, onBattleEnd, trainerBattle, wildOve
     const newHp = Math.max(0, b.partyHps[b.activeIdx] - damage)
     const newPartyHps = b.partyHps.map((hp, i) => i === b.activeIdx ? newHp : hp)
     const enemyLabel = trainerBattle ? capitalize(b.wild.name) : `Wild ${capitalize(b.wild.name)}`
+    const chosen = chosenMoveFor(b)
+    const missed = chosen ? `${capitalize(defender.name)}'s ${capitalize(chosen.name)} missed! ` : ''
     setBattle(prev => prev ? {
       ...prev,
       phase: 'resolving-wrong',
       partyHps: newPartyHps,
-      log: [...prev.log.slice(-3), `${enemyLabel} used ${capitalize(move.name)} for ${damage} damage!`],
+      log: [...prev.log.slice(-3), `${missed}${enemyLabel} used ${capitalize(move.name)} for ${damage} damage!`],
     } : prev)
   }
 
@@ -776,8 +805,30 @@ export default function BattleScreen({ area, onBattleEnd, trainerBattle, wildOve
   }
 
   function handleFight() {
+    const b = battleRef.current
+    if (b && moveOptionsFor(b).length > 0) { setShowMoveMenu(true); return }
     const p = nextProblem()
     setBattle(prev => prev ? { ...prev, phase: 'player-turn', problem: p, timeRemaining: p.timeLimit } : prev)
+    setAnswer('')
+  }
+
+  /** Picking a move comes before the problem; solving it lands the move */
+  function handleChooseMove(move: Move) {
+    const b = battleRef.current
+    if (!b) return
+    setShowMoveMenu(false)
+    const chosenMove = { uid: trainer.party[b.activeIdx].uid, move }
+    const line = `Solve to use ${capitalize(move.name)}!`
+    if (b.phase !== 'choose-action') {
+      // Changed moves mid-fight: keep the current problem
+      setBattle(prev => prev ? { ...prev, chosenMove, log: [...prev.log.slice(-3), line] } : prev)
+      return
+    }
+    const p = nextProblem()
+    setBattle(prev => prev ? {
+      ...prev, chosenMove, phase: 'player-turn', problem: p, timeRemaining: p.timeLimit,
+      log: [...prev.log.slice(-3), line],
+    } : prev)
     setAnswer('')
   }
 
@@ -1089,6 +1140,8 @@ export default function BattleScreen({ area, onBattleEnd, trainerBattle, wildOve
   const isTerminal = isBattleOutcome(phase)
   const inputBlocked = phase !== 'player-turn' && phase !== 'catch-attempt' && phase !== 'run-attempt' && phase !== 'switch-attempt'
   const switchableCount = trainer.party.filter((_, i) => i !== activeIdx && (partyHps[i] ?? 0) > 0).length
+  const moveOptions = moveOptionsFor(battle)
+  const chosenMove = chosenMoveFor(battle)
 
   const numpadProps = {
     onDigit: (d: string) => setAnswer(a => a.length < 4 ? a + d : a),
@@ -1137,7 +1190,7 @@ export default function BattleScreen({ area, onBattleEnd, trainerBattle, wildOve
             <XpBar xp={activeParty.xp} max={activeParty.xpToNextLevel} />
           </div>
         )}
-        {(phase === 'player-turn' || phase === 'run-attempt' || phase === 'switch-attempt' || phase === 'resolving-correct' || phase === 'resolving-wrong') && problem && !showSwitch && (
+        {(phase === 'player-turn' || phase === 'run-attempt' || phase === 'switch-attempt' || phase === 'resolving-correct' || phase === 'resolving-wrong') && problem && !showSwitch && !showMoveMenu && (
           <TimerRing
             remaining={timeRemaining}
             total={problem.timeLimit}
@@ -1155,7 +1208,7 @@ export default function BattleScreen({ area, onBattleEnd, trainerBattle, wildOve
         <div className="battle-commands__inner">
 
           {/* Full-width equation row */}
-          {!isTerminal && !showSwitch && (
+          {!isTerminal && !showSwitch && !showMoveMenu && (
             phase === 'catch-attempt' && battle.catchProgress && battle.catchProblem ? (
               <>
                 <div className="catch-header">
@@ -1189,17 +1242,19 @@ export default function BattleScreen({ area, onBattleEnd, trainerBattle, wildOve
           )}
 
           {/* Bottom row: log + actions (left) | numpad / result (right) */}
-          <div className={`battle-commands__row${showSwitch ? ' battle-commands__row--switch' : ''}`}>
+          <div className={`battle-commands__row${showSwitch || showMoveMenu ? ' battle-commands__row--switch' : ''}`}>
 
             <div className="battle-commands__left">
               <div className="battle-log">
                 <p className="battle-log__line">{battle.log[battle.log.length - 1]}</p>
               </div>
-              {!isTerminal && !showSwitch && !pendingTrainerSend && phase !== 'catch-attempt' && phase !== 'run-attempt' && phase !== 'switch-attempt' && !showBallMenu && !showItemMenu && !usingItemInBattle && (
+              {!isTerminal && !showSwitch && !showMoveMenu && !pendingTrainerSend && phase !== 'catch-attempt' && phase !== 'run-attempt' && phase !== 'switch-attempt' && !showBallMenu && !showItemMenu && !usingItemInBattle && (
                 <div className="battle-action-strip">
                   {ACTION_BUTTONS.map(([action, icon, label]) => {
                     const isResolving = phase === 'resolving-correct' || phase === 'resolving-wrong'
-                    const isFighting = action === 'fight' && phase !== 'choose-action'
+                    // Mid-problem, Fight reopens the move menu to change moves
+                    const canChangeMove = phase === 'player-turn' && moveOptions.length > 0
+                    const isFighting = action === 'fight' && phase !== 'choose-action' && !canChangeMove
                     const noSwitchable = action === 'switch' && switchableCount === 0
                     const notAllowed = !!trainerBattle && (action === 'catch' || action === 'run')
                     return (
@@ -1259,6 +1314,25 @@ export default function BattleScreen({ area, onBattleEnd, trainerBattle, wildOve
                     )
                   })}
                   <button className="switch-btn switch-btn--cancel" onClick={() => closeSwitchMenu(true)}>
+                    Cancel
+                  </button>
+                </div>
+              ) : showMoveMenu ? (
+                <div className="switch-menu switch-menu--grid">
+                  {moveOptions.map((m, i) => (
+                    <button
+                      key={m.id}
+                      className={`switch-btn${m.id === chosenMove?.id ? ' switch-btn--current' : ''}`}
+                      onClick={() => handleChooseMove(m)}
+                    >
+                      <span className="switch-btn__name">
+                        <span className="switch-btn__num">{i + 1}</span>
+                        {capitalize(m.name)}
+                      </span>
+                      <span className="switch-btn__hp">Power {m.power}</span>
+                    </button>
+                  ))}
+                  <button className="switch-btn switch-btn--cancel" onClick={() => setShowMoveMenu(false)}>
                     Cancel
                   </button>
                 </div>

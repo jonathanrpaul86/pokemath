@@ -31,6 +31,8 @@ export interface Trainer {
   badges: BadgeId[]
   /** Multiplier applied to battle timer limits. 1 = normal, 1.5 = more time, 0.75 = less time */
   timerMultiplier?: number
+  /** Pick which move to attack with when fighting, instead of a random one. Off by default. */
+  chooseMoves?: boolean
   /** Unix ms timestamp of the last save — set by writeSave */
   savedAt?: number
   /** Progress per gym — keyed by GymDefinition.id */

@@ -15,6 +15,11 @@ const DIFFICULTY_OPTIONS: { label: string; description: string; value: number }[
   { label: 'Hard',   description: 'Less time per problem',              value: 0.75 },
 ]
 
+const MOVE_OPTIONS: { label: string; description: string; value: boolean }[] = [
+  { label: 'Auto',   description: 'Your Pokémon picks its own move', value: false },
+  { label: 'Choose', description: 'Pick your move when you Fight',   value: true  },
+]
+
 function pct(correct: number, total: number): string {
   if (total === 0) return '—'
   return `${Math.round((correct / total) * 100)}%`
@@ -28,6 +33,7 @@ export default function ProfileScreen({ onBack }: Props) {
   const [draftName, setDraftName] = useState(trainer.name)
 
   const activeMultiplier = trainer.timerMultiplier ?? 1
+  const chooseMoves = trainer.chooseMoves ?? false
 
   function handleSaveName() {
     const trimmed = draftName.trim()
@@ -100,6 +106,23 @@ export default function ProfileScreen({ onBack }: Props) {
                 key={value}
                 className={`btn profile-timer-btn${activeMultiplier === value ? ' profile-timer-btn--active' : ''}`}
                 onClick={() => dispatch({ type: 'SET_TIMER_MULTIPLIER', payload: { multiplier: value } })}
+              >
+                {label}
+                <span className="profile-timer-btn__desc">{description}</span>
+              </button>
+            ))}
+          </div>
+        </section>
+
+        {/* ── Moves ── */}
+        <section className="profile-card">
+          <h2 className="profile-card__heading">Moves</h2>
+          <div className="profile-timer-btns">
+            {MOVE_OPTIONS.map(({ label, description, value }) => (
+              <button
+                key={label}
+                className={`btn profile-timer-btn${chooseMoves === value ? ' profile-timer-btn--active' : ''}`}
+                onClick={() => dispatch({ type: 'SET_CHOOSE_MOVES', payload: { enabled: value } })}
               >
                 {label}
                 <span className="profile-timer-btn__desc">{description}</span>
