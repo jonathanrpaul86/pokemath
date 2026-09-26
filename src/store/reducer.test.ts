@@ -60,6 +60,27 @@ describe('SET_MOVES', () => {
   })
 })
 
+describe('RELEASE_POKEMON', () => {
+  const release = (t: ReturnType<typeof makeTrainer>, uid: string) =>
+    gameReducer(t, { type: 'RELEASE_POKEMON', payload: { uid } })
+
+  it('removes the Pokémon from the party or the PC and keeps it caught in the Pokédex', () => {
+    const t = makeTrainer({
+      party: [makePokemon(), makePokemon({ uid: 'pkmn-2' })],
+      pc: [makePokemon({ uid: 'pkmn-3' })],
+      pokedex: { 4: { seen: true, caught: true } },
+    })
+    expect(release(t, 'pkmn-2').party.map(p => p.uid)).toEqual(['pkmn-1'])
+    expect(release(t, 'pkmn-3').pc).toEqual([])
+    expect(release(t, 'pkmn-3').pokedex[4]).toEqual({ seen: true, caught: true })
+  })
+
+  it('never releases the last Pokémon in the party', () => {
+    const t = makeTrainer({ party: [makePokemon()], pc: [makePokemon({ uid: 'pkmn-2' })] })
+    expect(release(t, 'pkmn-1')).toBe(t)
+  })
+})
+
 describe('EARN_BADGE', () => {
   it('releases the banked level-up when the cap rises', () => {
     const capped = gainXp(makeTrainer(), 1_000_000)
