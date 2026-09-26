@@ -173,9 +173,18 @@ export default function PartyScreen({ onBack }: Props) {
   const trainer = useTrainer()
   const { dispatch } = useGameStore()
   const [selection, setSelection] = useState<Selection>(null)
+  const [confirmingRelease, setConfirmingRelease] = useState(false)
 
   function handleSelect(uid: string, location: 'party' | 'pc') {
     setSelection(prev => (prev?.uid === uid ? null : { uid, location }))
+    setConfirmingRelease(false)
+  }
+
+  function handleRelease() {
+    if (!selection) return
+    dispatch({ type: 'RELEASE_POKEMON', payload: { uid: selection.uid } })
+    setSelection(null)
+    setConfirmingRelease(false)
   }
 
   function handleSendToPC() {
@@ -284,7 +293,21 @@ export default function PartyScreen({ onBack }: Props) {
           <p className="pm-action-bar__hint">Tap a Pokémon to select it, then move it</p>
         )}
 
-        {selection?.location === 'party' && (
+        {selectedPokemon && confirmingRelease && (
+          <div className="pm-action-bar__row">
+            <span className="pm-action-bar__label">
+              Release {capitalize(selectedPokemon.name)}? You can't get it back.
+            </span>
+            <button className="btn btn-danger" onClick={handleRelease}>
+              Yes, release
+            </button>
+            <button className="btn btn-secondary" onClick={() => setConfirmingRelease(false)}>
+              Keep it
+            </button>
+          </div>
+        )}
+
+        {!confirmingRelease && selection?.location === 'party' && (
           <div className="pm-action-bar__row">
             <span className="pm-action-bar__label">
               {capitalize(trainer.party.find(p => p.uid === selection.uid)?.name ?? '')} selected
@@ -311,13 +334,21 @@ export default function PartyScreen({ onBack }: Props) {
             >
               Send to PC →
             </button>
+            <button
+              className="btn btn-danger"
+              onClick={() => setConfirmingRelease(true)}
+              disabled={partyIsOne}
+              title={partyIsOne ? "Can't release your last Pokémon!" : undefined}
+            >
+              Release
+            </button>
             {partyIsOne && (
               <span className="pm-action-bar__warning">Need at least 1 Pokémon in party</span>
             )}
           </div>
         )}
 
-        {selection?.location === 'pc' && (
+        {!confirmingRelease && selection?.location === 'pc' && (
           <div className="pm-action-bar__row">
             <span className="pm-action-bar__label">
               {capitalize(trainer.pc.find(p => p.uid === selection.uid)?.name ?? '')} selected
@@ -343,6 +374,9 @@ export default function PartyScreen({ onBack }: Props) {
               title={partyFull ? 'Party is full! (6/6)' : undefined}
             >
               ← Add to Party
+            </button>
+            <button className="btn btn-danger" onClick={() => setConfirmingRelease(true)}>
+              Release
             </button>
             {partyFull && (
               <span className="pm-action-bar__warning">Party is full — send one to PC first</span>

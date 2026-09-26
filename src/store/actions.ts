@@ -12,6 +12,7 @@ export type GameAction =
   | { type: 'SET_CURRENT_AREA'; payload: { areaId: string } }
   | { type: 'MOVE_TO_PARTY'; payload: { uid: string } }
   | { type: 'MOVE_TO_PC'; payload: { uid: string } }
+  | { type: 'RELEASE_POKEMON'; payload: { uid: string } }
   | { type: 'REORDER_PARTY'; payload: { uid: string; direction: 'up' | 'down' } }
   | { type: 'REORDER_PC'; payload: { uid: string; direction: 'up' | 'down' } }
   | { type: 'EVOLVE_POKEMON'; payload: { uid: string; newSpeciesId: number; newName: string; newBaseStats: BaseStats } }

@@ -223,6 +223,20 @@ export function gameReducer(trainer: Trainer, action: GameAction): Trainer {
       break
     }
 
+    case 'RELEASE_POKEMON': {
+      // Released Pokémon stay registered as caught in the Pokédex
+      const { uid } = action.payload
+      if (trainer.party.some(p => p.uid === uid)) {
+        if (trainer.party.length <= 1) return trainer // can't release last Pokemon
+        next = { ...trainer, party: trainer.party.filter(p => p.uid !== uid) }
+      } else if (trainer.pc.some(p => p.uid === uid)) {
+        next = { ...trainer, pc: trainer.pc.filter(p => p.uid !== uid) }
+      } else {
+        return trainer
+      }
+      break
+    }
+
     case 'EVOLVE_POKEMON': {
       const { uid, newSpeciesId, newName, newBaseStats } = action.payload
       function evolve(list: typeof trainer.party) {
