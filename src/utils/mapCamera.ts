@@ -58,6 +58,29 @@ export function followView(
   }
 }
 
+/**
+ * The narrowest view width, at least `minViewWidth`, that keeps every point at
+ * the given offsets from the view's center at least `padding` inside the canvas
+ * edges. Canvas size and padding share units (e.g. CSS pixels).
+ */
+export function viewWidthToShow(
+  offsets: { dx: number; dy: number }[],
+  minViewWidth: number,
+  canvasW: number,
+  canvasH: number,
+  padding: number,
+): number {
+  // Room from the center to the padded edge, never less than a quarter of the canvas
+  const roomX = Math.max(canvasW / 4, canvasW / 2 - padding)
+  const roomY = Math.max(canvasH / 4, canvasH / 2 - padding)
+  let width = minViewWidth
+  for (const { dx, dy } of offsets) {
+    // A world distance d lands d * canvasW / viewWidth pixels from the center
+    width = Math.max(width, Math.abs(dx) * canvasW / roomX, Math.abs(dy) * canvasW / roomY)
+  }
+  return width
+}
+
 /** The world rectangle a view covers on a canvas of the given size */
 export function viewRect(view: MapView, canvasW: number, canvasH: number) {
   const height = view.viewWidth * (canvasH / canvasW)

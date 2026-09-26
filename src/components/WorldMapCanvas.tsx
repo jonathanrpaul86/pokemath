@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react'
 import type { Area, BadgeId, InventorySlot } from '../types'
 import { MapRenderer, WORLD_BOUNDS, type MapRenderState } from '../utils/mapRenderer'
-import { followView, viewRect, easeToward, type MapView } from '../utils/mapCamera'
+import { followView, viewRect, easeToward, viewWidthToShow, type MapView } from '../utils/mapCamera'
 import { travelBlocker, openNewAreaIds } from '../data/areas'
 
 /** How much of the world the local map shows across its width (see WORLD_BOUNDS) */
@@ -15,6 +15,8 @@ const VIEW_UNITS_PER_PIXEL = 1.05
 function localViewWidth(cssWidth: number): number {
   return Math.min(LOCAL_VIEW_WIDTH, Math.max(MIN_LOCAL_VIEW_WIDTH, cssWidth * VIEW_UNITS_PER_PIXEL))
 }
+/** CSS pixels to keep between a connected area and the map's edge, so its name fits */
+const NEIGHBOR_PADDING = 56
 /** Fraction of the remaining distance the camera covers each frame */
 const CAMERA_EASE = 0.12
 
@@ -75,20 +77,30 @@ export function WorldMapCanvas(props: Props) {
     observer.observe(mini)
 
     let camera: { x: number; y: number } | null = null
+    let viewWidth: number | null = null
     let pulse = 0
     let raf = 0
     const loop = () => {
       pulse += 1
       const { areas, currentAreaId } = latest.current
       const here = areas.find(a => a.id === currentAreaId)
+      const dpr = window.devicePixelRatio || 1
       if (here) {
         const target = { x: here.mapX, y: here.mapY }
+        // Zoom out as far as needed to show every place you can go from here
+        const neighbors = here.connectedAreaIds.flatMap(id => {
+          const a = areas.find(n => n.id === id)
+          return a ? [{ dx: a.mapX - here.mapX, dy: a.mapY - here.mapY }] : []
+        })
+        const cssW = canvas.width / dpr
+        const targetWidth = viewWidthToShow(neighbors, localViewWidth(cssW), cssW, canvas.height / dpr, NEIGHBOR_PADDING)
         // Snap on the first frame, then glide when the player travels
         camera = camera ? easeToward(camera, target, CAMERA_EASE) : target
+        viewWidth = viewWidth === null ? targetWidth : easeToward({ x: viewWidth, y: 0 }, { x: targetWidth, y: 0 }, CAMERA_EASE).x
       }
       const state = renderState(pulse)
-      const view = camera
-        ? followView(WORLD_BOUNDS, camera, localViewWidth(canvas.width / (window.devicePixelRatio || 1)), canvas.width, canvas.height)
+      const view = camera && viewWidth !== null
+        ? followView(WORLD_BOUNDS, camera, viewWidth, canvas.width, canvas.height)
         : undefined
       viewRef.current = view
       main.render(state, { view })

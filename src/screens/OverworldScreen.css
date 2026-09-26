@@ -167,6 +167,11 @@
   border-radius: 16px;
   overflow: hidden;
   aspect-ratio: 1;
+  /* Never taller than the window under the header, so nearby places stay on
+     screen; it stays full width and gets wider than tall instead */
+  width: 100%;
+  max-height: max(320px, calc(100vh - 6.5rem));
+  max-height: max(320px, calc(100dvh - 6.5rem));
   align-self: start;
 }
 

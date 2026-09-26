@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { fitView, followView, makeTransform, viewRect, easeToward } from './mapCamera'
+import { fitView, followView, makeTransform, viewRect, easeToward, viewWidthToShow } from './mapCamera'
 
 const WORLD = { width: 600, height: 380 }
 
@@ -65,5 +65,25 @@ describe('easeToward', () => {
     const halfway = easeToward({ x: 0, y: 0 }, { x: 100, y: 50 }, 0.5)
     expect(halfway).toEqual({ x: 50, y: 25 })
     expect(easeToward({ x: 99.8, y: 50.2 }, { x: 100, y: 50 }, 0.1)).toEqual({ x: 100, y: 50 })
+  })
+})
+
+describe('viewWidthToShow', () => {
+  it('keeps the normal zoom when every neighbor already fits', () => {
+    expect(viewWidthToShow([{ dx: 100, dy: 50 }], 760, 1200, 500, 56)).toBe(760)
+  })
+
+  it('zooms out until a far neighbor sits inside the padded edge', () => {
+    // Route 5 → Route 6: 288 units straight down on a wide, short map
+    const width = viewWidthToShow([{ dx: 0, dy: 288 }], 760, 1200, 500, 56)
+    expect(width).toBeGreaterThan(760)
+    const t = makeTransform({ centerX: 600, centerY: 600, viewWidth: width }, 1200, 500, WORLD)
+    expect(t.ty(600 + 288)).toBeCloseTo(500 - 56)
+  })
+
+  it('fits horizontal neighbors on a narrow phone screen', () => {
+    const width = viewWidthToShow([{ dx: -288, dy: 0 }], 380, 390, 600, 56)
+    const t = makeTransform({ centerX: 600, centerY: 600, viewWidth: width }, 390, 600, WORLD)
+    expect(t.tx(600 - 288)).toBeCloseTo(56)
   })
 })
