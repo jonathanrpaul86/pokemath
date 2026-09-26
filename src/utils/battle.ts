@@ -59,9 +59,6 @@ export function moveMenuOptions(moves: Move[] | undefined, chooseMoves: boolean 
 
 // ---- Stronger moves, harder math --------------------------------------------
 
-/** Difficulty points each step of move strength adds to a problem */
-const MATH_BOOST_PER_TIER = 10
-
 /** How much harder the math is when attacking with a move: 0 normal, 1 harder (power 60+), 2 hardest (power 90+) */
 export function moveMathTier(move: Move): 0 | 1 | 2 {
   const power = move.power ?? 0
@@ -77,7 +74,7 @@ export function battleProblem(areaDifficulty: number, move?: Move): MathProblem 
   const base = generateProblem(areaDifficulty)
   const tier = move ? moveMathTier(move) : 0
   if (tier === 0) return base
-  const harder = generateProblem(Math.min(100, areaDifficulty + tier * MATH_BOOST_PER_TIER), base.operator)
+  const harder = generateProblem(areaDifficulty, base.operator, tier)
   return { ...harder, timeLimit: base.timeLimit }
 }
 

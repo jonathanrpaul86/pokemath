@@ -38,11 +38,11 @@ describe('battleProblem', () => {
   const sample = (difficulty: number, move?: Move) => Array.from({ length: 300 }, () => battleProblem(difficulty, move))
   const answers = (difficulty: number, move?: Move) => sample(difficulty, move).map(p => p.answer)
 
-  it('uses bigger numbers for stronger moves (Route 1: sums up to 9, 18, 28)', () => {
-    expect(Math.max(...answers(5))).toBeLessThanOrEqual(9)
-    expect(Math.max(...answers(5, EMBER))).toBeLessThanOrEqual(9)
-    expect(answers(5, SLASH).every(a => a >= 6 && a <= 18)).toBe(true)
-    expect(answers(5, FLAMETHROWER).every(a => a >= 10 && a <= 28)).toBe(true)
+  it('uses bigger numbers for stronger moves (Route 1: sums up to 10, then 11–15, then 11–20)', () => {
+    expect(Math.max(...answers(5))).toBeLessThanOrEqual(10)
+    expect(Math.max(...answers(5, EMBER))).toBeLessThanOrEqual(10)
+    expect(answers(5, SLASH).every(a => a >= 11 && a <= 15)).toBe(true)
+    expect(answers(5, FLAMETHROWER).every(a => a >= 11 && a <= 20)).toBe(true)
   })
 
   it('keeps the kind of problem the area uses, and its time to answer', () => {
