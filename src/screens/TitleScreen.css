@@ -129,6 +129,31 @@
   color: #5a7a9a;
 }
 
+/* ── Export / import ── */
+
+.slot-card__link-btn {
+  background: none;
+  border: none;
+  color: #7a9cc0;
+  font-size: 0.78rem;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 6px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.slot-card__link-btn:hover {
+  color: #aac4e0;
+}
+
+.slot-card__error {
+  font-size: 0.78rem;
+  color: #f4a0a8;
+  margin: 0;
+  text-align: center;
+}
+
 /* ── Inline delete confirmation ── */
 
 .slot-card__confirm {

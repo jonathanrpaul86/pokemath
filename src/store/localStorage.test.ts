@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
 import {
   loadSave, writeSave, listSaves, deleteSave, purgeOutdatedApiCache,
-  getLastSaveFailed, subscribeSaveStatus,
+  getLastSaveFailed, subscribeSaveStatus, exportSave, exportFileName, importSave,
 } from './localStorage'
 import { API_CACHE_PREFIX } from '../utils/storage'
 import { pokemonXpToNextLevel } from '../utils/formulas'
@@ -170,5 +170,56 @@ describe('migrating older saves', () => {
   it('returns null for corrupt saves instead of crashing', () => {
     localStorage.setItem('pmg_save_v1_0', '{not json')
     expect(loadSave(0)).toBeNull()
+  })
+})
+
+describe('exportSave / importSave', () => {
+  it('moves a save into an empty slot, keeping when it was last played', () => {
+    writeSave(0, makeTrainer({ name: 'Valentine', badges: ['boulder-badge'] }))
+    const file = exportSave(0)!
+    const savedAt = loadSave(0)!.savedAt
+
+    // A fresh browser on another device
+    installMemoryStorage()
+    const result = importSave(2, file)
+    expect(result.ok).toBe(true)
+    expect(loadSave(2)?.name).toBe('Valentine')
+    expect(loadSave(2)?.badges).toEqual(['boulder-badge'])
+    expect(loadSave(2)?.savedAt).toBe(savedAt)
+  })
+
+  it('exports nothing for an empty slot', () => {
+    expect(exportSave(1)).toBeNull()
+  })
+
+  it('accepts a bare save copied straight out of storage, and upgrades it', () => {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { claimedRewardIds, ...old } = makeTrainer()
+    const result = importSave(0, JSON.stringify({ ...old, level: 4, claimedRewardAreaIds: ['route-1'] }))
+    expect(result.ok).toBe(true)
+    const loaded = loadSave(0)!
+    expect(loaded.claimedRewardIds).toEqual(['route-1'])
+    expect('level' in loaded).toBe(false)
+  })
+
+  it('never overwrites an existing save', () => {
+    writeSave(0, makeTrainer({ name: 'Keep Me' }))
+    const result = importSave(0, JSON.stringify(makeTrainer({ name: 'Intruder' })))
+    expect(result).toEqual({ ok: false, error: expect.stringMatching(/already/) })
+    expect(loadSave(0)?.name).toBe('Keep Me')
+  })
+
+  it.each([
+    ['not JSON', 'hello'],
+    ['some other JSON', '{"photos": []}'],
+    ['a save with no Pokémon', JSON.stringify(makeTrainer({ party: [] }))],
+  ])('rejects %s', (_, text) => {
+    expect(importSave(0, text).ok).toBe(false)
+    expect(loadSave(0)).toBeNull()
+  })
+
+  it('names the file after the trainer and date', () => {
+    expect(exportFileName(makeTrainer({ name: 'Ash K.' }), new Date(2026, 10, 1)))
+      .toBe('pokemath-ash-k-2026-11-01.json')
   })
 })

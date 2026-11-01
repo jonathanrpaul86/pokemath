@@ -1,7 +1,7 @@
 import { useEffect, useCallback, useState, type ReactNode } from 'react'
 import type { Trainer, PokemonSpecies } from '../types'
 import { gameReducer, createNewTrainer } from './reducer'
-import { loadSave, writeSave, deleteSave, listSaves, migrateLegacySave, purgeOutdatedApiCache } from './localStorage'
+import { loadSave, writeSave, deleteSave, listSaves, migrateLegacySave, purgeOutdatedApiCache, importSave } from './localStorage'
 import type { GameAction } from './actions'
 import { GameContext } from './context'
 
@@ -50,6 +50,12 @@ export function GameProvider({ children }: { children: ReactNode }) {
     }
   }, [currentSlot])
 
+  const importSlot = useCallback((slot: number, text: string) => {
+    const result = importSave(slot, text)
+    if (result.ok) setSaves(listSaves())
+    return result
+  }, [])
+
   const goToTitle = useCallback(() => {
     setCurrentSlot(null)
     setTrainer(null)
@@ -57,7 +63,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
   }, [])
 
   return (
-    <GameContext.Provider value={{ trainer, currentSlot, saves, dispatch, startNewGame, loadSlot, deleteSlot, goToTitle }}>
+    <GameContext.Provider value={{ trainer, currentSlot, saves, dispatch, startNewGame, loadSlot, deleteSlot, importSlot, goToTitle }}>
       {children}
     </GameContext.Provider>
   )
