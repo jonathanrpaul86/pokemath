@@ -97,7 +97,7 @@ const FIELD_THEMES: Record<string, [string, string, string, string]> = {
   'route-21':        ['#70c0f0', '#a0d8f8', '#2080c8', '#0850a0'],
   'seafoam-islands': ['#a8d8f0', '#d0f0ff', '#88b8d8', '#4878a8'],
   'cinnabar-island': ['#280408', '#681008', '#b83008', '#c04808'],
-  'victory-road':    ['#080c10', '#101820', '#181820', '#080810'],
+  'victory-road':    ['#0a0605', '#4a200c', '#3c2a1c', '#120c08'],
   'indigo-plateau':  ['#302070', '#5040a8', '#403860', '#201838'],
 }
 
