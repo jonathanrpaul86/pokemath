@@ -15,7 +15,7 @@ import './index.css'
 type GameScreen = 'overworld' | 'battle' | 'pokedex' | 'party' | 'profile' | 'bag'
 
 function App() {
-  const { trainer, currentSlot, saves, dispatch, loadSlot, deleteSlot, goToTitle } = useGameStore()
+  const { trainer, currentSlot, saves, dispatch, loadSlot, deleteSlot, importSlot, goToTitle } = useGameStore()
   const [starterSlot, setStarterSlot] = useState<number | null>(null)
   const [gameScreen, setGameScreen] = useState<GameScreen>('overworld')
   const [battleRequest, setBattleRequest] = useState<BattleRequest>({ kind: 'wild' })
@@ -51,6 +51,7 @@ function App() {
         onNewGame={slot => setStarterSlot(slot)}
         onPlay={slot => { loadSlot(slot); setCityView(true); setGameScreen('overworld') }}
         onDelete={deleteSlot}
+        onImport={importSlot}
       />
     )
   }

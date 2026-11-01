@@ -188,6 +188,64 @@ export function listSaves(): (Trainer | null)[] {
   return Array.from({ length: SLOT_COUNT }, (_, i) => loadSave(i))
 }
 
+// ---- Moving a save between devices ------------------------------------------
+
+const EXPORT_FORMAT = 'pokemon-math-save'
+
+/** A save as a downloadable JSON file, or null if the slot is empty */
+export function exportSave(slot: number): string | null {
+  const trainer = loadSave(slot)
+  if (!trainer) return null
+  return JSON.stringify({ format: EXPORT_FORMAT, version: 1, exportedAt: Date.now(), trainer })
+}
+
+/** A file name like "pokemath-ash-2026-11-01.json" */
+export function exportFileName(trainer: Trainer, now = new Date()): string {
+  const name = trainer.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'save'
+  const date = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
+  return `pokemath-${name}-${date}.json`
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function looksLikeTrainer(raw: any): boolean {
+  return !!raw && typeof raw === 'object'
+    && typeof raw.name === 'string'
+    && typeof raw.currentAreaId === 'string'
+    && Array.isArray(raw.party) && raw.party.length > 0
+}
+
+export type ImportResult = { ok: true; trainer: Trainer } | { ok: false; error: string }
+
+/**
+ * Reads an exported save (or a bare save copied straight out of storage) into
+ * an empty slot. Older saves go through the same upgrades as loading does.
+ */
+export function importSave(slot: number, text: string): ImportResult {
+  if (loadSave(slot)) return { ok: false, error: 'That slot already has a save.' }
+  let parsed
+  try {
+    parsed = JSON.parse(text)
+  } catch {
+    return { ok: false, error: "That file isn't a Pokémon Math save." }
+  }
+  const raw = parsed?.format === EXPORT_FORMAT ? parsed.trainer : parsed
+  if (!looksLikeTrainer(raw)) return { ok: false, error: "That file isn't a Pokémon Math save." }
+
+  let trainer: Trainer
+  try {
+    trainer = migrateTrainer(raw)
+  } catch {
+    return { ok: false, error: 'That save file looks damaged.' }
+  }
+  // Keep the original savedAt so the slot shows when it was last played
+  const data = JSON.stringify(trainer)
+  if (!trySetItem(slotKey(slot), data)) {
+    clearApiCache()
+    if (!trySetItem(slotKey(slot), data)) return { ok: false, error: 'Not enough browser storage to import.' }
+  }
+  return { ok: true, trainer }
+}
+
 /** The v1 cache stored raw PokéAPI responses (~250K chars per Pokémon) that could fill storage */
 export function purgeOutdatedApiCache(): void {
   clearApiCache({ keepCurrent: true })

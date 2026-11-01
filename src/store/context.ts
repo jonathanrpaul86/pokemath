@@ -1,6 +1,7 @@
 import { createContext } from 'react'
 import type { Trainer, PokemonSpecies } from '../types'
 import type { GameAction } from './actions'
+import type { ImportResult } from './localStorage'
 
 export interface GameContextValue {
   trainer: Trainer | null
@@ -10,6 +11,7 @@ export interface GameContextValue {
   startNewGame: (name: string, starterSpecies: PokemonSpecies, slot: number) => void
   loadSlot: (slot: number) => void
   deleteSlot: (slot: number) => void
+  importSlot: (slot: number, text: string) => ImportResult
   goToTitle: () => void
 }
 
