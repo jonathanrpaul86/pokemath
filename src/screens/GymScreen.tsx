@@ -51,7 +51,8 @@ export default function GymScreen({ gymId, onExit }: Props) {
   const gym = GYM_MAP[gymId]
   if (!gym) return null
 
-  const area = AREA_MAP[gym.cityAreaId]
+  const cityArea = AREA_MAP[gym.cityAreaId]
+  const area = gym.mathDifficulty ? { ...cityArea, mathDifficulty: gym.mathDifficulty } : cityArea
   const progress = trainer.gymProgress?.[gymId] ?? { defeatedTrainerIds: [], leaderDefeated: false }
   const allTrainersDefeated = gym.trainers.every(t => progress.defeatedTrainerIds.includes(t.id))
   const leaderDefeated = trainer.badges.includes(gym.leader.badge)

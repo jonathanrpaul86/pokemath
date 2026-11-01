@@ -274,6 +274,12 @@ describe('Pokémon League', () => {
 })
 
 describe('badges and gyms', () => {
+  it('the last gym asks for math at least as hard as any gym before it', () => {
+    const effective = KANTO_GYMS.map(g => g.mathDifficulty ?? AREA_MAP[g.cityAreaId].mathDifficulty)
+    for (const d of effective) expect(d).toBeGreaterThanOrEqual(1)
+    expect(effective[effective.length - 1]).toBe(Math.max(...effective))
+  })
+
   it('each gym can be reached with only the badges from the gyms before it', () => {
     KANTO_GYMS.forEach((gym, i) => {
       const seen = reachableWith(KANTO_GYMS.slice(0, i).map(g => g.leader.badge))
