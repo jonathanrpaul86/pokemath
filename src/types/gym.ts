@@ -29,6 +29,8 @@ export interface GymDefinition {
   type: string
   /** Badges needed before the gym opens (Viridian stays closed until the end) */
   requiredBadgeCount?: number
+  /** Math difficulty (1–100) for this gym's battles; defaults to the city's own */
+  mathDifficulty?: number
   trainers: GymTrainer[]
   leader: GymLeader
 }

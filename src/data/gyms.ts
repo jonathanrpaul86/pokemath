@@ -353,6 +353,8 @@ export const KANTO_GYMS: GymDefinition[] = [
     name: 'Viridian City Gym',
     type: 'Ground',
     requiredBadgeCount: 7,
+    // Viridian is an early city, but this gym is the last one, so its math is late-game
+    mathDifficulty: 88,
     trainers: [
       {
         id: 'viridian-t1',
