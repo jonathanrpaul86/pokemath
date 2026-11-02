@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { generateProblem } from './math'
+import { generateProblem, problemText } from './math'
 import type { MathOperator } from '../types'
 
 const sample = (difficulty: number, operator?: MathOperator) =>
@@ -24,6 +24,33 @@ describe('generateProblem', () => {
     expect(threes.length).toBeGreaterThan(0)
     expect(threes.every(p => p.answer <= 10)).toBe(true)
     expect(sample(30, '+').some(p => p.operands.length === 3)).toBe(false)
+  })
+
+  it('introduces shaded-shape fractions in halves, thirds and fourths, before multiplication', () => {
+    expect(sample(40).some(p => p.operator === '½')).toBe(false)
+    const fracs = sample(45, '½')
+    expect(sample(45).some(p => p.operator === '½')).toBe(true)
+    for (const p of fracs) {
+      const [shaded, parts] = p.operands
+      expect(parts).toBeGreaterThanOrEqual(2)
+      expect(parts).toBeLessThanOrEqual(4)
+      expect(shaded).toBeGreaterThanOrEqual(1)
+      expect(shaded).toBeLessThanOrEqual(parts)
+      expect(p.answer).toBe(p.fractionAsk === 'bottom' ? parts : shaded)
+    }
+    expect(fracs.some(p => p.fractionAsk === 'bottom')).toBe(true)
+  })
+
+  it('gives stronger moves fractions with more parts than the area uses', () => {
+    const boosted = Array.from({ length: 200 }, () => generateProblem(45, '½', 2))
+    expect(boosted.every(p => p.operands[1] > 4)).toBe(true)
+  })
+
+  it('draws fractions as a shaded bar with the unknown in the fraction', () => {
+    const top = { operands: [2, 3], operator: '½' as const, answer: 2, timeLimit: 14, fractionAsk: 'top' as const }
+    expect(problemText(top)).toBe('■■□ = ?/3')
+    expect(problemText({ ...top, answer: 3, fractionAsk: 'bottom' }, '3')).toBe('■■□ = 2/3')
+    expect(problemText({ operands: [7, 5], operator: '+', answer: 12, timeLimit: 15 })).toBe('7 + 5 = ?')
   })
 
   it('introduces multiplication with factors up to 5', () => {
