@@ -21,6 +21,8 @@ interface Band {
   mulMax: number
   /** Largest divisor and quotient for division; 0 = not unlocked yet */
   divMax: number
+  /** Most equal parts in a shaded-shape fraction; 0 = not unlocked yet */
+  fracMax: number
   /** Seconds to answer, before level and timer adjustments */
   timeLimit: number
 }
@@ -33,17 +35,17 @@ interface Band {
 //   75 Routes 12–15, Fuchsia        85 Routes 19–21, Seafoam, Cinnabar
 //   95 Victory Road, League
 const BANDS: Band[] = [
-  { from: 1,  addMax: 10, add3Max: 0,  minOperand: 0,  subMax: 0,  mulMax: 0,  divMax: 0,  timeLimit: 15 },
-  { from: 10, addMax: 15, add3Max: 0,  minOperand: 0,  subMax: 0,  mulMax: 0,  divMax: 0,  timeLimit: 15 },
-  { from: 20, addMax: 20, add3Max: 0,  minOperand: 0,  subMax: 0,  mulMax: 0,  divMax: 0,  timeLimit: 15 },
-  { from: 25, addMax: 20, add3Max: 0,  minOperand: 0,  subMax: 10, mulMax: 0,  divMax: 0,  timeLimit: 15 },
-  { from: 35, addMax: 25, add3Max: 10, minOperand: 0,  subMax: 15, mulMax: 0,  divMax: 0,  timeLimit: 14 },
-  { from: 45, addMax: 30, add3Max: 15, minOperand: 0,  subMax: 20, mulMax: 0,  divMax: 0,  timeLimit: 14 },
-  { from: 50, addMax: 30, add3Max: 15, minOperand: 0,  subMax: 20, mulMax: 5,  divMax: 0,  timeLimit: 14 },
-  { from: 60, addMax: 40, add3Max: 20, minOperand: 3,  subMax: 30, mulMax: 6,  divMax: 0,  timeLimit: 13 },
-  { from: 75, addMax: 50, add3Max: 25, minOperand: 5,  subMax: 40, mulMax: 8,  divMax: 5,  timeLimit: 12 },
-  { from: 85, addMax: 75, add3Max: 40, minOperand: 8,  subMax: 60, mulMax: 10, divMax: 8,  timeLimit: 11 },
-  { from: 95, addMax: 99, add3Max: 60, minOperand: 10, subMax: 99, mulMax: 12, divMax: 10, timeLimit: 10 },
+  { from: 1,  addMax: 10, add3Max: 0,  minOperand: 0,  subMax: 0,  mulMax: 0,  divMax: 0,  fracMax: 0,  timeLimit: 15 },
+  { from: 10, addMax: 15, add3Max: 0,  minOperand: 0,  subMax: 0,  mulMax: 0,  divMax: 0,  fracMax: 0,  timeLimit: 15 },
+  { from: 20, addMax: 20, add3Max: 0,  minOperand: 0,  subMax: 0,  mulMax: 0,  divMax: 0,  fracMax: 0,  timeLimit: 15 },
+  { from: 25, addMax: 20, add3Max: 0,  minOperand: 0,  subMax: 10, mulMax: 0,  divMax: 0,  fracMax: 0,  timeLimit: 15 },
+  { from: 35, addMax: 25, add3Max: 10, minOperand: 0,  subMax: 15, mulMax: 0,  divMax: 0,  fracMax: 0,  timeLimit: 14 },
+  { from: 45, addMax: 30, add3Max: 15, minOperand: 0,  subMax: 20, mulMax: 0,  divMax: 0,  fracMax: 4,  timeLimit: 14 },
+  { from: 50, addMax: 30, add3Max: 15, minOperand: 0,  subMax: 20, mulMax: 5,  divMax: 0,  fracMax: 4,  timeLimit: 14 },
+  { from: 60, addMax: 40, add3Max: 20, minOperand: 3,  subMax: 30, mulMax: 6,  divMax: 0,  fracMax: 6,  timeLimit: 13 },
+  { from: 75, addMax: 50, add3Max: 25, minOperand: 5,  subMax: 40, mulMax: 8,  divMax: 5,  fracMax: 8,  timeLimit: 12 },
+  { from: 85, addMax: 75, add3Max: 40, minOperand: 8,  subMax: 60, mulMax: 10, divMax: 8,  fracMax: 8,  timeLimit: 11 },
+  { from: 95, addMax: 99, add3Max: 60, minOperand: 10, subMax: 99, mulMax: 12, divMax: 10, fracMax: 8,  timeLimit: 10 },
 ]
 
 function randInt(min: number, max: number): number {
@@ -61,6 +63,7 @@ function operatorsFor(band: Band): MathOperator[] {
   if (band.subMax > 0) ops.push('-')
   if (band.mulMax > 0) ops.push('×')
   if (band.divMax > 0) ops.push('÷')
+  if (band.fracMax > 0) ops.push('½')
   return ops
 }
 
@@ -120,6 +123,21 @@ export function generateProblem(difficulty: number, operator?: MathOperator, ste
     // A boosted problem makes at least one factor bigger than the area's usual
     const big = randInt(boosted ? floorAbove(base.mulMax, max, 2) : 2, max)
     operands = Math.random() < 0.5 ? [big, randInt(2, max)] : [randInt(2, max), big]
+  } else if (op === '½') {
+    // A shape cut into equal parts, some shaded: halves, thirds and fourths
+    // first, more parts later. Usually asks for the shaded count (top number),
+    // sometimes for the number of parts (bottom number).
+    const max = band.fracMax || BANDS.find(b => b.fracMax > 0)!.fracMax
+    const parts = randInt(boosted ? floorAbove(base.fracMax, max, 2) : 2, max)
+    const shaded = randInt(1, parts)
+    const fractionAsk = Math.random() < 0.3 ? 'bottom' : 'top'
+    return {
+      operands: [shaded, parts],
+      operator: op,
+      answer: fractionAsk === 'top' ? shaded : parts,
+      timeLimit: band.timeLimit,
+      fractionAsk,
+    }
   } else {
     // ÷ — generate answer first to guarantee clean division
     const max = band.divMax || BANDS.find(b => b.divMax > 0)!.divMax
@@ -135,6 +153,26 @@ export function generateProblem(difficulty: number, operator?: MathOperator, ste
                  operands[0] / operands[1]
 
   return { operands, operator: op, answer, timeLimit: band.timeLimit }
+}
+
+/** Shaded parts first, then the empty ones, like a shaded bar on a worksheet */
+function shadedShape(shaded: number, parts: number): string {
+  return '■'.repeat(shaded) + '□'.repeat(parts - shaded)
+}
+
+/**
+ * The problem as shown in battle, with `fill` in place of the unknown:
+ * "7 + 5 = ?", or for fractions "■■□ = ?/3" / "■■□ = 2/?".
+ */
+export function problemText(problem: MathProblem, fill = '?'): string {
+  if (problem.operator === '½') {
+    const [shaded, parts] = problem.operands
+    const shape = shadedShape(shaded, parts)
+    return problem.fractionAsk === 'bottom'
+      ? `${shape} = ${shaded}/${fill}`
+      : `${shape} = ${fill}/${parts}`
+  }
+  return `${problem.operands.join(` ${problem.operator} `)} = ${fill}`
 }
 
 export function checkAnswer(problem: MathProblem, candidate: number): boolean {

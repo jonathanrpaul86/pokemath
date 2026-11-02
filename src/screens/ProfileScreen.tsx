@@ -7,7 +7,7 @@ interface Props {
   onBack: () => void
 }
 
-const OPERATORS: MathOperator[] = ['+', '-', '×', '÷']
+const OPERATORS: MathOperator[] = ['+', '-', '½', '×', '÷']
 
 const DIFFICULTY_OPTIONS: { label: string; description: string; value: number }[] = [
   { label: 'Easy',   description: 'Extra time to answer each problem',  value: 1.5 },

@@ -3,7 +3,7 @@ import { useTrainer, useGameStore } from '../store'
 import { fetchPokemonSpecies } from '../services/pokeApi'
 import { spawnWildPokemon, calcDamage, calcCatchDifficulty, isBattleOutcome, damagingMoves, moveMenuOptions, battleProblem, moveMathTier } from '../utils/battle'
 import { pickEncounter, pickLevel } from '../utils/encounter'
-import { generateProblem, checkAnswer } from '../utils/math'
+import { generateProblem, checkAnswer, problemText } from '../utils/math'
 import { battleXpReward, trainerMoneyReward, pokemonXpToNextLevel, EXP_ALL_SHARE } from '../utils/formulas'
 import { hasKeyItem } from '../data/areas'
 import { playCorrect, playWrong, playCatch, playVictory, playLevelUp, isMuted, setMuted } from '../utils/sound'
@@ -1292,7 +1292,7 @@ export default function BattleScreen({ area, onBattleEnd, trainerBattle, wildOve
                 </div>
                 <div className="battle-problem">
                   <span className="battle-problem__text">
-                    {battle.catchProblem.operands.join(` ${battle.catchProblem.operator} `)} = ?
+                    {problemText(battle.catchProblem)}
                   </span>
                   <span className="battle-problem__answer">{answer || '_'}</span>
                 </div>
@@ -1303,7 +1303,7 @@ export default function BattleScreen({ area, onBattleEnd, trainerBattle, wildOve
                 return (
                   <div className={`battle-problem${phase === 'resolving-correct' ? ' battle-problem--correct' : phase === 'resolving-wrong' ? ' battle-problem--wrong' : ''}`}>
                     <span className="battle-problem__text">
-                      {problem.operands.join(` ${problem.operator} `)} = {isResolving ? (answer || '?') : '?'}
+                      {problemText(problem, isResolving ? (answer || '?') : '?')}
                     </span>
                     {!isResolving && (
                       <span className="battle-problem__answer">{answer || '_'}</span>

@@ -17,6 +17,7 @@ const DEFAULT_MATH_STATS: MathStats = {
     '-': { totalAttempts: 0, correctAnswers: 0 },
     '×': { totalAttempts: 0, correctAnswers: 0 },
     '÷': { totalAttempts: 0, correctAnswers: 0 },
+    '½': { totalAttempts: 0, correctAnswers: 0 },
   },
   lifetimeTotal: 0,
   lifetimeCorrect: 0,

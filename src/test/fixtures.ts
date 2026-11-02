@@ -59,6 +59,7 @@ export function makeTrainer(overrides: Partial<Trainer> = {}): Trainer {
         '-': { totalAttempts: 0, correctAnswers: 0 },
         '×': { totalAttempts: 0, correctAnswers: 0 },
         '÷': { totalAttempts: 0, correctAnswers: 0 },
+        '½': { totalAttempts: 0, correctAnswers: 0 },
       },
       lifetimeTotal: 0,
       lifetimeCorrect: 0,
